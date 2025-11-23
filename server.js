@@ -73,11 +73,21 @@ const pool = new Pool({
 // ---------------- Admin Login API ----------------
 app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
-  const ADMIN_USER = process.env.ADMIN_USER || "game-admin";
-  const ADMIN_PASS = process.env.ADMIN_PASS || "Rainbow6GoldenEye";
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    return res.json({ success: true });
+
+  // Require credentials from environment variables
+  const ADMIN_USER = process.env.ADMIN_USER;
+  const ADMIN_PASS = process.env.ADMIN_PASS;
+
+  // If not set, throw an error so you know to configure them
+  if (!ADMIN_USER || !ADMIN_PASS) {
+    return res.status(500).json({ error: "Admin credentials not configured" });
   }
+
+  // Check credentials
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    return res.json({ success: true, redirect: "/admin-dashboard.html" });
+  }
+
   res.status(401).json({ error: "Invalid credentials" });
 });
 
@@ -350,6 +360,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
