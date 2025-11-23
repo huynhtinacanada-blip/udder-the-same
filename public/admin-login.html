@@ -105,7 +105,7 @@
     <!-- Login form -->
     <form id="adminForm">
       <label>Username</label>
-      <input id="username" name="username" required />
+      <input id="username" name="username" type="text" required />
       <label>Password</label>
       <input id="password" name="password" type="password" required />
       <button type="submit">Login</button>
@@ -115,33 +115,39 @@
     <div id="msg"></div>
   </div>
 
-  <script>
-    // ===== Form Submission Logic =====
-    const form = document.getElementById('adminForm');
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
+<script>
+  // ===== Form Submission Logic =====
+  const form = document.getElementById('adminForm');
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
 
-      // Get values from inputs
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-      // Send POST request to server
+    try {
       const res = await fetch('/api/admin/login', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username, password})
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       });
 
-      // Handle response
-      if(res.ok){
+      if (res.ok) {
         const j = await res.json();
-        location.href = j.redirect; // redirect on success
+        // Show success message briefly before redirect
+        document.getElementById('msg').textContent = "Login successful!";
+        setTimeout(() => {
+          location.href = j.redirect;
+        }, 500);
       } else {
-        const j = await res.json().catch(()=>({}));
+        const j = await res.json().catch(() => ({}));
         document.getElementById('msg').textContent = j.error || 'Error logging in';
       }
-    });
-  </script>
+    } catch (err) {
+      document.getElementById('msg').textContent = "Server unreachable";
+    }
+  });
+</script>
 </body>
 </html>
+
 
