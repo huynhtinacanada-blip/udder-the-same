@@ -4,29 +4,17 @@
   <meta charset="utf-8" />
   <title>Admin Login — Udderly the Same</title>
   <style>
-    /* ===== Global Layout ===== */
     body { 
       font-family: Arial, sans-serif; 
-      background:#f4f6f9;    
-      display:flex; 
-      justify-content:center; 
-      align-items:center; 
-      min-height:100vh; 
-      margin:0; 
-    }
-
-    /* ===== Card Container ===== */
-    .card { 
-      background:#f4f6f9; 
-      padding:30px; 
-      border-radius:16px; 
-      box-shadow:0 8px 24px rgba(0,0,0,0.12); 
-      width:100%; 
+      background:#f0f0f0; 
       max-width:400px; 
+      margin:80px auto; 
+      padding:30px; 
+      border-radius:12px; 
+      box-shadow:0 4px 12px rgba(0,0,0,0.15); 
       text-align:center;
     }
-
-    /* ===== Logo Styling ===== */
+    h1 { margin:20px 0; }
     .logo {
       max-width:120px;
       width:100%;
@@ -35,112 +23,49 @@
       display:block;
       cursor:pointer;
     }
-
-    /* ===== Heading ===== */
-    h1 { 
-      font-size:32px; 
-      margin-bottom:25px; 
-      text-align:center; 
-    }
-
-    /* ===== Form Layout ===== */
-    form { 
-      display:flex; 
-      flex-direction:column; 
-      gap:18px; 
-      text-align:left;
-    }
-    label { font-size:16px; }
-    input { 
-      font-size:18px; 
-      padding:12px; 
-      border:1px solid #ccc; 
-      border-radius:8px; 
-    }
-
-    /* ===== Button Styling ===== */
-    button { 
-      font-size:20px; 
-      padding:16px; 
-      background:#333;   /* keep admin button color */
-      color:#fff; 
-      border:none; 
-      border-radius:8px; 
-      cursor:pointer; 
-    }
-    button:hover { background:#1976d2; } /* keep admin hover color */
-
-    /* ===== Message Area ===== */
-    #msg { 
-      margin-top:12px; 
-      font-size:15px; 
-      color:red; 
-      text-align:center; 
-      min-height:20px; 
-    }
-
-
+    label { display:block; margin-top:12px; font-weight:bold; text-align:left; }
+    input { width:100%; padding:10px; margin-top:6px; border:1px solid #ccc; border-radius:6px; }
+    button { width:100%; padding:12px; margin-top:20px; background:#333; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; }
+    button:hover { background:#555; }
+    #msg { margin-top:15px; color:red; text-align:center; min-height:20px; }
   </style>
 </head>
 <body>
+  <!-- Logo that links back to index.html -->
+  <a href="/index.html">
+    <img src="udder-consensus-logo.png" alt="App Logo" class="logo">
+  </a>
 
- 
-  <!-- Login card -->
-  <div class="card">
-  
-	<div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
-		Form Ver. 1.0.0
-	</div>
-
-  
-    <!-- Logo that links back to index.html -->
-    <a href="/index.html">
-      <img src="udderly-logo-login.png" alt="Udderly the Same Logo" class="logo">
-    </a>
-
-    <!-- Page heading -->
-    <h1>🛡️ Admin Login</h1>
-
-    <!-- Login form -->
-    <form id="adminForm">
-      <label>Username</label>
-      <input id="username" name="username" required />
-      <label>Password</label>
-      <input id="password" name="password" type="password" required />
-      <button type="submit">Login</button>
-    </form>
-
-    <!-- Error or success message -->
-    <div id="msg"></div>
-  </div>
+  <h1>🛡️ Admin Login</h1>
+  <form id="loginForm">
+    <label>Username</label>
+    <input name="username" required />
+    <label>Password</label>
+    <input name="password" type="password" required />
+    <button type="submit">Login</button>
+  </form>
+  <div id="msg"></div>
 
   <script>
-    // ===== Form Submission Logic =====
-    const form = document.getElementById('adminForm');
+    const form = document.getElementById('loginForm');
     form.addEventListener('submit', async e => {
       e.preventDefault();
-
-      // Get values from inputs
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      // Send POST request to server
+      const fd = new FormData(form);
       const res = await fetch('/api/admin/login', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username, password})
+        body:JSON.stringify({
+          username: fd.get('username'),
+          password: fd.get('password')
+        })
       });
-
-      // Handle response
       if(res.ok){
-        const j = await res.json();
-        location.href = j.redirect; // redirect on success
+        location.href='/admin-dashboard.html';
       } else {
         const j = await res.json().catch(()=>({}));
-        document.getElementById('msg').textContent = j.error || 'Error logging in';
+        document.getElementById('msg').textContent = j.error || 'Login failed';
       }
     });
   </script>
 </body>
 </html>
-
