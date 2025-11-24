@@ -353,7 +353,10 @@
 	
 
 	const endGameBtn = document.getElementById("endGameBtn");
+	const signOutBtn = document.getElementById("signOutBtn");
 
+  signOutBtn.onclick = () => window.location.href = "/";
+	  
 	// Handler to emit closeRoom event
 	endGameBtn.onclick = () => {
 	  if (confirm("Are you sure you want to end this game?")) {
@@ -644,5 +647,6 @@
   </script>
 </body>
 </html>
+
 
 
