@@ -449,49 +449,52 @@
       socket.emit("startRound",{roomCode});
     };
 
-    socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
-      currentRound = roundNumber;
-      answersShown = false;
+socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnswer, popup}) => {
+  currentRound = roundNumber;
+  answersShown = false;
 
-      startBtn.disabled=true;
-      document.getElementById("toggleStart").checked = false;
+  // Reset controls
+  startBtn.disabled = true;
+  document.getElementById("toggleStart").checked = false;
+  showBtn.disabled = true;
+  document.getElementById("toggleShow").checked = false;
 
-      showBtn.disabled=true;
-      document.getElementById("toggleShow").checked = false;
+  statusMsg.innerText = "Round in progress…";
+  document.getElementById("qaSection").style.display = "block";
+  openAccordion("questionBox");
+  closeAccordion("answersTableWrapper");
+  document.getElementById("answersAccordion").style.display = "none";
+  document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${prompt}`;
+  document.getElementById("progress").innerText = `Submitted: 0 / ${playerCount}`;
 
-      statusMsg.innerText="Round in progress…";
-      document.getElementById("qaSection").style.display="block";
-      openAccordion("questionBox");
-      closeAccordion("answersTableWrapper");
-      document.getElementById("answersAccordion").style.display="none";
-      document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
-      document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
+  // Only auto-show popup if server says popup=true
+  if (popup) {
+    document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
+    document.getElementById("roundPopup").style.display = "flex";
+    showQuestionBtn.disabled = true;
+  }
 
-      // Show popup with question
-      document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
-      document.getElementById("roundPopup").style.display = "flex";
-      showQuestionBtn.disabled = true;
-
-      if (answersShown || myAnswer) {
-        submitBtn.disabled=true;
-        inputBox.disabled=true;
-        document.getElementById("toggleSubmit").checked = false;
-        inputBox.value = myAnswer || "";
-      } else {
-        submitBtn.disabled=false;
-        inputBox.disabled=false;
-        document.getElementById("toggleSubmit").checked = true;
-        inputBox.value = "";
-        submitBtn.onclick=()=>{
-          const answer=inputBox.value.trim();
-          if(!answer) return;
-          socket.emit("submitAnswer",{roomCode,name:myName,questionId,answer});
-          submitBtn.disabled=true;
-          inputBox.disabled=true;
-          document.getElementById("toggleSubmit").checked = false;
-        };
-      }
-    });
+  // Answer submission logic
+  if (answersShown || myAnswer) {
+    submitBtn.disabled = true;
+    inputBox.disabled = true;
+    document.getElementById("toggleSubmit").checked = false;
+    inputBox.value = myAnswer || "";
+  } else {
+    submitBtn.disabled = false;
+    inputBox.disabled = false;
+    document.getElementById("toggleSubmit").checked = true;
+    inputBox.value = "";
+    submitBtn.onclick = () => {
+      const answer = inputBox.value.trim();
+      if (!answer) return;
+      socket.emit("submitAnswer", { roomCode, name: myName, questionId, answer });
+      submitBtn.disabled = true;
+      inputBox.disabled = true;
+      document.getElementById("toggleSubmit").checked = false;
+    };
+  }
+});
 
     socket.on("allSubmitted", () => {
       showBtn.disabled=false;
@@ -647,6 +650,7 @@
   </script>
 </body>
 </html>
+
 
 
 
