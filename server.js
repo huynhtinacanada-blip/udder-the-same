@@ -1,4 +1,4 @@
-// v1.1.2f
+// v1.1.0d
 // Did not include: Server-side (block actions if closed)
 
 const express = require("express"); 
@@ -28,7 +28,7 @@ const pool = new Pool({
     status TEXT NOT NULL DEFAULT 'open',
     current_round INT DEFAULT 0,
     active_question_id INT,
-    question_shown BOOLEAN DEFAULT FALSE,
+    board_status INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
   );`);
 
@@ -372,6 +372,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
