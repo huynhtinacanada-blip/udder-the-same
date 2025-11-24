@@ -28,6 +28,7 @@ const pool = new Pool({
     status TEXT NOT NULL DEFAULT 'open',
     current_round INT DEFAULT 0,
     active_question_id INT,
+    question_shown BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
   );`);
 
@@ -269,22 +270,33 @@ io.on("connection", (socket) => {
     if (qr.rows.length === 0) return;
     const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
     const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
-
-    await pool.query("UPDATE rooms SET current_round = current_round+1, active_question_id=$1 WHERE code=$2", [qid, rc]);
+  
+    // Reset question_shown to FALSE here
+    await pool.query(
+      "UPDATE rooms SET current_round = current_round+1, active_question_id=$1, question_shown=FALSE WHERE code=$2",
+      [qid, rc]
+    );
+  
     await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
-
+  
     await emitPlayerList(rc);
-
+  
     const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
     const { activeCount } = await getActiveStats(rc);
+  
     io.to(rc).emit("roundStarted", {
       questionId: qid,
       prompt: q.rows[0].prompt,
       playerCount: activeCount,
       roundNumber: roundNum,
-      myAnswer: null
+      myAnswer: null,
+      popup: true   // tell clients to show popup
     });
+  
+    // Then immediately mark it TRUE after emitting
+    await pool.query("UPDATE rooms SET question_shown=TRUE WHERE code=$1", [rc]);
   });
+
 
   socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
     const rc = roomCode.toUpperCase();
@@ -360,6 +372,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
