@@ -240,7 +240,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0b)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0c)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -426,7 +426,7 @@
         })
         .join("");
 
-      statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+      // statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
       document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
 
       if (document.getElementById("qaSection").style.display === "block") {
@@ -467,13 +467,18 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${prompt}`;
   document.getElementById("progress").innerText = `Submitted: 0 / ${playerCount}`;
 
+  showQuestionBtn.disabled = true;
+	
   // Only auto-show popup if server says popup=true
   if (popup) {
     document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
     document.getElementById("roundPopup").style.display = "flex";
-    showQuestionBtn.disabled = true;
   }
 
+  // Keep local toggle enabled at all times (unless the room is closed elsewhere)
+  showQuestionBtn.disabled = false;
+
+	
   // Answer submission logic
   if (answersShown || myAnswer) {
     submitBtn.disabled = true;
@@ -509,12 +514,12 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
     // Popup close logic
     document.getElementById("closePopup").onclick = () => {
       document.getElementById("roundPopup").style.display = "none";
-      showQuestionBtn.disabled = false;
+      //showQuestionBtn.disabled = false;
     };
     document.getElementById("roundPopup").addEventListener("click", e => {
       if (e.target.id === "roundPopup") {
         document.getElementById("roundPopup").style.display = "none";
-        showQuestionBtn.disabled = false;
+       //showQuestionBtn.disabled = false;
       }
     });
     showQuestionBtn.onclick = () => {
@@ -650,6 +655,7 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   </script>
 </body>
 </html>
+
 
 
 
