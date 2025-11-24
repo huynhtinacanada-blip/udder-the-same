@@ -1,9 +1,3 @@
-<!-- File: index.html 
-     Purpose: Landing page for Udderly the Same game 
-     Contains: Logo, navigation buttons for Admin and Player login 
--->
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,18 +14,42 @@
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      position: relative;
     }
     h1 { font-size: 36px; margin-bottom: 10px; }
     h3 { margin-top: 0; font-weight: normal; }
-    .logo {
-      max-width: 150px;
-      width: 100%;
-      height: auto;
+
+    /* Logo container ensures overlap */
+    .logo-container {
+      position: relative;
+      width: 250px;
+      height: 250px;
       margin: 20px auto 10px;
-      display: block;
+    }
+    .logo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+    .logo.show {
+      opacity: 1;
+    }
+
+    /* Buttons flexbox */
+    section {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
     }
     .btn {
-      display: inline-block;
+      flex: 1;
+      min-width: 200px;
       padding: 14px 24px;
       margin: 8px;
       font-size: 18px;
@@ -41,48 +59,163 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.3s ease, transform 0.2s ease;
+      text-align: center;
     }
     .btn:hover { 
       background: #F7AC4D; 
       transform: scale(1.05); 
     }
+    .btn:disabled {
+      background: #999;
+      cursor: not-allowed;
+      transform: none;
+    }
+    @media (max-width: 600px) {
+      section {
+        flex-direction: column;
+        align-items: center;
+      }
+      .btn {
+        width: 80%;
+      }
+    }
+
     p {
       margin-top: 16px;
       font-size: 15px;
       color: #444;
     }
     p:first-of-type { margin-top: 10px; }
+
+    /* How to Play button */
+    .help-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #007BFF;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Popup modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background: #fff;
+      margin: 10% auto;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 600px;
+      text-align: left;
+    }
+    .close {
+      float: right;
+      font-size: 24px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <button class="help-btn" id="helpBtn">?</button>
+
   <h1>Udderly the Same</h1>
   <h3>🐮 Inspired by Herd Mentality, created by Big Potato Games.</h3>
 
-  <img src="udderly-logo-main-a.png" alt="Home Page Logo" class="logo">
+  <!-- Logos stacked in same spot -->
+  <div class="logo-container">
+    <img src="udderly-logo-main-b.png" alt="Home Page Logo" class="logo" id="logoB">
+    <img src="udderly-logo-main-a.png" alt="Home Page Logo" class="logo" id="logoA">
+  </div>
 
   <p><strong>Welcome! Choose your path:</strong></p>
-  <section>
-    <a class="btn" href="/admin-login.html">Admin Login</a>
-    <a class="btn" href="/player-login.html">Join as Player</a>
-  </section>
+	<section>
+	  <button class="btn" id="adminBtn" disabled onclick="location.href='/admin-login.html'">Admin Login</button>
+	  <button class="btn" id="playerBtn" disabled onclick="location.href='/player-login.html'">Join as Player</button>
+	</section>
   <p>
     Players: Click on <em>Join as Player</em> and enter your name and room code.<br>
     Admins: Click on <em>Admin Login</em> to create rooms and manage questions.
   </p>
    
-  
-	  <!-- Version footer -->
-	<div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-	  Game Ver. 1.0.0
-	  <br>
-	  <span style="font-size:0.75em; color:#666;">
-		This online game is inspired by Herd Mentality, created by Big Potato Games. 
-		It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
-	  </span>
-	</div>
+  <!-- Version footer -->
+  <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
+    Game Ver. 1.1.0
+    <br>
+    <span style="font-size:0.75em; color:#666;">
+      This online game is inspired by Herd Mentality, created by Big Potato Games. 
+      It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
+    </span>
+  </div>
 
+  <!-- How to Play Modal -->
+  <div id="howToPlayModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h2>How to Play</h2>
+      <p>
+        1. Admin creates a room and sets up questions.<br>
+        2. Players join using the room code and their name.<br>
+        3. Each round, answer the question with what you think most people will say.<br>
+        4. Points are awarded for being part of the majority herd.<br>
+        5. First to reach the 8 points is the champion!
+      </p>
+    </div>
+  </div>
 
+  <script>
+    const logoB = document.getElementById('logoB');
+    const logoA = document.getElementById('logoA');
+    const adminBtn = document.getElementById('adminBtn');
+    const playerBtn = document.getElementById('playerBtn');
 
+	// Start with Logo A visible
+	logoA.classList.add('show');
+
+    // Disable buttons
+    adminBtn.setAttribute('disabled', true);
+    playerBtn.setAttribute('disabled', true);
+
+    // After delay, crossfade logos and enable buttons
+ 
+	  // After 2s, fade to Logo B
+	  setTimeout(() => {
+		logoA.classList.remove('show');
+		logoB.classList.add('show');
+	  }, 2000);
+
+	  // After 4s, fade back to Logo A
+	  setTimeout(() => {
+		logoB.classList.remove('show');
+		logoA.classList.add('show');
+
+		// Enable buttons once Logo A is back
+		setTimeout(() => {
+		  adminBtn.removeAttribute('disabled');
+		  playerBtn.removeAttribute('disabled');
+		}, 1500); // wait for fade duration
+	  }, 4000);
+
+    // Modal logic
+    const helpBtn = document.getElementById('helpBtn');
+    const modal = document.getElementById('howToPlayModal');
+    const closeModal = document.getElementById('closeModal');
+
+    helpBtn.onclick = () => modal.style.display = 'block';
+    closeModal.onclick = () => modal.style.display = 'none';
+    window.onclick = (event) => {
+      if (event.target === modal) modal.style.display = 'none';
+    };
+  </script>
 </body>
 </html>
-

@@ -81,28 +81,66 @@
       border:1px solid #ccc; margin-bottom:10px; font-size:16px;
     }
 
-    /* ===== Toggle Switches ===== */
-    .switch { display:block; margin-bottom:12px; }
-    .switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
-    .switch input { display:none; }
-    .slider {
-      position: relative;
-      width: 60px; height: 28px;
-      background-color: #ccc;
-      border-radius: 28px;
-      transition: background-color 0.3s;
-    }
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 24px; height: 24px;
-      left: 2px; top: 2px;
-      background-color: white;
-      border-radius: 50%;
-      transition: transform 0.3s;
-    }
-    .switch input:checked + .slider { background-color: #2e7d32; }
-    .switch input:checked + .slider::before { transform: translateX(32px); }
+	/* ===== Toggle Switches ===== */
+	.switch { display:block; margin-bottom:12px; }
+	.switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
+	.switch input { display:none; }
+	.slider {
+	  position: relative;
+	  width: 60px; height: 28px;
+	  background-color: #ccc;
+	  border-radius: 28px;
+	  transition: background-color 0.3s;
+	}
+	.slider::before {
+	  content: "";
+	  position: absolute;
+	  width: 24px; height: 24px;
+	  left: 2px; top: 2px;
+	  background-color: white;
+	  border-radius: 50%;
+	  transition: transform 0.3s;
+	}
+	.switch input:checked + .slider { background-color: #2e7d32; }
+	.switch input:checked + .slider::before { transform: translateX(32px); }
+
+	/* ===== Two-Column Layout ===== */
+	.controlsLayout {
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: flex-start;
+	  gap: 20px;
+	}
+
+	.leftColumn {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 12px;
+	}
+
+	.rightColumn {
+	  display: flex;
+	  align-items: center;      /* vertical center */
+	  align-self: stretch;      /* ensure it stretches to row height */
+	}
+
+
+	/* Sign Out button styling */
+	#signOutBtn {
+	  background-color: #d32f2f;   /* red tone */
+	  color: white;
+	  border: none;
+	  padding: 10px 18px;
+	  border-radius: 6px;
+	  cursor: pointer;
+	  font-weight: bold;
+	  transition: background-color 0.3s;
+	}
+
+	#signOutBtn:hover {
+	  background-color: #ffa600;   /* darker red on hover */
+	}
+
 
     /* ===== Room Header ===== */
     #topStatus { font-weight:bold; color:#444; margin-left:auto; }
@@ -179,6 +217,15 @@
       to   { transform:scale(1); opacity:1; }
     }
 
+
+    /* --- Game Over Banner --- */
+    #gameOverBanner {
+      background-color: #d32f2f; color: white; font-weight: bold;
+      text-align: center; padding: 25px; font-size: 22px;
+      margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .hidden { display: none; }
+
     /* ===== Disclaimer Footer ===== */
     .disclaimer {
       text-align:center;
@@ -193,9 +240,15 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0a)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0b)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
+
+
+<!-- --- Banner --- -->
+<div id="gameOverBanner" class="hidden">🎮 Game Over</div>
+
+
 
   <!-- Accordion: Game Room Info -->
   <div class="accordion">
@@ -224,15 +277,27 @@
     </div>
   </div>
 
-  <!-- Accordion: Control switches -->
-  <div class="accordion">
-    <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
-    <div id="controlsBox" class="accordion-content">
-      <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
-      <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
-      <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
-    </div>
-  </div>
+	<!-- Accordion: Control switches -->
+	<div class="accordion">
+	  <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
+	  <div id="controlsBox" class="accordion-content">
+		<div class="controlsLayout">
+		  
+		  <!-- Left column: switches -->
+		  <div class="leftColumn">
+			<div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
+			<div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
+			<div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
+		  </div>
+		  
+		  <!-- Right column: sign out button -->
+		  <div class="rightColumn">
+			<button id="signOutBtn">Sign Out</button>
+		  </div>
+		  
+		</div>
+	  </div>
+	</div>
 
   <!-- Accordion: Answers -->
   <div id="answersAccordion" class="accordion" style="display:none;">
@@ -311,19 +376,9 @@
 	  inputBox.disabled = true;
 	  endGameBtn.disabled = true;
 	
-	  // Show a "Game Over" badge/message
-	  const badge = document.createElement("div");
-	  badge.innerText = "🎮 Game Over";
-	  badge.style.backgroundColor = "#d32f2f";   // red
-	  badge.style.color = "white";
-	  badge.style.fontWeight = "bold";
-	  badge.style.padding = "10px 20px";
-	  badge.style.marginTop = "20px";
-	  badge.style.borderRadius = "8px";
-	  badge.style.display = "inline-block";
-	  badge.style.fontSize = "18px";
-	
-	  document.body.appendChild(badge);
+		// Show a "Game Over" badge/message
+		document.getElementById("gameOverBanner").classList.remove("hidden");
+		statusMessage.textContent = "Game over.";
 	});
 
 
