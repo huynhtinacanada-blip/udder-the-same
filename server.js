@@ -47,12 +47,13 @@ const pool = new Pool({
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS players_name_room_unique
     ON players (LOWER(name), room_code);`);
 
-  await pool.query(`CREATE TABLE IF NOT EXISTS questions (
-    id SERIAL PRIMARY KEY,
-    prompt TEXT NOT NULL,
-    discard INT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-  );`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS questions (
+      id SERIAL PRIMARY KEY,
+      prompt TEXT NOT NULL,
+      discard DATE DEFAULT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );`);
 
   await pool.query(`CREATE TABLE IF NOT EXISTS answers (
     id SERIAL PRIMARY KEY,
@@ -386,6 +387,7 @@ socket.on("startRound", async ({ roomCode }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
