@@ -100,7 +100,7 @@
     <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
   </div>
   <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-    Card Management Ver. 1.0.0a
+    Card Management Ver. 1.0.1
   </div>
   
   <script>
@@ -113,7 +113,7 @@
         `<tr>
           <td>${q.id}</td>
           <td>${escapeHTML(q.prompt)}</td>
-          <td>${q.discard || q.id}</td>
+          <td>${formatDiscardDate(q.discard)}</td>
           <td>
             <div class="actions">
               <button class="action-btn edit-btn" onclick="editQuestion(${q.id}, '${escapeHTML(q.prompt)}')">Edit</button>
@@ -124,6 +124,18 @@
       ).join('');
     }
 
+  function formatDiscardDate(discard){
+    if (!discard) return ""; // blank if no date
+    const d = new Date(discard);
+    if (isNaN(d)) return discard; // if not a valid date, just show raw value
+    const yyyy = d.getFullYear();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    return `${yyyy}-${dd}-${mm}`; // YYYY-DD-MM format
+  }
+
+
+    
     document.getElementById('addBtn').onclick = async () => {
       const text = document.getElementById('questionText').value.trim();
       if (!text) return alert('Enter a question');
@@ -183,3 +195,4 @@
   </script>
 </body>
 </html>
+
