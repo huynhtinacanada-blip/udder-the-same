@@ -31,6 +31,11 @@ const pool = new Pool({
     board_status INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
   );`);
+  
+//board_status:
+//0 = No round in progress
+//1 = Round started, popup should be shown
+//2 = Round started, popup dismissed  
 
   await pool.query(`CREATE TABLE IF NOT EXISTS players (
     id SERIAL PRIMARY KEY,
@@ -222,80 +227,89 @@ async function emitScoreboard(roomCode) {
 
 // ---------------- Socket.IO Game Logic ----------------
 io.on("connection", (socket) => {
-  socket.on("joinLobby", async ({ roomCode, name }) => {
-    const rc = roomCode.toUpperCase();
-    socket.data.name = name;
-    socket.data.roomCode = rc;
-    socket.join(rc);
+socket.on("joinLobby", async ({ roomCode, name }) => {
+  const rc = roomCode.toUpperCase();
+  socket.data.name = name;
+  socket.data.roomCode = rc;
+  socket.join(rc);
 
-    await pool.query(
-      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-      [name, rc]
+  await pool.query(
+    "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+    [name, rc]
+  );
+
+  await emitPlayerList(rc);
+  await emitScoreboard(rc);
+
+  // also select board_status
+  const room = await pool.query("SELECT current_round, active_question_id, board_status FROM rooms WHERE code=$1", [rc]);
+
+  if (room.rows.length && room.rows[0].active_question_id) {
+    const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [room.rows[0].active_question_id]);
+    const ans = await pool.query(
+      "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
+      [rc, name, room.rows[0].active_question_id, room.rows[0].current_round]
     );
+    const { activeCount, submittedActiveCount } = await getActiveStats(rc);
 
-    await emitPlayerList(rc);
-    await emitScoreboard(rc);
-
-    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-    if (room.rows.length && room.rows[0].active_question_id) {
-      const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [room.rows[0].active_question_id]);
-      const ans = await pool.query(
-        "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
-        [rc, name, room.rows[0].active_question_id, room.rows[0].current_round]
-      );
-      const { activeCount, submittedActiveCount } = await getActiveStats(rc);
-
-      socket.emit("roundStarted", {
-        questionId: room.rows[0].active_question_id,
-        prompt: q.rows[0].prompt,
-        playerCount: activeCount,
-        roundNumber: room.rows[0].current_round,
-        myAnswer: ans.rows.length ? ans.rows[0].answer : null
-      });
-
-      io.to(rc).emit("submissionProgress", {
-        submittedCount: submittedActiveCount,
-        totalPlayers: activeCount
-      });
-
-      if (activeCount > 0 && submittedActiveCount === activeCount) {
-        io.to(rc).emit("allSubmitted");
-      }
-    }
-  });
-
-  socket.on("startRound", async ({ roomCode }) => {
-    const rc = roomCode.toUpperCase();
-    const qr = await pool.query("SELECT id FROM questions ORDER BY discard ASC");
-    if (qr.rows.length === 0) return;
-    const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
-    const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
-  
-    // Reset question_shown to FALSE here
-    await pool.query(
-      "UPDATE rooms SET current_round = current_round+1, active_question_id=$1, question_shown=FALSE WHERE code=$2",
-      [qid, rc]
-    );
-  
-    await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
-  
-    await emitPlayerList(rc);
-  
-    const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
-    const { activeCount } = await getActiveStats(rc);
-  
-    io.to(rc).emit("roundStarted", {
-      questionId: qid,
+    // add popup flag based on board_status
+    socket.emit("roundStarted", {
+      questionId: room.rows[0].active_question_id,
       prompt: q.rows[0].prompt,
       playerCount: activeCount,
-      roundNumber: roundNum,
-      myAnswer: null,
-      popup: true   // tell clients to show popup
+      roundNumber: room.rows[0].current_round,
+      myAnswer: ans.rows.length ? ans.rows[0].answer : null,
+      popup: room.rows[0].board_status === 1   // NEW: auto-show only if still in popup phase
     });
-  
-    // Then immediately mark it TRUE after emitting
-    await pool.query("UPDATE rooms SET question_shown=TRUE WHERE code=$1", [rc]);
+
+    io.to(rc).emit("submissionProgress", {
+      submittedCount: submittedActiveCount,
+      totalPlayers: activeCount
+    });
+
+    if (activeCount > 0 && submittedActiveCount === activeCount) {
+      io.to(rc).emit("allSubmitted");
+    }
+  }
+});
+
+
+socket.on("startRound", async ({ roomCode }) => {
+  const rc = roomCode.toUpperCase();
+
+  // Pick a random question
+  const qr = await pool.query("SELECT id FROM questions ORDER BY discard ASC");
+  if (qr.rows.length === 0) return;
+  const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
+  const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
+
+  // Reset round state: new round, new question, popup phase active
+  await pool.query(
+    "UPDATE rooms SET current_round = current_round+1, active_question_id=$1, board_status=1 WHERE code=$2",
+    [qid, rc]
+  );
+
+  // Reset players' submission state
+  await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
+
+  await emitPlayerList(rc);
+
+  const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
+  const { activeCount } = await getActiveStats(rc);
+
+  // Broadcast round start with popup=true
+  io.to(rc).emit("roundStarted", {
+    questionId: qid,
+    prompt: q.rows[0].prompt,
+    playerCount: activeCount,
+    roundNumber: roundNum,
+    myAnswer: null,
+    popup: true   // tell clients to auto-show popup
   });
+
+  // After broadcasting, mark popup dismissed globally (phase 2)
+  await pool.query("UPDATE rooms SET board_status=2 WHERE code=$1", [rc]);
+});
 
 
   socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
@@ -372,6 +386,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
