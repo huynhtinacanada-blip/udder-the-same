@@ -467,15 +467,13 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${prompt}`;
   document.getElementById("progress").innerText = `Submitted: 0 / ${playerCount}`;
 
-  showQuestionBtn.disabled = true;
-	
   // Only auto-show popup if server says popup=true
   if (popup) {
     document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
     document.getElementById("roundPopup").style.display = "flex";
   }
 
-  // Keep local toggle enabled at all times (unless the room is closed elsewhere)
+  // Keep local toggle enabled at all times
   showQuestionBtn.disabled = false;
 
 	
@@ -655,6 +653,7 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   </script>
 </body>
 </html>
+
 
 
 
