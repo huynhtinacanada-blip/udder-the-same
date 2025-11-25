@@ -112,7 +112,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0e)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0)</span></h2>
     <button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -149,7 +149,7 @@
   <!-- Popup Modal -->
   <div id="roundPopup" class="popup">
     <div class="popup-content">
-      <!-- ✅ FIX: use consistent ID "closePopup" -->
+      <!-- use consistent ID "closePopup" -->
       <span id="closePopup" class="close-btn">&times;</span>
       <h1 id="popupQuestion"></h1>
     </div>
@@ -237,12 +237,9 @@
       answersShown = true;
     };
 
-    // ❌ DELETE: old close handler that only hid popup
-    // document.getElementById("closePopup").onclick = () => {
-    //   document.getElementById("roundPopup").style.display = "none";
-    // };
+  
 
-    // ✅ ADD: new close handler that hides popup AND tells server
+    // : new close handler that hides popup AND tells server
     document.getElementById("closePopup").onclick = () => {
       document.getElementById("roundPopup").style.display = "none";
       socket.emit("dismissPopup", { roomCode });  // notify server popup dismissed
@@ -395,3 +392,4 @@
 
 
  
+
