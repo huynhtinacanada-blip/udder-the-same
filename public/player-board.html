@@ -529,7 +529,16 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
 	  // Show the popup again
 	  document.getElementById("roundPopup").style.display = "flex";
 	};
-	
+
+
+	// Close popup button now tells server
+	document.getElementById("closePopupBtn").onclick = () => {
+		document.getElementById("roundPopup").style.display = "none";
+		socket.emit("dismissPopup", { roomCode });  // tell server popup dismissed
+	};
+
+
+	  
 		  
 
     socket.on("answersRevealed", rows => {
@@ -661,6 +670,7 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   </script>
 </body>
 </html>
+
 
 
 
