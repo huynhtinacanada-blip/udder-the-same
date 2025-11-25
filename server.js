@@ -394,9 +394,35 @@ socket.on("startRound", async ({ roomCode }) => {
   });
 });
 
+
+socket.on("showQuestion", async ({ roomCode }) => {
+  const rc = roomCode.toUpperCase();
+
+  // Get the active question for this room
+  const room = await pool.query("SELECT active_question_id, current_round FROM rooms WHERE code=$1", [rc]);
+  if (room.rows.length === 0) return;
+
+  const qid = room.rows[0].active_question_id;
+  const roundNum = room.rows[0].current_round;
+
+  const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
+
+  // Broadcast to all players in the room
+  io.to(rc).emit("roundStarted", {
+    questionId: qid,
+    prompt: q.rows[0].prompt,
+    playerCount: (await getActiveStats(rc)).activeCount,
+    roundNumber: roundNum,
+    myAnswer: null,
+    popup: true   // force popup again
+  });
+});
+
+
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
