@@ -6,7 +6,7 @@
   <script src="/socket.io/socket.io.js"></script>
 
   <style>
-    /* Global Layout */
+    /* ===== Global Layout ===== */
     body {
       font-family:'Segoe UI',Arial,sans-serif;
       max-width:1200px;
@@ -17,39 +17,49 @@
       box-shadow:0 4px 12px rgba(0,0,0,0.9);
     }
 
-    /* Header */
+    /* ===== Header ===== */
     .header { display:flex; align-items:center; gap:12px; margin-bottom:20px;}
     .logo { max-width:100px; height:auto; display:block;}
     h2 { margin:0;}
     #statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444;}
 
-    /* Buttons */
+    /* ===== Buttons ===== */
     button {
       padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
       cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
     }
     button:disabled { background:#999; cursor:not-allowed;}
-    
-    /* Default hover (orange) */
-    button:hover:enabled { background:#F7AC4D; }
+	
+	/* ===== Default hover (orange) ===== */
+	button:hover:enabled {
+	  background:#F7AC4D; /* orange hover for most buttons */
+	}
 
-    /* Special End Game button hover */
-    .danger-btn:hover:enabled { background:#d32f2f; color:#fff; font-weight:bold; }
+	/* ===== Special End Game button hover ===== */
+	.danger-btn:hover:enabled {
+	  background:#d32f2f;   /* red hover */
+	  color:#fff;           /* keep text white */
+	  font-weight:bold;     /* optional: bold text */
+	}
 
-    /* Show Question button hover */
-    #showQuestionBtn:hover:enabled { background:#1976d2; }
+	/* ===== Show Question button hover ===== */
+	#showQuestionBtn:hover:enabled {
+	  background:#1976d2;   /* blue hover */
+	}
 
-    /* Show Answers button hover */
-    #showAnswersBtn:hover:enabled { background:#2e7d32; }
+	/* ===== Show Answers button hover ===== */
+	#showAnswersBtn:hover:enabled {
+	  background:#2e7d32;   /* green hover */
+	}
 
-    /* Accordion Sections */
+    /* ===== Accordion Sections ===== */
     .accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
     .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold;}
     .accordion-header:hover { background:#F7AC4D;}
     .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px;}
     .accordion-content.open { padding:15px; max-height:1000px;}
 
-    /* Tables */
+    /* ===== Tables ===== */
     #answersTable, #playersTable, #scoreTable {
       font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
     }
@@ -60,7 +70,119 @@
     }
     #answersTable th, #answersTable td { text-align:left; }
 
-    /* Popup Modal */
+    /* Column widths for answers table */
+    #answersTable th:first-child, #answersTable td:first-child { width:120px; text-align:center; }
+    #answersTable th:nth-child(2), #answersTable td:nth-child(2) { width:200px; }
+    #answersTable th:nth-child(3), #answersTable td:nth-child(3) { width:auto; }
+
+    /* ===== Textarea ===== */
+    textarea {
+      width:100%; max-width:800px; padding:10px; border-radius:6px;
+      border:1px solid #ccc; margin-bottom:10px; font-size:16px;
+    }
+
+	/* ===== Toggle Switches ===== */
+	.switch { display:block; margin-bottom:12px; }
+	.switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
+	.switch input { display:none; }
+	.slider {
+	  position: relative;
+	  width: 60px; height: 28px;
+	  background-color: #ccc;
+	  border-radius: 28px;
+	  transition: background-color 0.3s;
+	}
+	.slider::before {
+	  content: "";
+	  position: absolute;
+	  width: 24px; height: 24px;
+	  left: 2px; top: 2px;
+	  background-color: white;
+	  border-radius: 50%;
+	  transition: transform 0.3s;
+	}
+	.switch input:checked + .slider { background-color: #2e7d32; }
+	.switch input:checked + .slider::before { transform: translateX(32px); }
+
+	/* ===== Two-Column Layout ===== */
+	.controlsLayout {
+	  display: flex;
+	  justify-content: space-between;
+	  align-items: flex-start;
+	  gap: 20px;
+	}
+
+	.leftColumn {
+	  display: flex;
+	  flex-direction: column;
+	  gap: 12px;
+	}
+
+	.rightColumn {
+	  display: flex;
+	  align-items: center;      /* vertical center */
+	  align-self: stretch;      /* ensure it stretches to row height */
+	}
+
+
+	/* Sign Out button styling */
+	#signOutBtn {
+	  background-color: #d32f2f;   /* red tone */
+	  color: white;
+	  border: none;
+	  padding: 10px 18px;
+	  border-radius: 6px;
+	  cursor: pointer;
+	  font-weight: bold;
+	  transition: background-color 0.3s;
+	}
+
+	#signOutBtn:hover {
+	  background-color: #ffa600;   /* darker red on hover */
+	}
+
+
+    /* ===== Room Header ===== */
+    #topStatus { font-weight:bold; color:#444; margin-left:auto; }
+    .roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .small { font-size:12px; color:#666; }
+
+    /* ===== Scoreboard ===== */
+    #scoreTable th, #scoreTable td { padding:6px; }
+    #scoreTable th:first-child, #scoreTable td:first-child { text-align:left; padding-left:10px; }
+    #scoreTable th:nth-child(2), #scoreTable td:nth-child(2) { text-align:center; width:60px; }
+    #scoreTable th:nth-child(n+3), #scoreTable td.roundCell { text-align:center; width:35px; }
+    .scoreSelect { width:100%; text-align:center; }
+
+    .pointLabel { margin-left:8px; font-weight:bold; }
+    .pointLabel.green { color:#2e7d32; }
+    .pointLabel.blue  { color:#0d47a1; text-shadow:0 0 2px #fff; }
+
+    /* ===== Answers Table Toggle Styling ===== */
+    #answersTable .slider {
+      width:80px; height:32px;
+      background-color:#ddd;
+      border:2px solid #aaa;
+      border-radius:32px;
+      transition:background-color 0.3s, border-color 0.3s;
+    }
+    #answersTable .slider::before {
+      content:"";
+      position:absolute;
+      width:28px; height:28px;
+      left:2px; top:2px;
+      background-color:white;
+      border-radius:50%;
+      transition:transform 0.3s, background-color 0.3s;
+    }
+    #answersTable .switch input:checked + .slider {
+      background-color:#66bb6a;
+      border-color:#66bb6a;
+    }
+    #answersTable .switch input:checked + .slider::before { transform:translateX(48px); }
+    #answersTable .slider:hover { background-color:#bbb; cursor:pointer; }
+
+    /* ===== Popup Modal ===== */
     .popup {
       display:none;
       position:fixed;
@@ -95,6 +217,7 @@
       to   { transform:scale(1); opacity:1; }
     }
 
+
     /* --- Game Over Banner --- */
     #gameOverBanner {
       background-color: #d32f2f; color: white; font-weight: bold;
@@ -103,8 +226,13 @@
     }
     .hidden { display: none; }
 
-    /* Disclaimer Footer */
-    .disclaimer { text-align:center; font-size:0.75em; color:#666; margin-top:50px; }
+    /* ===== Disclaimer Footer ===== */
+    .disclaimer {
+      text-align:center;
+      font-size:0.75em;
+      color:#666;
+      margin-top:50px;
+    }
   </style>
 </head>
 <body>
@@ -112,12 +240,15 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0)</span></h2>
-    <button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0r)</span></h2>
+	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
-  <!-- --- Banner --- -->
-  <div id="gameOverBanner" class="hidden">🎮 Game Over</div>
+
+<!-- --- Banner --- -->
+<div id="gameOverBanner" class="hidden">🎮 Game Over</div>
+
+
 
   <!-- Accordion: Game Room Info -->
   <div class="accordion">
@@ -146,22 +277,66 @@
     </div>
   </div>
 
+	<!-- Accordion: Control switches -->
+	<div class="accordion">
+	  <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
+	  <div id="controlsBox" class="accordion-content">
+		<div class="controlsLayout">
+		  
+		  <!-- Left column: switches -->
+		  <div class="leftColumn">
+			<div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
+			<div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
+			<div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
+		  </div>
+		  
+		  <!-- Right column: sign out button -->
+		  <div class="rightColumn">
+			<button id="signOutBtn">Sign Out</button>
+		  </div>
+		  
+		</div>
+	  </div>
+	</div>
+
+  <!-- Accordion: Answers -->
+  <div id="answersAccordion" class="accordion" style="display:none;">
+    <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
+    <div id="answersTableWrapper" class="accordion-content">
+      <table id="answersTable">
+        <thead><tr><th>Point</th><th>Name</th><th>Answer</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Accordion: Scoreboard -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('scoreboardBox')">Scoreboard</div>
+    <div id="scoreboardBox" class="accordion-content">
+      <table id="scoreTable">
+        <thead><tr><th>Player</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- Popup Modal -->
   <div id="roundPopup" class="popup">
     <div class="popup-content">
-      <!-- use consistent ID "closePopup" -->
       <span id="closePopup" class="close-btn">&times;</span>
       <h1 id="popupQuestion"></h1>
     </div>
   </div>
 
-  <!-- Disclaimer Footer -->
+  <!-- Disclaimer Footer (outside card/accordion area) -->
   <div class="disclaimer">
     This online game is inspired by Herd Mentality, created by Big Potato Games. 
     It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
   </div>
 
   <script>
+  
     const urlParams=new URLSearchParams(window.location.search);
     const roomCode=(urlParams.get("room")||"").toUpperCase();
     const myName=urlParams.get("name")||"";
@@ -175,91 +350,196 @@
     const statusMsg=document.getElementById("statusMessage");
     const submitBtn=document.getElementById("submitAnswerBtn");
     const inputBox=document.getElementById("answerInput");
+	
 
-    // ... other setup code omitted for brevity ...
+	const endGameBtn = document.getElementById("endGameBtn");
+	const signOutBtn = document.getElementById("signOutBtn");
 
-    socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnswer, popup}) => {
-      currentRound = roundNumber;
-      answersShown = false;
+	signOutBtn.onclick = () => window.location.href = "/player-login.html";
+	  
+	// Handler to emit closeRoom event
+	endGameBtn.onclick = () => {
+	  if (confirm("Are you sure you want to end this game?")) {
+		socket.emit("closeRoom", { roomCode });
+	  }
+	};
+	  
+	let roomIsClosed = false; // global flag
+	
+	// Listen for server confirmation
+	socket.on("roomClosed", () => {
+	  roomIsClosed = true;
+	  statusMsg.innerText = "This game room has been closed.";
+	
+	  // Disable all controls
+	  startBtn.disabled = true;
+	  showBtn.disabled = true;
+	  showQuestionBtn.disabled = true;
+	  submitBtn.disabled = true;
+	  inputBox.disabled = true;
+	  endGameBtn.disabled = true;
+	
+		// Show a "Game Over" badge/message
+		document.getElementById("gameOverBanner").classList.remove("hidden");
+		statusMessage.textContent = "Game over.";
+	});
 
-      // Reset controls
-      startBtn.disabled = true;
-      document.getElementById("toggleStart").checked = false;
-      showBtn.disabled = true;
-      document.getElementById("toggleShow").checked = false;
 
-      statusMsg.innerText = "Round in progress…";
-      document.getElementById("qaSection").style.display = "block";
-      openAccordion("questionBox");
-      closeAccordion("answersTableWrapper");
-      document.getElementById("answersAccordion").style.display = "none";
-      document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${prompt}`;
-      document.getElementById("progress").innerText = `Submitted: 0 / ${playerCount}`;
 
-      // Only auto-show popup if server says popup=true
-      if (popup) {
-        document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
-        document.getElementById("roundPopup").style.display = "flex";
-      }
+    let allPlayers = new Set();
+    let answersShown = false;
+    let currentRound = 0;
+    let scoreboard = [];
 
-      // Keep local toggle enabled at all times
-      showQuestionBtn.disabled = false;
+	// Switch overrides
+	document.getElementById("toggleStart").addEventListener("change", e => {
+	  // Only allow enabling if the room is still open
+	  if (!roomIsClosed) {
+	    startBtn.disabled = !e.target.checked;
+	  } else {
+	    startBtn.disabled = true; // force disabled if closed
+	  }
+	});
+	  
+    document.getElementById("toggleShow").addEventListener("change", e => {
+      showBtn.disabled = !e.target.checked;
+    });
+    document.getElementById("toggleSubmit").addEventListener("change", e => {
+      const on = e.target.checked;
+      submitBtn.disabled = !on;
+      inputBox.disabled = !on;
+    });
 
-      // Answer submission logic
-      if (answersShown || myAnswer) {
-        submitBtn.disabled = true;
-        inputBox.disabled = true;
-        document.getElementById("toggleSubmit").checked = false;
-        inputBox.value = myAnswer || "";
-      } else {
-        submitBtn.disabled = false;
-        inputBox.disabled = false;
-        document.getElementById("toggleSubmit").checked = true;
-        inputBox.value = "";
-        submitBtn.onclick = () => {
-          const answer = inputBox.value.trim();
-          if (!answer) return;
-          socket.emit("submitAnswer", { roomCode, name: myName, questionId, answer });
-          submitBtn.disabled = true;
-          inputBox.disabled = true;
-          document.getElementById("toggleSubmit").checked = false;
-        };
+    // Player list updates
+    socket.on("playerList", data => {
+      const players = data.players || data;
+      const activeCount = data.activeCount || players.filter(p => p.active).length;
+      const submittedCount = data.submittedCount || players.filter(p => p.active && p.submitted).length;
+
+      players.forEach(p => allPlayers.add(p.name));
+      document.querySelector("#playersTable tbody").innerHTML = Array.from(allPlayers)
+        .map(name => {
+          const player = players.find(p => p.name === name);
+          const ghost = player && player.active ? "" : "👻";
+          const submitted = player ? (player.submitted ? "✅ Submitted" : "⌛ Waiting") : "";
+          return `<tr><td>${escapeHTML(name)}</td><td>${ghost}</td><td>${submitted}</td></tr>`;
+        })
+        .join("");
+
+      // statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+      document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+
+      if (document.getElementById("qaSection").style.display === "block") {
+        document.getElementById("progress").innerText = `Submitted: ${submittedCount} / ${activeCount}`;
       }
     });
 
+    socket.on("submissionProgress", ({submittedCount,totalPlayers}) => {
+      document.getElementById("progress").innerText=`Submitted: ${submittedCount} / ${totalPlayers}`;
+      if (totalPlayers > 0 && submittedCount === totalPlayers) {
+        showBtn.disabled = false;
+        document.getElementById("toggleShow").checked = true;
+      } else {
+        showBtn.disabled = true;
+        document.getElementById("toggleShow").checked = false;
+      }
+    });
+
+    startBtn.onclick = () => {
+      socket.emit("startRound",{roomCode});
+    };
+
+socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnswer, popup}) => {
+  currentRound = roundNumber;
+  answersShown = false;
+
+  // Reset controls
+  startBtn.disabled = true;
+  document.getElementById("toggleStart").checked = false;
+  showBtn.disabled = true;
+  document.getElementById("toggleShow").checked = false;
+
+  statusMsg.innerText = "Round in progress…";
+  document.getElementById("qaSection").style.display = "block";
+  openAccordion("questionBox");
+  closeAccordion("answersTableWrapper");
+  document.getElementById("answersAccordion").style.display = "none";
+  document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${prompt}`;
+  document.getElementById("progress").innerText = `Submitted: 0 / ${playerCount}`;
+
+  // Only auto-show popup if server says popup=true
+  if (popup) {
+    document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
+    document.getElementById("roundPopup").style.display = "flex";
+  }
+
+  // Keep local toggle enabled at all times
+  showQuestionBtn.disabled = false;
+
+	
+  // Answer submission logic
+  if (answersShown || myAnswer) {
+    submitBtn.disabled = true;
+    inputBox.disabled = true;
+    document.getElementById("toggleSubmit").checked = false;
+    inputBox.value = myAnswer || "";
+  } else {
+    submitBtn.disabled = false;
+    inputBox.disabled = false;
+    document.getElementById("toggleSubmit").checked = true;
+    inputBox.value = "";
+    submitBtn.onclick = () => {
+      const answer = inputBox.value.trim();
+      if (!answer) return;
+      socket.emit("submitAnswer", { roomCode, name: myName, questionId, answer });
+      submitBtn.disabled = true;
+      inputBox.disabled = true;
+      document.getElementById("toggleSubmit").checked = false;
+    };
+  }
+});
+
     socket.on("allSubmitted", () => {
-      showBtn.disabled = false;
+      showBtn.disabled=false;
       document.getElementById("toggleShow").checked = true;
     });
 
     showBtn.onclick = () => {
-      socket.emit("showAnswers", { roomCode });
+      socket.emit("showAnswers",{roomCode});
       answersShown = true;
     };
 
-  
-
-    // : new close handler that hides popup AND tells server
+    // Popup close logic
     document.getElementById("closePopup").onclick = () => {
       document.getElementById("roundPopup").style.display = "none";
-      socket.emit("dismissPopup", { roomCode });  // notify server popup dismissed
+      //showQuestionBtn.disabled = false;
     };
-
-    // Backdrop click handler (keep as is)
     document.getElementById("roundPopup").addEventListener("click", e => {
       if (e.target.id === "roundPopup") {
         document.getElementById("roundPopup").style.display = "none";
+       //showQuestionBtn.disabled = false;
       }
     });
 
-    showQuestionBtn.onclick = () => {
-      // Copy the current question prompt into the popup
-      const promptText = document.getElementById("questionPrompt").innerText;
-      document.getElementById("popupQuestion").innerText = promptText;
+	showQuestionBtn.onclick = () => {
+	  // Copy the current question prompt into the popup
+	  const promptText = document.getElementById("questionPrompt").innerText;
+	  document.getElementById("popupQuestion").innerText = promptText;
+	
+	  // Show the popup again
+	  document.getElementById("roundPopup").style.display = "flex";
+	};
 
-      // Show the popup again
-      document.getElementById("roundPopup").style.display = "flex";
-    };
+
+	// Close popup button now tells server
+	document.getElementById("closePopupBtn").onclick = () => {
+		document.getElementById("roundPopup").style.display = "none";
+		socket.emit("dismissPopup", { roomCode });  // tell server popup dismissed
+	};
+
+
+	  
+		  
 
     socket.on("answersRevealed", rows => {
       const roundMap = toRoundMap(scoreboard, currentRound);
@@ -295,6 +575,7 @@
       document.getElementById("toggleStart").checked = true;
       statusMsg.innerText="Round finished. You can start a new round.";
     });
+
 
     // Persist point toggles
     document.addEventListener("change", e => {
@@ -391,5 +672,5 @@
 </html>
 
 
- 
+
 
