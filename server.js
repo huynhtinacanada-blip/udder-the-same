@@ -227,7 +227,7 @@ async function emitScoreboard(roomCode) {
 }
 
 // ---------------- Socket.IO Game Logic ----------------
-io.on("connection", (socket) => {
+io.on("connection", (socket) => { 
   socket.on("joinLobby", async ({ roomCode, name }) => {
     const rc = roomCode.toUpperCase();
     socket.data.name = name
@@ -325,10 +325,18 @@ io.on("connection", (socket) => {
       popup: true   // tell clients to auto-show popup
     });
 
-    // After broadcasting, mark popup dismissed globally (phase 2)
+    // We do want After broadcasting, mark popup dismissed globally (phase 2); Keep board_status=1 until a client dismisses the popup
+    // await pool.query("UPDATE rooms SET board_status=2 WHERE code=$1", [rc]);
+  });
+
+  
+  // handler: clients call this when they close the popup
+  socket.on("dismissPopup", async ({ roomCode }) => {
+    const rc = roomCode.toUpperCase();
     await pool.query("UPDATE rooms SET board_status=2 WHERE code=$1", [rc]);
   });
 
+  
   socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
     const rc = roomCode.toUpperCase();
     const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
@@ -421,4 +429,5 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
