@@ -234,6 +234,7 @@ socket.on("joinLobby", async ({ roomCode, name }) => {
   socket.data.roomCode = rc;
   socket.join(rc);
 
+  // Add player
   await pool.query(
     "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
     [name, rc]
@@ -242,7 +243,7 @@ socket.on("joinLobby", async ({ roomCode, name }) => {
   await emitPlayerList(rc);
   await emitScoreboard(rc);
 
-  // also select board_status
+   // Get room info and also select board_status
   const room = await pool.query("SELECT current_round, active_question_id, board_status FROM rooms WHERE code=$1", [rc]);
 
   if (room.rows.length && room.rows[0].active_question_id) {
@@ -251,18 +252,20 @@ socket.on("joinLobby", async ({ roomCode, name }) => {
       "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
       [rc, name, room.rows[0].active_question_id, room.rows[0].current_round]
     );
+    
     const { activeCount, submittedActiveCount } = await getActiveStats(rc);
 
-    // add popup flag based on board_status
+    // Only auto-show popup if board_status=1
     socket.emit("roundStarted", {
-      questionId: room.rows[0].active_question_id,
+      questionId: active_question_id,
       prompt: q.rows[0].prompt,
       playerCount: activeCount,
-      roundNumber: room.rows[0].current_round,
+      roundNumber: current_round,
       myAnswer: ans.rows.length ? ans.rows[0].answer : null,
-      popup: room.rows[0].board_status === 1   // NEW: auto-show only if still in popup phase
+      popup: board_status === 1   // auto-show only if still in popup phase
     });
 
+    // Progress updates still go to the whole room
     io.to(rc).emit("submissionProgress", {
       submittedCount: submittedActiveCount,
       totalPlayers: activeCount
@@ -422,6 +425,7 @@ socket.on("showQuestion", async ({ roomCode }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
