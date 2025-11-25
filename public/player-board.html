@@ -240,7 +240,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0c)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0e)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -520,9 +520,17 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
        //showQuestionBtn.disabled = false;
       }
     });
-    showQuestionBtn.onclick = () => {
-      document.getElementById("roundPopup").style.display = "flex";
-    };
+
+	showQuestionBtn.onclick = () => {
+	  // Copy the current question prompt into the popup
+	  const promptText = document.getElementById("questionPrompt").innerText;
+	  document.getElementById("popupQuestion").innerText = promptText;
+	
+	  // Show the popup again
+	  document.getElementById("roundPopup").style.display = "flex";
+	};
+	
+		  
 
     socket.on("answersRevealed", rows => {
       const roundMap = toRoundMap(scoreboard, currentRound);
@@ -653,6 +661,7 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   </script>
 </body>
 </html>
+
 
 
 
