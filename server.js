@@ -278,11 +278,21 @@ socket.on("joinLobby", async ({ roomCode, name }) => {
 socket.on("startRound", async ({ roomCode }) => {
   const rc = roomCode.toUpperCase();
 
-  // Pick a random question
-  const qr = await pool.query("SELECT id FROM questions ORDER BY discard ASC");
-  if (qr.rows.length === 0) return;
+  // Pick a random question that has not be discarded in the last 30 days.
+  const qr = await pool.query("SELECT id FROM questions WHERE discard IS NULL OR discard < CURRENT_DATE - INTERVAL '30 days'");
+ 
+  if (qr.rows.length === 0) {
+    console.log("No available questions left (all used in last 30 days).");
+    return;
+  }
+  
+  // Randomly select one
   const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
   const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
+
+  // Mark this question as discarded today (YYYY-MM-DD)
+  const today = new Date().toISOString().slice(0, 10); // e.g. "2025-11-24"
+  await pool.query("UPDATE questions SET discard=$1 WHERE id=$2", [today, qid]);
 
   // Reset round state: new round, new question, popup phase active
   await pool.query(
@@ -387,6 +397,7 @@ socket.on("startRound", async ({ roomCode }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
 
