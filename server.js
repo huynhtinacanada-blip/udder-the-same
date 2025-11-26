@@ -225,63 +225,47 @@ async function emitScoreboard(roomCode) {
   const scoreboard = await getScoreboard(roomCode);
   io.to(roomCode).emit("scoreboardUpdated", scoreboard);
 }
+
 // ---------------- Socket.IO Game Logic ----------------
 io.on("connection", (socket) => { 
+  socket.on("joinLobby", async ({ roomCode, name }) => {
+    const rc = (roomCode || "").trim().toUpperCase();
+    const nameNorm = (name || "").trim().toLowerCase();
 
-	// Listen for the "joinLobby" event from the client
-	socket.on("joinLobby", async ({ roomCode, name }) => {
-	  // Normalize the room code:
-	  // - Ensure it's a string (fallback to empty string if undefined/null)
-	  // - Trim whitespace, Convert to uppercase for consistency
-	  const rc = (roomCode || "").trim().toUpperCase();
+    socket.data.name = nameNorm;
+    socket.data.roomCode = rc;
+    socket.join(rc);
 
-	  // Normalize the player name:
-	  // - Ensure it's a string (fallback to empty string if undefined/null)
-	  // - Trim whitespace, Convert to lowercase so names are stored in a consistent format
-	  const nameNorm = (name || "").trim().toLowerCase();   // normalize here
+    await pool.query(
+      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+      [nameNorm, rc]
+    );
 
-	  // Attach normalized name and room code to the socket's data object
-	  // This makes them accessible later in the connection lifecycle
-	  socket.data.name = nameNorm;
-	  socket.data.roomCode = rc;
-
-	  // Add the socket to the specified room (lobby) in Socket.IO
-	  // This allows broadcasting messages to all players in the same room
-	  socket.join(rc);
-
-	  // Insert the player into the database:
-	  // - Use parameterized query to prevent SQL injection
-	  // - Store normalized name and room code
-	  // - ON CONFLICT ensures that if a player with the same lowercase name
-	  //   already exists in the same room, the insert is skipped (no duplicates)
-	  await pool.query(
-		"INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-		[nameNorm, rc]
-	  );
-	});
-
-
-
+    // Query the room after inserting player
+    const room = await pool.query("SELECT * FROM rooms WHERE room_code=$1", [rc]);
 
     if (room.rows.length && room.rows[0].active_question_id) {
-      // : destructure values from row
       const { active_question_id, current_round, board_status } = room.rows[0];
 
-      const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [active_question_id]);
-		const ans = await pool.query(
-		  "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
-		  [rc, nameNorm, active_question_id, current_round]
-		);
+      const q = await pool.query(
+        "SELECT prompt FROM questions WHERE id=$1",
+        [active_question_id]
+      );
+
+      const ans = await pool.query(
+        "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
+        [rc, nameNorm, active_question_id, current_round]
+      );
 
       const { activeCount, submittedActiveCount } = await getActiveStats(rc);
 
       socket.emit("roundStarted", {
         questionId: active_question_id,
-        prompt: q.rows[0].prompt,
+        prompt: q.rows[0]?.prompt,
         playerCount: activeCount,
         roundNumber: current_round,
         myAnswer: ans.rows.length ? ans.rows[0].answer : null,
-        popup: board_status === 1   // auto-show only if still in popup phase
+        popup: board_status === 1
       });
 
       io.to(rc).emit("submissionProgress", {
@@ -294,6 +278,9 @@ io.on("connection", (socket) => {
       }
     }
   });
+});
+
+
 
   socket.on("startRound", async ({ roomCode }) => {
     const rc = roomCode.toUpperCase();
@@ -449,3 +436,4 @@ socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) =>
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
