@@ -143,75 +143,58 @@
   </div>
 
   <script>
-    const logoB = document.getElementById('logoB');
-    const logoA = document.getElementById('logoA');
-    const adminBtn = document.getElementById('adminBtn');
-    const playerBtn = document.getElementById('playerBtn');
-	
-	// Always show Logo A first
-	logoA.classList.add('show');
 
+  const logoB = document.getElementById('logoB');
+  const logoA = document.getElementById('logoA');
+  const adminBtn = document.getElementById('adminBtn');
+  const playerBtn = document.getElementById('playerBtn');
+  const skipAnimationCheckbox = document.getElementById('skipAnimation');
 
+  // Initialize checkbox state based on localStorage
+  skipAnimationCheckbox.checked = !!localStorage.getItem('seenLogoAnimation');
 
-	// Checkbox logic
-	const skipAnimationCheckbox = document.getElementById('skipAnimation');
+  // Listen for changes to the checkbox
+  skipAnimationCheckbox.addEventListener('change', () => {
+    if (skipAnimationCheckbox.checked) {
+      localStorage.setItem('seenLogoAnimation', 'true');
+    } else {
+      localStorage.removeItem('seenLogoAnimation');
+    }
+  });
 
-	// Initialize checkbox state based on localStorage
-	skipAnimationCheckbox.checked = !!localStorage.getItem('seenLogoAnimation');
+  // Constants for timing (in ms)
+  const FADE_DURATION = 2000;
+  const DELAY_TO_LOGO_B = 2000;
+  const DELAY_TO_LOGO_A = 3000;
 
-	// Listen for changes to the checkbox
-	skipAnimationCheckbox.addEventListener('change', () => {
-	  if (skipAnimationCheckbox.checked) {
-		// User wants to skip animation in future
-		localStorage.setItem('seenLogoAnimation', 'true');
-	  } else {
-		// User wants to see animation again
-		localStorage.removeItem('seenLogoAnimation');
-	  }
-	});
+  const skipAnimation = localStorage.getItem('seenLogoAnimation');
 
+  if (!skipAnimation) {
+    // Run animation sequence
+    setTimeout(() => {
+      logoB.classList.add('show');
+    }, DELAY_TO_LOGO_B);
 
+    setTimeout(() => {
+      logoB.classList.remove('show');
+      logoA.classList.add('show');
 
-	// *** Logo Animation Control ***
-	// Handles whether to show the logo animation on first visit
-	// and manages crossfade timing + button activation.
+      setTimeout(() => {
+        adminBtn.removeAttribute('disabled');
+        playerBtn.removeAttribute('disabled');
 
-	// Constants for timing (in ms)
-	const FADE_DURATION = 2000;   // matches your CSS fade transition (e.g. 2s)
-	const DELAY_TO_LOGO_B = 1500; // when Logo B fades in
-	const DELAY_TO_LOGO_A = 4000; // when Logo A fades back in
+        // ✅ Mark animation as seen once it finishes
+        localStorage.setItem('seenLogoAnimation', 'true');
+        skipAnimationCheckbox.checked = true; // auto-check the box
+      }, FADE_DURATION);
+    }, DELAY_TO_LOGO_A);
 
-	// Check if the user has already seen the logo animation
-	const hasSeenAnimation = localStorage.getItem('seenLogoAnimation');
-
-	if (!hasSeenAnimation) {
-	  // First-time visitor: run animation sequence
-	  localStorage.setItem('seenLogoAnimation', 'true');
-
-	  // After 2s, fade from Logo A → Logo B
-	  setTimeout(() => {
-		logoB.classList.add('show');
-	  }, DELAY_TO_LOGO_B);
-
-	  // After 4s, fade back from Logo B → Logo A
-	  setTimeout(() => {
-		logoB.classList.remove('show');
-		logoA.classList.add('show');
-
-		// Enable buttons once Logo A is fully visible again
-		setTimeout(() => {
-		  adminBtn.removeAttribute('disabled');
-		  playerBtn.removeAttribute('disabled');
-		}, FADE_DURATION); // wait for fade to finish
-	  }, DELAY_TO_LOGO_A);
-
-	} else {
-	  // Returning visitor: skip animation, show Logo A immediately
-	  logoA.classList.add('show');
-	  adminBtn.removeAttribute('disabled');
-	  playerBtn.removeAttribute('disabled');
-	}
-
+  } else {
+    // Skip animation, show Logo A immediately
+    logoA.classList.add('show');
+    adminBtn.removeAttribute('disabled');
+    playerBtn.removeAttribute('disabled');
+  }
 
     // Modal logic
     const helpBtn = document.getElementById('helpBtn');
@@ -226,4 +209,5 @@
   </script>
 </body>
 </html>
+
 
