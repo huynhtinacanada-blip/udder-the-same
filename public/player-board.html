@@ -5,8 +5,15 @@
   <title>Player Dashboard — Udderly the Same</title>
   <script src="/socket.io/socket.io.js"></script>
 
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Player Dashboard — Udderly the Same</title>
+  <script src="/socket.io/socket.io.js"></script>
+
   <style>
-    /* ===== Global Layout ===== */
+    /* Global Layout */
     body {
       font-family:'Segoe UI',Arial,sans-serif;
       max-width:1200px;
@@ -17,221 +24,132 @@
       box-shadow:0 4px 12px rgba(0,0,0,0.9);
     }
 
-    /* ===== Header ===== */
-    .header { display:flex; align-items:center; gap:12px; margin-bottom:20px;}
-    .logo { max-width:100px; height:auto; display:block;}
-    h2 { margin:0;}
-    #statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444;}
+    /* Header */
+    .header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    .logo { 
+      max-width:100px; 
+      height:auto; 
+      display:block;
+      animation: logoSwap 4s forwards; /* run once, hold final state */
+    }
+    h2 { margin:0; }
+    #statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444; }
 
-    /* ===== Buttons ===== */
+    /* Buttons */
     button {
       padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
       cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
     }
-    button:disabled { background:#999; cursor:not-allowed;}
-	
-	/* ===== Default hover (orange) ===== */
-	button:hover:enabled {
-	  background:#F7AC4D; /* orange hover for most buttons */
-	}
+    button:disabled { background:#999; cursor:not-allowed; }
+    button:hover:enabled { background:#F7AC4D; }
+    .danger-btn:hover:enabled { background:#d32f2f; color:#fff; font-weight:bold; }
+    #showQuestionBtn:hover:enabled { background:#1976d2; }
+    #showAnswersBtn:hover:enabled { background:#2e7d32; }
 
-	/* ===== Special End Game button hover ===== */
-	.danger-btn:hover:enabled {
-	  background:#d32f2f;   /* red hover */
-	  color:#fff;           /* keep text white */
-	  font-weight:bold;     /* optional: bold text */
-	}
+    /* Accordion Sections */
+    .accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+    .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
+    .accordion-header:hover { background:#F7AC4D; }
+    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
+    .accordion-content.open { padding:15px; max-height:1000px; }
 
-	/* ===== Show Question button hover ===== */
-	#showQuestionBtn:hover:enabled {
-	  background:#1976d2;   /* blue hover */
-	}
-
-	/* ===== Show Answers button hover ===== */
-	#showAnswersBtn:hover:enabled {
-	  background:#2e7d32;   /* green hover */
-	}
-
-    /* ===== Accordion Sections ===== */
-    .accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold;}
-    .accordion-header:hover { background:#F7AC4D;}
-    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px;}
-    .accordion-content.open { padding:15px; max-height:1000px;}
-
-    /* ===== Tables ===== */
-    #answersTable, #playersTable, #scoreTable {
-      font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
-    }
+    /* Tables */
+    #answersTable, #playersTable, #scoreTable { font-size:18px; border-collapse:collapse; width:100%; margin-top:10px; }
     #answersTable th, #answersTable td,
     #playersTable th, #playersTable td,
-    #scoreTable th, #scoreTable td {
-      border-bottom:1px solid #ccc; padding:8px;
-    }
+    #scoreTable th, #scoreTable td { border-bottom:1px solid #ccc; padding:8px; }
     #answersTable th, #answersTable td { text-align:left; }
-
-    /* Column widths for answers table */
     #answersTable th:first-child, #answersTable td:first-child { width:120px; text-align:center; }
     #answersTable th:nth-child(2), #answersTable td:nth-child(2) { width:200px; }
     #answersTable th:nth-child(3), #answersTable td:nth-child(3) { width:auto; }
 
-    /* ===== Textarea ===== */
-    textarea {
-      width:100%; max-width:800px; padding:10px; border-radius:6px;
-      border:1px solid #ccc; margin-bottom:10px; font-size:16px;
-    }
+    /* Textarea */
+    textarea { width:100%; max-width:800px; padding:10px; border-radius:6px; border:1px solid #ccc; margin-bottom:10px; font-size:16px; }
 
-	/* ===== Toggle Switches ===== */
-	.switch { display:block; margin-bottom:12px; }
-	.switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
-	.switch input { display:none; }
-	.slider {
-	  position: relative;
-	  width: 60px; height: 28px;
-	  background-color: #ccc;
-	  border-radius: 28px;
-	  transition: background-color 0.3s;
-	}
-	.slider::before {
-	  content: "";
-	  position: absolute;
-	  width: 24px; height: 24px;
-	  left: 2px; top: 2px;
-	  background-color: white;
-	  border-radius: 50%;
-	  transition: transform 0.3s;
-	}
-	.switch input:checked + .slider { background-color: #2e7d32; }
-	.switch input:checked + .slider::before { transform: translateX(32px); }
+    /* Toggle Switches */
+    .switch { display:block; margin-bottom:12px; }
+    .switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
+    .switch input { display:none; }
+    .slider { position: relative; width: 60px; height: 28px; background-color: #ccc; border-radius: 28px; transition: background-color 0.3s; }
+    .slider::before { content: ""; position: absolute; width: 24px; height: 24px; left: 2px; top: 2px; background-color: white; border-radius: 50%; transition: transform 0.3s; }
+    .switch input:checked + .slider { background-color: #2e7d32; }
+    .switch input:checked + .slider::before { transform: translateX(32px); }
 
-	/* ===== Two-Column Layout ===== */
-	.controlsLayout {
-	  display: flex;
-	  justify-content: space-between;
-	  align-items: flex-start;
-	  gap: 20px;
-	}
+    /* Two-Column Layout */
+    .controlsLayout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .leftColumn { display: flex; flex-direction: column; gap: 12px; }
+    .rightColumn { display: flex; align-items: center; align-self: stretch; }
 
-	.leftColumn {
-	  display: flex;
-	  flex-direction: column;
-	  gap: 12px;
-	}
+    /* Sign Out button styling */
+    #signOutBtn { background-color: #d32f2f; color: white; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; }
+    #signOutBtn:hover { background-color: #ffa600; }
 
-	.rightColumn {
-	  display: flex;
-	  align-items: center;      /* vertical center */
-	  align-self: stretch;      /* ensure it stretches to row height */
-	}
-
-
-	/* Sign Out button styling */
-	#signOutBtn {
-	  background-color: #d32f2f;   /* red tone */
-	  color: white;
-	  border: none;
-	  padding: 10px 18px;
-	  border-radius: 6px;
-	  cursor: pointer;
-	  font-weight: bold;
-	  transition: background-color 0.3s;
-	}
-
-	#signOutBtn:hover {
-	  background-color: #ffa600;   /* darker red on hover */
-	}
-
-
-    /* ===== Room Header ===== */
+    /* Room Header */
     #topStatus { font-weight:bold; color:#444; margin-left:auto; }
     .roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .small { font-size:12px; color:#666; }
 
-    /* ===== Scoreboard ===== */
+    /* Scoreboard */
     #scoreTable th, #scoreTable td { padding:6px; }
     #scoreTable th:first-child, #scoreTable td:first-child { text-align:left; padding-left:10px; }
     #scoreTable th:nth-child(2), #scoreTable td:nth-child(2) { text-align:center; width:60px; }
     #scoreTable th:nth-child(n+3), #scoreTable td.roundCell { text-align:center; width:35px; }
     .scoreSelect { width:100%; text-align:center; }
-
     .pointLabel { margin-left:8px; font-weight:bold; }
     .pointLabel.green { color:#2e7d32; }
     .pointLabel.blue  { color:#0d47a1; text-shadow:0 0 2px #fff; }
 
-    /* ===== Answers Table Toggle Styling ===== */
-    #answersTable .slider {
-      width:80px; height:32px;
-      background-color:#ddd;
-      border:2px solid #aaa;
-      border-radius:32px;
-      transition:background-color 0.3s, border-color 0.3s;
-    }
-    #answersTable .slider::before {
-      content:"";
-      position:absolute;
-      width:28px; height:28px;
-      left:2px; top:2px;
-      background-color:white;
-      border-radius:50%;
-      transition:transform 0.3s, background-color 0.3s;
-    }
-    #answersTable .switch input:checked + .slider {
-      background-color:#66bb6a;
-      border-color:#66bb6a;
-    }
+    /* Answers Table Toggle Styling */
+    #answersTable .slider { width:80px; height:32px; background-color:#ddd; border:2px solid #aaa; border-radius:32px; transition:background-color 0.3s, border-color 0.3s; }
+    #answersTable .slider::before { content:""; position:absolute; width:28px; height:28px; left:2px; top:2px; background-color:white; border-radius:50%; transition:transform 0.3s, background-color 0.3s; }
+    #answersTable .switch input:checked + .slider { background-color:#66bb6a; border-color:#66bb6a; }
     #answersTable .switch input:checked + .slider::before { transform:translateX(48px); }
     #answersTable .slider:hover { background-color:#bbb; cursor:pointer; }
 
-    /* ===== Popup Modal ===== */
-    .popup {
-      display:none;
-      position:fixed;
-      z-index:1000;
-      left:0; top:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.6);
-      backdrop-filter:blur(4px);
-      justify-content:center;
-      align-items:center;
-    }
-    .popup-content {
-      background:#fff;
-      border-radius:16px;
-      padding:40px;
-      width:80%; max-width:700px;
-      text-align:center;
-      box-shadow:0 8px 24px rgba(0,0,0,0.3);
-      animation:fadeIn 0.4s ease;
-      position:relative;
-    }
+    /* Popup Modal */
+    .popup { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center; }
+    .popup-content { background:#fff; border-radius:16px; padding:40px; width:80%; max-width:700px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.3); animation:fadeIn 0.4s ease; position:relative; }
     .popup-content h1 { font-size:2rem; color:#333; margin:0; }
-    .close-btn {
-      position:absolute; top:20px; right:30px;
-      font-size:32px; font-weight:bold;
-      color:#333; cursor:pointer;
-      transition:color 0.3s;
-    }
+    .close-btn { position:absolute; top:20px; right:30px; font-size:32px; font-weight:bold; color:#333; cursor:pointer; transition:color 0.3s; }
     .close-btn:hover { color:#F7AC4D; }
+
+    /* Fade-in animation for popup */
     @keyframes fadeIn {
       from { transform:scale(0.9); opacity:0; }
       to   { transform:scale(1); opacity:1; }
     }
 
-
-    /* --- Game Over Banner --- */
-    #gameOverBanner {
-      background-color: #d32f2f; color: white; font-weight: bold;
-      text-align: center; padding: 25px; font-size: 22px;
-      margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    /* Logo Swap Animation */
+    @keyframes logoSwap {
+      0%   { opacity: 1; }   /* Logo A visible */
+      40%  { opacity: 0; }   /* Fade out A */
+      50%  { opacity: 1; }   /* Logo B visible */
+      90%  { opacity: 1; }   /* Hold B visible */
+      100% { opacity: 1; }   /* End with B still visible */
     }
+
+    /* Game Over Banner */
+    #gameOverBanner {
+      background-color: #d32f2f;   /* red background */
+      color: white;                /* white text */
+      font-weight: bold;
+      text-align: center;
+      padding: 25px;
+      font-size: 22px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Utility class to hide elements */
     .hidden { display: none; }
 
-    /* ===== Disclaimer Footer ===== */
+    /* Disclaimer Footer */
     .disclaimer {
-      text-align:center;
-      font-size:0.75em;
-      color:#666;
-      margin-top:50px;
+      text-align: center;
+      font-size: 0.75em;
+      color: #666;
+      margin-top: 50px;
     }
   </style>
 </head>
@@ -654,6 +572,7 @@
   </script>
 </body>
 </html>
+
 
 
 
