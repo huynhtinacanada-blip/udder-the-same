@@ -97,7 +97,11 @@
     const form = document.getElementById('joinForm');
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const name = document.getElementById('name').value.trim();
+
+	    let name = document.getElementById('name').value.trim();
+	    // Add this line to normalize the name
+	    name = name.toLowerCase();
+		
       const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
       const res = await fetch('/api/player/join', {
         method:'POST',
@@ -115,3 +119,4 @@
   </script>
 </body>
 </html>
+
