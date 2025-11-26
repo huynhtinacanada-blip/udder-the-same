@@ -1,4 +1,4 @@
-// v1.1.0a
+// v1.1.0b
 // Did not include: Server-side  to block uising URL 
 
 const express = require("express"); 
@@ -175,7 +175,7 @@ function getActiveNames(roomCode) {
   for (const socketId of connected) {
     const s = io.sockets.sockets.get(socketId);
     if (s && s.data && s.data.name) {
-      activeNames.push(s.data.name);
+      activeNames.push(s.data.name.toLowerCase());
     }
   }
   return activeNames;
@@ -187,7 +187,7 @@ async function getActiveStats(roomCode) {
   const merged = dbPlayers.rows.map(p => ({
     name: p.name,
     submitted: p.submitted,
-    active: activeNames.includes(p.name)
+    active: activeNames.includes(p.name.toLowerCase())
   }));
   const activeCount = merged.filter(p => p.active).length;
   const submittedActiveCount = merged.filter(p => p.active && p.submitted).length;
@@ -225,39 +225,53 @@ async function emitScoreboard(roomCode) {
   const scoreboard = await getScoreboard(roomCode);
   io.to(roomCode).emit("scoreboardUpdated", scoreboard);
 }
-
 // ---------------- Socket.IO Game Logic ----------------
 io.on("connection", (socket) => { 
-  socket.on("joinLobby", async ({ roomCode, name }) => {
-    const rc = roomCode.toUpperCase();
-    socket.data.name = name
-    socket.data.roomCode = rc;
-    socket.join(rc);
 
-    // Add player
-    await pool.query(
-      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-      [name, rc]
-    );
+	// Listen for the "joinLobby" event from the client
+	socket.on("joinLobby", async ({ roomCode, name }) => {
+	  // Normalize the room code:
+	  // - Ensure it's a string (fallback to empty string if undefined/null)
+	  // - Trim whitespace, Convert to uppercase for consistency
+	  const rc = (roomCode || "").trim().toUpperCase();
 
-    await emitPlayerList(rc);
-    await emitScoreboard(rc);
+	  // Normalize the player name:
+	  // - Ensure it's a string (fallback to empty string if undefined/null)
+	  // - Trim whitespace, Convert to lowercase so names are stored in a consistent format
+	  const nameNorm = (name || "").trim().toLowerCase();   // normalize here
 
-    // Get room info and also select board_status
-    const room = await pool.query(
-      "SELECT current_round, active_question_id, board_status FROM rooms WHERE code=$1",
-      [rc]
-    );
+	  // Attach normalized name and room code to the socket's data object
+	  // This makes them accessible later in the connection lifecycle
+	  socket.data.name = nameNorm;
+	  socket.data.roomCode = rc;
+
+	  // Add the socket to the specified room (lobby) in Socket.IO
+	  // This allows broadcasting messages to all players in the same room
+	  socket.join(rc);
+
+	  // Insert the player into the database:
+	  // - Use parameterized query to prevent SQL injection
+	  // - Store normalized name and room code
+	  // - ON CONFLICT ensures that if a player with the same lowercase name
+	  //   already exists in the same room, the insert is skipped (no duplicates)
+	  await pool.query(
+		"INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+		[nameNorm, rc]
+	  );
+	});
+
+
+
 
     if (room.rows.length && room.rows[0].active_question_id) {
       // : destructure values from row
       const { active_question_id, current_round, board_status } = room.rows[0];
 
       const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [active_question_id]);
-      const ans = await pool.query(
-        "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
-        [rc, name, active_question_id, current_round]
-      );
+		const ans = await pool.query(
+		  "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
+		  [rc, nameNorm, active_question_id, current_round]
+		);
 
       const { activeCount, submittedActiveCount } = await getActiveStats(rc);
 
@@ -337,16 +351,19 @@ io.on("connection", (socket) => {
   });
 
   
-  socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
-    const rc = roomCode.toUpperCase();
-    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-    if (!room.rows.length || room.rows[0].active_question_id !== questionId) return;
+	socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
+	  const rc = (roomCode || "").trim().toUpperCase();
+	  const nameNorm = (name || "").trim().toLowerCase();
 
-    await pool.query(
-      "INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
-      [rc, name, questionId, room.rows[0].current_round, answer]
-    );
-    await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, name]);
+	  const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
+	  if (!room.rows.length || room.rows[0].active_question_id !== questionId) return;
+
+	  await pool.query(
+		"INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
+		[rc, nameNorm, questionId, room.rows[0].current_round, answer]
+	  );
+	  await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, nameNorm]);
+
 
     await emitPlayerList(rc);
 
@@ -375,15 +392,18 @@ io.on("connection", (socket) => {
     await emitScoreboard(rc);
   });
 
-  socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
-    const rc = roomCode.toUpperCase();
-    await pool.query(
-      `INSERT INTO scores (room_code, player_name, round_number, points)
-       VALUES ($1,$2,$3,$4)
-       ON CONFLICT (room_code, player_name, round_number)
-       DO UPDATE SET points=$4`,
-      [rc, playerName, roundNumber, points]
-    );
+socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
+  const rc = (roomCode || "").trim().toUpperCase();
+  const nameNorm = (playerName || "").trim().toLowerCase();
+
+  await pool.query(
+    `INSERT INTO scores (room_code, player_name, round_number, points)
+     VALUES ($1,$2,$3,$4)
+     ON CONFLICT (room_code, player_name, round_number)
+     DO UPDATE SET points=$4`,
+    [rc, nameNorm, roundNumber, points]
+  );
+
     await emitScoreboard(rc);
   });
 
