@@ -160,12 +160,20 @@ app.post("/api/player/join", async (req, res) => {
   if (room.rows.length === 0) return res.status(404).json({ error: "Room not found" });
   if (room.rows[0].status === "closed") return res.status(403).json({ error: "Room closed" });
 
-  await pool.query(
-    "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-    [name, rc]
+  // Check if name already exists in this room (case-insensitive)
+  const existing = await pool.query(
+    "SELECT 1 FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
+    [rc, name]
   );
-
+  if (existing.rows.length > 0) {
+    return res.status(400).json({ error: "Name already taken in this room" });
+  }
+  
+  // Safe to insert
+  await pool.query("INSERT INTO players (name, room_code) VALUES ($1,$2)", [name, rc]);
+  
   res.json({ success: true, redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(name)}` });
+
 });
 
 // ---------------- Helpers ----------------
@@ -234,11 +242,19 @@ io.on("connection", (socket) => {
     socket.data.roomCode = rc;
     socket.join(rc);
 
-    // Add player
-    await pool.query(
-      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-      [name, rc]
-    );
+// Prevent duplicate names (case-insensitive)
+const existing = await pool.query(
+  "SELECT 1 FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
+  [rc, name]
+);
+if (existing.rows.length > 0) {
+  socket.emit("errorMessage", { error: "Name already taken in this room" });
+  return;
+}
+
+// Safe to insert
+await pool.query("INSERT INTO players (name, room_code) VALUES ($1,$2)", [name, rc]);
+
 
     await emitPlayerList(rc);
     await emitScoreboard(rc);
@@ -429,5 +445,6 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
 
