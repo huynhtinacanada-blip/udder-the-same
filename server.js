@@ -1,4 +1,4 @@
-// v1.1.2f
+// v1.1.0a
 // Did not include: Server-side (block actions if closed)
 
 const express = require("express"); 
@@ -221,16 +221,19 @@ async function emitScoreboard(roomCode) {
 
 // ---------------- Socket.IO Game Logic ----------------
 io.on("connection", (socket) => {
-  socket.on("joinLobby", async ({ roomCode, name }) => {
-    const rc = roomCode.toUpperCase();
-    socket.data.name = name;
-    socket.data.roomCode = rc;
-    socket.join(rc);
+	socket.on("joinLobby", async ({ roomCode, name }) => {
+	  const rc = roomCode.toUpperCase();
+	  const normalizedName = name.trim().toLowerCase();
 
-    await pool.query(
-      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-      [name, rc]
-    );
+	  socket.data.name = normalizedName;
+	  socket.data.roomCode = rc;
+	  socket.join(rc);
+
+	  await pool.query(
+		"INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+		[normalizedName, rc]
+	  );
+
 
     await emitPlayerList(rc);
     await emitScoreboard(rc);
@@ -286,16 +289,19 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
-    const rc = roomCode.toUpperCase();
-    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-    if (!room.rows.length || room.rows[0].active_question_id !== questionId) return;
+	socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
+	  const rc = roomCode.toUpperCase();
+	  const normalizedName = name.trim().toLowerCase();
 
-    await pool.query(
-      "INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
-      [rc, name, questionId, room.rows[0].current_round, answer]
-    );
-    await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, name]);
+	  const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
+	  if (!room.rows.length || room.rows[0].active_question_id !== questionId) return;
+
+	  await pool.query(
+		"INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
+		[rc, normalizedName, questionId, room.rows[0].current_round, answer]
+	  );
+	  await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, normalizedName]);
+
 
     await emitPlayerList(rc);
 
@@ -326,17 +332,21 @@ io.on("connection", (socket) => {
   });
 
   // Award or update points for a player and round
-  socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
-    const rc = roomCode.toUpperCase();
-    await pool.query(
-      `INSERT INTO scores (room_code, player_name, round_number, points)
-       VALUES ($1,$2,$3,$4)
-       ON CONFLICT (room_code, player_name, round_number)
-       DO UPDATE SET points=$4`,
-      [rc, playerName, roundNumber, points]
-    );
-    await emitScoreboard(rc);
-  });
+	socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
+	  const rc = roomCode.toUpperCase();
+	  const normalizedName = playerName.trim().toLowerCase();   // <-- NEW LINE
+
+	  await pool.query(
+		`INSERT INTO scores (room_code, player_name, round_number, points)
+		 VALUES ($1,$2,$3,$4)
+		 ON CONFLICT (room_code, player_name, round_number)
+		 DO UPDATE SET points=$4`,
+		[rc, normalizedName, roundNumber, points]               // <-- USE normalizedName
+	  );
+
+	  await emitScoreboard(rc);
+	});
+
 
   // End Game / Close Room handler
   socket.on("closeRoom", async ({ roomCode }) => {
@@ -360,5 +370,8 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
+
+
 
 
