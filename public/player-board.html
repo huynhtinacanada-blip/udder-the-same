@@ -6,7 +6,7 @@
   <script src="/socket.io/socket.io.js"></script>
 
   <style>
-    /* Global Layout */
+    /* ===== Global Layout ===== */
     body {
       font-family:'Segoe UI',Arial,sans-serif;
       max-width:1200px;
@@ -17,63 +17,49 @@
       box-shadow:0 4px 12px rgba(0,0,0,0.9);
     }
 
-    /* Header */
+    /* ===== Header ===== */
     .header { display:flex; align-items:center; gap:12px; margin-bottom:20px;}
     .logo { max-width:100px; height:auto; display:block;}
     h2 { margin:0;}
     #statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444;}
 
-    /* Buttons */
+    /* ===== Buttons ===== */
     button {
       padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
       cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
     }
     button:disabled { background:#999; cursor:not-allowed;}
 	
-	/* Default hover (orange) */
+	/* ===== Default hover (orange) ===== */
 	button:hover:enabled {
 	  background:#F7AC4D; /* orange hover for most buttons */
 	}
 
-	/* Special End Game button hover */
+	/* ===== Special End Game button hover ===== */
 	.danger-btn:hover:enabled {
 	  background:#d32f2f;   /* red hover */
 	  color:#fff;           /* keep text white */
 	  font-weight:bold;     /* optional: bold text */
 	}
 
-	/* Show Question button hover */
+	/* ===== Show Question button hover ===== */
 	#showQuestionBtn:hover:enabled {
 	  background:#1976d2;   /* blue hover */
 	}
 
-	/* Show Answers button hover */
+	/* ===== Show Answers button hover ===== */
 	#showAnswersBtn:hover:enabled {
 	  background:#2e7d32;   /* green hover */
 	}
 
-    /* Accordion Sections */
+    /* ===== Accordion Sections ===== */
     .accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
     .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold;}
     .accordion-header:hover { background:#F7AC4D;}
     .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px;}
     .accordion-content.open { padding:15px; max-height:1000px;}
 
-
-
-	/* Answer Row Layout */
-	.answerRow {
-	  display: flex;
-	  align-items: flex-end;   /* aligns button to bottom of textarea */
-	  gap: 10px;               /* space between textarea and button */
-	}
-	
-	.answerRow textarea {
-	  flex: 1;                 /* let textarea expand to fill available width */
-	}
-
-	
-    /* Tables */
+    /* ===== Tables ===== */
     #answersTable, #playersTable, #scoreTable {
       font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
     }
@@ -89,13 +75,13 @@
     #answersTable th:nth-child(2), #answersTable td:nth-child(2) { width:200px; }
     #answersTable th:nth-child(3), #answersTable td:nth-child(3) { width:auto; }
 
-    /* Textarea */
+    /* ===== Textarea ===== */
     textarea {
       width:100%; max-width:800px; padding:10px; border-radius:6px;
       border:1px solid #ccc; margin-bottom:10px; font-size:16px;
     }
 
-	/* Toggle Switches */
+	/* ===== Toggle Switches ===== */
 	.switch { display:block; margin-bottom:12px; }
 	.switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
 	.switch input { display:none; }
@@ -118,7 +104,7 @@
 	.switch input:checked + .slider { background-color: #2e7d32; }
 	.switch input:checked + .slider::before { transform: translateX(32px); }
 
-	/* Two-Column Layout */
+	/* ===== Two-Column Layout ===== */
 	.controlsLayout {
 	  display: flex;
 	  justify-content: space-between;
@@ -156,12 +142,12 @@
 	}
 
 
-    /* Room Header */
+    /* ===== Room Header ===== */
     #topStatus { font-weight:bold; color:#444; margin-left:auto; }
     .roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .small { font-size:12px; color:#666; }
 
-    /* Scoreboard */
+    /* ===== Scoreboard ===== */
     #scoreTable th, #scoreTable td { padding:6px; }
     #scoreTable th:first-child, #scoreTable td:first-child { text-align:left; padding-left:10px; }
     #scoreTable th:nth-child(2), #scoreTable td:nth-child(2) { text-align:center; width:60px; }
@@ -172,7 +158,7 @@
     .pointLabel.green { color:#2e7d32; }
     .pointLabel.blue  { color:#0d47a1; text-shadow:0 0 2px #fff; }
 
-    /* Answers Table Toggle Styling */
+    /* ===== Answers Table Toggle Styling ===== */
     #answersTable .slider {
       width:80px; height:32px;
       background-color:#ddd;
@@ -196,7 +182,7 @@
     #answersTable .switch input:checked + .slider::before { transform:translateX(48px); }
     #answersTable .slider:hover { background-color:#bbb; cursor:pointer; }
 
-    /* Popup Modal */
+    /* ===== Popup Modal ===== */
     .popup {
       display:none;
       position:fixed;
@@ -240,7 +226,7 @@
     }
     .hidden { display: none; }
 
-    /* Disclaimer Footer */
+    /* ===== Disclaimer Footer ===== */
     .disclaimer {
       text-align:center;
       font-size:0.75em;
@@ -254,7 +240,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0b)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -282,19 +268,12 @@
         <button id="showAnswersBtn" disabled>Show Answers</button>
         <p id="statusMessage"></p>
       </div>
-	<div id="qaSection" style="display:none;">
-	  <p id="questionPrompt"></p>
-	  
-	  <!--  wrapper for textarea + button -->
-	  <div class="answerRow">
-	    <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
-	    <button id="submitAnswerBtn">Submit Answer</button>
-	  </div>	  
-	  <p id="progress"></p>
-	</div>
-
-
-		
+      <div id="qaSection" style="display:none;">
+        <p id="questionPrompt"></p>
+        <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
+        <button id="submitAnswerBtn">Submit Answer</button>
+        <p id="progress"></p>
+      </div>
     </div>
   </div>
 
@@ -374,10 +353,7 @@
 	
 
 	const endGameBtn = document.getElementById("endGameBtn");
-	const signOutBtn = document.getElementById("signOutBtn");
 
-	signOutBtn.onclick = () => window.location.href = "/player-login.html";
-	  
 	// Handler to emit closeRoom event
 	endGameBtn.onclick = () => {
 	  if (confirm("Are you sure you want to end this game?")) {
@@ -447,7 +423,7 @@
         })
         .join("");
 
-      // statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+      statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
       document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
 
       if (document.getElementById("qaSection").style.display === "block") {
@@ -470,55 +446,49 @@
       socket.emit("startRound",{roomCode});
     };
 
-socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnswer, popup}) => {
-  currentRound = roundNumber;
-  answersShown = false;
+    socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
+      currentRound = roundNumber;
+      answersShown = false;
 
-  // Reset controls
-  startBtn.disabled = true;
-  document.getElementById("toggleStart").checked = false;
-  showBtn.disabled = true;
-  document.getElementById("toggleShow").checked = false;
+      startBtn.disabled=true;
+      document.getElementById("toggleStart").checked = false;
 
-  statusMsg.innerText = "Round in progress…";
-  document.getElementById("qaSection").style.display = "block";
-  openAccordion("questionBox");
-  closeAccordion("answersTableWrapper");
-  document.getElementById("answersAccordion").style.display = "none";
-  document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${prompt}`;
-  document.getElementById("progress").innerText = `Submitted: 0 / ${playerCount}`;
+      showBtn.disabled=true;
+      document.getElementById("toggleShow").checked = false;
 
-  // Only auto-show popup if server says popup=true
-  if (popup) {
-    document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
-    document.getElementById("roundPopup").style.display = "flex";
-  }
+      statusMsg.innerText="Round in progress…";
+      document.getElementById("qaSection").style.display="block";
+      openAccordion("questionBox");
+      closeAccordion("answersTableWrapper");
+      document.getElementById("answersAccordion").style.display="none";
+      document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
+      document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
-  // Keep local toggle enabled at all times
-  showQuestionBtn.disabled = false;
+      // Show popup with question
+      document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
+      document.getElementById("roundPopup").style.display = "flex";
+      showQuestionBtn.disabled = true;
 
-	
-  // Answer submission logic
-  if (answersShown || myAnswer) {
-    submitBtn.disabled = true;
-    inputBox.disabled = true;
-    document.getElementById("toggleSubmit").checked = false;
-    inputBox.value = myAnswer || "";
-  } else {
-    submitBtn.disabled = false;
-    inputBox.disabled = false;
-    document.getElementById("toggleSubmit").checked = true;
-    inputBox.value = "";
-    submitBtn.onclick = () => {
-      const answer = inputBox.value.trim();
-      if (!answer) return;
-      socket.emit("submitAnswer", { roomCode, name: myName, questionId, answer });
-      submitBtn.disabled = true;
-      inputBox.disabled = true;
-      document.getElementById("toggleSubmit").checked = false;
-    };
-  }
-});
+      if (answersShown || myAnswer) {
+        submitBtn.disabled=true;
+        inputBox.disabled=true;
+        document.getElementById("toggleSubmit").checked = false;
+        inputBox.value = myAnswer || "";
+      } else {
+        submitBtn.disabled=false;
+        inputBox.disabled=false;
+        document.getElementById("toggleSubmit").checked = true;
+        inputBox.value = "";
+        submitBtn.onclick=()=>{
+          const answer=inputBox.value.trim();
+          if(!answer) return;
+          socket.emit("submitAnswer",{roomCode,name:myName,questionId,answer});
+          submitBtn.disabled=true;
+          inputBox.disabled=true;
+          document.getElementById("toggleSubmit").checked = false;
+        };
+      }
+    });
 
     socket.on("allSubmitted", () => {
       showBtn.disabled=false;
@@ -533,34 +503,17 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
     // Popup close logic
     document.getElementById("closePopup").onclick = () => {
       document.getElementById("roundPopup").style.display = "none";
-      //showQuestionBtn.disabled = false;
+      showQuestionBtn.disabled = false;
     };
     document.getElementById("roundPopup").addEventListener("click", e => {
       if (e.target.id === "roundPopup") {
         document.getElementById("roundPopup").style.display = "none";
-       //showQuestionBtn.disabled = false;
+        showQuestionBtn.disabled = false;
       }
     });
-
-	showQuestionBtn.onclick = () => {
-	  // Copy the current question prompt into the popup
-	  const promptText = document.getElementById("questionPrompt").innerText;
-	  document.getElementById("popupQuestion").innerText = promptText;
-	
-	  // Show the popup again
-	  document.getElementById("roundPopup").style.display = "flex";
-	};
-
-
-	// Close popup button now tells server
-	document.getElementById("closePopupBtn").onclick = () => {
-		document.getElementById("roundPopup").style.display = "none";
-		socket.emit("dismissPopup", { roomCode });  // tell server popup dismissed
-	};
-
-
-	  
-		  
+    showQuestionBtn.onclick = () => {
+      document.getElementById("roundPopup").style.display = "flex";
+    };
 
     socket.on("answersRevealed", rows => {
       const roundMap = toRoundMap(scoreboard, currentRound);
@@ -691,8 +644,5 @@ socket.on("roundStarted", ({questionId, prompt, playerCount, roundNumber, myAnsw
   </script>
 </body>
 </html>
-
-
-
 
 

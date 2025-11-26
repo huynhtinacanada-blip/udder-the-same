@@ -4,127 +4,88 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Udderly the Same</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background: linear-gradient(135deg, #fdfcfb, #e2d1c3);
-      max-width: 800px;
-      margin: 100px auto;
-      text-align: center;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      position: relative;
-    }
-    h1 { font-size: 36px; margin-bottom: 10px; }
-    h3 { margin-top: 0; font-weight: normal; }
+	<style>
+	  /* Base page styling */
+	  body {
+		font-family: 'Segoe UI', Arial, sans-serif;
+		background: linear-gradient(135deg, #fdfcfb, #e2d1c3); /* soft gradient background */
+		max-width: 800px; /* limit content width */
+		margin: 60px auto; /* center page with top spacing */
+		text-align: center; /* center text */
+		padding: 30px; /* inner spacing */
+		border-radius: 12px; /* rounded corners */
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
+		position: relative;
+	  }
+	  h1 { font-size: 36px; margin-bottom: 10px; }
+	  h3 { margin-top: 0; font-weight: normal; }
 
-    /* Logo container ensures overlap */
-    .logo-container {
-      position: relative;
-      width: 250px;
-      height: 250px;
-      margin: 20px auto 10px;
-    }
-    .logo {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      opacity: 0;
-      transition: opacity 1.5s ease;
-    }
-    .logo.show {
-      opacity: 1;
-    }
+	  /* Logo container */
+	  .logo-container {
+		position: relative; /* allows overlap */
+		width: 250px; height: 250px;
+		margin: 20px auto 10px;
+	  }
+	  .logo {
+		position: absolute; top: 0; left: 0; /* stack logos */
+		width: 100%; height: 100%;
+		object-fit: contain; /* keep aspect ratio */
+		opacity: 0; /* hidden by default */
+		transition: opacity 1.5s ease; /* fade effect */
+	  }
+	  .logo.show { opacity: 1; /* visible when "show" class applied */ }
 
-    /* Buttons flexbox */
-    section {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-    .btn {
-      flex: 1;
-      min-width: 200px;
-      padding: 14px 24px;
-      margin: 8px;
-      font-size: 18px;
-      background: #333;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease, transform 0.2s ease;
-      text-align: center;
-    }
-    .btn:hover { 
-      background: #F7AC4D; 
-      transform: scale(1.05); 
-    }
-    .btn:disabled {
-      background: #999;
-      cursor: not-allowed;
-      transform: none;
-    }
-    @media (max-width: 600px) {
-      section {
-        flex-direction: column;
-        align-items: center;
-      }
-      .btn {
-        width: 80%;
-      }
-    }
+	  /* Buttons layout */
+	  section {
+		display: flex; justify-content: center; flex-wrap: wrap; /* responsive row */
+		margin-top: 10px;
+	  }
+	  .btn {
+		flex: 1; min-width: 200px; /* flexible sizing */
+		padding: 14px 24px; margin: 8px;
+		font-size: 18px;
+		background: #333; color: #fff; /* dark button */
+		text-decoration: none; border-radius: 8px;
+		cursor: pointer; text-align: center;
+		transition: background 0.3s ease, transform 0.2s ease; /* hover effects */
+	  }
+	  .btn:hover { background: #F7AC4D; transform: scale(1.05); /* highlight + zoom */ }
+	  .btn:disabled { background: #999; cursor: not-allowed; transform: none; /* inactive */ }
 
-    p {
-      margin-top: 16px;
-      font-size: 15px;
-      color: #444;
-    }
-    p:first-of-type { margin-top: 10px; }
+	  /* Responsive buttons */
+	  @media (max-width: 600px) {
+		section { flex-direction: column; align-items: center; }
+		.btn { width: 80%; /* full width on small screens */ }
+	  }
 
-    /* How to Play button */
-    .help-btn {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: #007BFF;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      font-size: 20px;
-      cursor: pointer;
-    }
+	  /* Paragraphs */
+	  p { margin-top: 16px; font-size: 15px; color: #444; }
+	  p:first-of-type { margin-top: 10px; }
 
-    /* Popup modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0; top: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-    }
-    .modal-content {
-      background: #fff;
-      margin: 10% auto;
-      padding: 10px;
-      border-radius: 8px;
-      max-width: 600px;
-      text-align: left;
-    }
-    .close {
-      float: right;
-      font-size: 24px;
-      cursor: pointer;
-    }
-  </style>
+	  /* Help button */
+	  .help-btn {
+		position: absolute; top: 15px; right: 15px; /* top-right corner */
+		background: #007BFF; color: #fff; /* blue circle */
+		border: none; border-radius: 50%;
+		width: 36px; height: 36px; /* small round button */
+		font-size: 20px; cursor: pointer;
+	  }
+
+	  /* Modal overlay */
+	  .modal {
+		display: none; /* hidden by default */
+		position: fixed; z-index: 1000; /* above all content */
+		left: 0; top: 0; width: 100%; height: 100%;
+		background: rgba(0,0,0,0.5); /* semi-transparent backdrop */
+	  }
+	  .modal-content {
+		background: #fff; margin: 10% auto; /* centered box */
+		padding: 10px; border-radius: 8px;
+		max-width: 600px; text-align: left;
+	  }
+	  .close { float: right; font-size: 24px; cursor: pointer; /* close button */ }
+	</style>
+
 </head>
 <body>
   <button class="help-btn" id="helpBtn">?</button>
@@ -158,6 +119,14 @@
     </span>
   </div>
 
+<label>
+<br>
+  <input type="checkbox" id="skipAnimation">
+  Skip logo animation next time
+</label>
+
+
+
   <!-- How to Play Modal -->
   <div id="howToPlayModal" class="modal">
     <div class="modal-content">
@@ -179,32 +148,66 @@
     const adminBtn = document.getElementById('adminBtn');
     const playerBtn = document.getElementById('playerBtn');
 
-	// Start with Logo A visible
-	logoA.classList.add('show');
+	// Checkbox logic
+	const skipAnimationCheckbox = document.getElementById('skipAnimation');
 
-    // Disable buttons
-    adminBtn.setAttribute('disabled', true);
-    playerBtn.setAttribute('disabled', true);
+	// Initialize checkbox state based on localStorage
+	skipAnimationCheckbox.checked = !!localStorage.getItem('seenLogoAnimation');
 
-    // After delay, crossfade logos and enable buttons
- 
-	  // After 2s, fade to Logo B
+	// Listen for changes to the checkbox
+	skipAnimationCheckbox.addEventListener('change', () => {
+	  if (skipAnimationCheckbox.checked) {
+		// User wants to skip animation in future
+		localStorage.setItem('seenLogoAnimation', 'true');
+	  } else {
+		// User wants to see animation again
+		localStorage.removeItem('seenLogoAnimation');
+	  }
+	});
+
+
+
+	// *** Logo Animation Control ***
+	// Handles whether to show the logo animation on first visit
+	// and manages crossfade timing + button activation.
+
+	// Constants for timing (in ms)
+	const FADE_DURATION = 2000;   // matches your CSS fade transition (e.g. 2s)
+	const DELAY_TO_LOGO_B = 2000; // when Logo B fades in
+	const DELAY_TO_LOGO_A = 3000; // when Logo A fades back in
+
+	// Check if the user has already seen the logo animation
+	const hasSeenAnimation = localStorage.getItem('seenLogoAnimation');
+
+	if (!hasSeenAnimation) {
+	  // First-time visitor: run animation sequence
+	  localStorage.setItem('seenLogoAnimation', 'true');
+
+	  // After 2s, fade from Logo A → Logo B
 	  setTimeout(() => {
 		logoA.classList.remove('show');
 		logoB.classList.add('show');
-	  }, 2000);
+	  }, DELAY_TO_LOGO_B);
 
-	  // After 4s, fade back to Logo A
+	  // After 4s, fade back from Logo B → Logo A
 	  setTimeout(() => {
 		logoB.classList.remove('show');
 		logoA.classList.add('show');
 
-		// Enable buttons once Logo A is back
+		// Enable buttons once Logo A is fully visible again
 		setTimeout(() => {
 		  adminBtn.removeAttribute('disabled');
 		  playerBtn.removeAttribute('disabled');
-		}, 1500); // wait for fade duration
-	  }, 4000);
+		}, FADE_DURATION); // wait for fade to finish
+	  }, DELAY_TO_LOGO_A);
+
+	} else {
+	  // Returning visitor: skip animation, show Logo A immediately
+	  logoA.classList.add('show');
+	  adminBtn.removeAttribute('disabled');
+	  playerBtn.removeAttribute('disabled');
+	}
+
 
     // Modal logic
     const helpBtn = document.getElementById('helpBtn');
@@ -214,11 +217,8 @@
     helpBtn.onclick = () => modal.style.display = 'block';
     closeModal.onclick = () => modal.style.display = 'none';
     window.onclick = (event) => {
-      if (event.target === modal) modal.style.display = 'none';
+      if (event.target *** modal) modal.style.display = 'none';
     };
   </script>
 </body>
 </html>
-
-
-
