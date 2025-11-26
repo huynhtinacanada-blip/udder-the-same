@@ -147,6 +147,11 @@
     const logoA = document.getElementById('logoA');
     const adminBtn = document.getElementById('adminBtn');
     const playerBtn = document.getElementById('playerBtn');
+	
+	// Always show Logo A first
+	logoA.classList.add('show');
+
+
 
 	// Checkbox logic
 	const skipAnimationCheckbox = document.getElementById('skipAnimation');
@@ -185,7 +190,6 @@
 
 	  // After 2s, fade from Logo A → Logo B
 	  setTimeout(() => {
-		logoA.classList.remove('show');
 		logoB.classList.add('show');
 	  }, DELAY_TO_LOGO_B);
 
@@ -217,7 +221,7 @@
     helpBtn.onclick = () => modal.style.display = 'block';
     closeModal.onclick = () => modal.style.display = 'none';
     window.onclick = (event) => {
-      if (event.target *** modal) modal.style.display = 'none';
+      if (event.target === modal) modal.style.display = 'none';
     };
   </script>
 </body>
