@@ -1,5 +1,5 @@
-// v1.1.0a
-// Did not include: Server-side (block actions if closed)
+// v1.1.0d
+// Did not include: Server-side  to block uising URL 
 
 const express = require("express"); 
 const http = require("http");
@@ -28,8 +28,14 @@ const pool = new Pool({
     status TEXT NOT NULL DEFAULT 'open',
     current_round INT DEFAULT 0,
     active_question_id INT,
+    board_status INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
   );`);
+  
+//board_status:
+//0 = No round in progress
+//1 = Round started, popup should be shown
+//2 = Round started, popup dismissed  
 
   await pool.query(`CREATE TABLE IF NOT EXISTS players (
     id SERIAL PRIMARY KEY,
@@ -41,12 +47,13 @@ const pool = new Pool({
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS players_name_room_unique
     ON players (LOWER(name), room_code);`);
 
-  await pool.query(`CREATE TABLE IF NOT EXISTS questions (
-    id SERIAL PRIMARY KEY,
-    prompt TEXT NOT NULL,
-    discard INT,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-  );`);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS questions (
+      id SERIAL PRIMARY KEY,
+      prompt TEXT NOT NULL,
+      discard DATE DEFAULT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );`);
 
   await pool.query(`CREATE TABLE IF NOT EXISTS answers (
     id SERIAL PRIMARY KEY,
@@ -74,16 +81,13 @@ const pool = new Pool({
 app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
 
-  // Require credentials from environment variables
   const ADMIN_USER = process.env.ADMIN_USER;
   const ADMIN_PASS = process.env.ADMIN_PASS;
 
-  // If not set, throw an error so you know to configure them
   if (!ADMIN_USER || !ADMIN_PASS) {
     return res.status(500).json({ error: "Admin credentials not configured" });
   }
 
-  // Check credentials
   if (username === ADMIN_USER && password === ADMIN_PASS) {
     return res.json({ success: true, redirect: "/admin-dashboard.html" });
   }
@@ -122,10 +126,16 @@ app.get("/api/questions", async (_req, res) => {
 app.post("/api/questions", async (req, res) => {
   const { text } = req.body;
   if (!text) return res.status(400).json({ error: "Prompt required" });
-  const r = await pool.query("INSERT INTO questions (prompt) VALUES ($1) RETURNING id, prompt", [text.trim()]);
-  const newId = r.rows[0].id;
-  await pool.query("UPDATE questions SET discard = $1 WHERE id = $1", [newId]);
-  res.json({ id: newId, prompt: r.rows[0].prompt, discard: newId });
+
+  // DELETE: incorrect discard update
+  // await pool.query("UPDATE questions SET discard = $1 WHERE id = $1", [newId]);
+
+  // :  insert and return, discard stays NULL
+  const r = await pool.query(
+    "INSERT INTO questions (prompt) VALUES ($1) RETURNING id, prompt, discard",
+    [text.trim()]
+  );
+  res.json(r.rows[0]);
 });
 app.put("/api/questions/:id", async (req, res) => {
   const { text } = req.body;
@@ -142,7 +152,6 @@ app.delete("/api/questions/:id", async (req, res) => {
   res.json({ success: true });
 });
 
-
 // ---------------- Player Join API ----------------
 app.post("/api/player/join", async (req, res) => {
   const { name, roomCode } = req.body;
@@ -158,7 +167,6 @@ app.post("/api/player/join", async (req, res) => {
 
   res.json({ success: true, redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(name)}` });
 });
-
 
 // ---------------- Helpers ----------------
 function getActiveNames(roomCode) {
@@ -197,7 +205,7 @@ async function getScoreboard(roomCode) {
      ORDER BY player_name`,
     [roomCode]
   );
-  return r.rows; // [{player_name, total, rounds:{round:points,...}}]
+  return r.rows;
 }
 
 async function emitPlayerList(roomCode) {
@@ -207,7 +215,6 @@ async function emitPlayerList(roomCode) {
     activeCount,
     submittedCount: submittedActiveCount
   });
-  // Keep progress synced on join/leave/submit
   io.to(roomCode).emit("submissionProgress", {
     submittedCount: submittedActiveCount,
     totalPlayers: activeCount
@@ -220,39 +227,47 @@ async function emitScoreboard(roomCode) {
 }
 
 // ---------------- Socket.IO Game Logic ----------------
-io.on("connection", (socket) => {
-	socket.on("joinLobby", async ({ roomCode, name }) => {
-	  const rc = roomCode.toUpperCase();
-	  const normalizedName = name.trim().toLowerCase();
+io.on("connection", (socket) => { 
+  socket.on("joinLobby", async ({ roomCode, name }) => {
+    const rc = roomCode.toUpperCase();
+    socket.data.name = name
+    socket.data.roomCode = rc;
+    socket.join(rc);
 
-	  socket.data.name = normalizedName;
-	  socket.data.roomCode = rc;
-	  socket.join(rc);
-
-	  await pool.query(
-		"INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-		[normalizedName, rc]
-	  );
-
+    // Add player
+    await pool.query(
+      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+      [name, rc]
+    );
 
     await emitPlayerList(rc);
     await emitScoreboard(rc);
 
-    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
+    // Get room info and also select board_status
+    const room = await pool.query(
+      "SELECT current_round, active_question_id, board_status FROM rooms WHERE code=$1",
+      [rc]
+    );
+
     if (room.rows.length && room.rows[0].active_question_id) {
-      const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [room.rows[0].active_question_id]);
+      // : destructure values from row
+      const { active_question_id, current_round, board_status } = room.rows[0];
+
+      const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [active_question_id]);
       const ans = await pool.query(
         "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
-        [rc, name, room.rows[0].active_question_id, room.rows[0].current_round]
+        [rc, name, active_question_id, current_round]
       );
+
       const { activeCount, submittedActiveCount } = await getActiveStats(rc);
 
       socket.emit("roundStarted", {
-        questionId: room.rows[0].active_question_id,
+        questionId: active_question_id,
         prompt: q.rows[0].prompt,
         playerCount: activeCount,
-        roundNumber: room.rows[0].current_round,
-        myAnswer: ans.rows.length ? ans.rows[0].answer : null
+        roundNumber: current_round,
+        myAnswer: ans.rows.length ? ans.rows[0].answer : null,
+        popup: board_status === 1   // auto-show only if still in popup phase
       });
 
       io.to(rc).emit("submissionProgress", {
@@ -268,40 +283,70 @@ io.on("connection", (socket) => {
 
   socket.on("startRound", async ({ roomCode }) => {
     const rc = roomCode.toUpperCase();
-    const qr = await pool.query("SELECT id FROM questions ORDER BY discard ASC");
-    if (qr.rows.length === 0) return;
+
+    // Pick a random question that has not been discarded in the last 30 days
+    const qr = await pool.query(
+      "SELECT id FROM questions WHERE discard IS NULL OR discard < CURRENT_DATE - INTERVAL '30 days'"
+    );
+
+    if (qr.rows.length === 0) {
+      console.log("No available questions left (all used in last 30 days).");
+      return;
+    }
+
+    // Randomly select one
     const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
     const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
 
-    await pool.query("UPDATE rooms SET current_round = current_round+1, active_question_id=$1 WHERE code=$2", [qid, rc]);
+    // : mark this question as discarded today (DATE column)
+    const today = new Date().toISOString().slice(0, 10);
+    await pool.query("UPDATE questions SET discard=$1 WHERE id=$2", [today, qid]);
+
+    // Reset round state: new round, new question, popup phase active
+    await pool.query(
+      "UPDATE rooms SET current_round = current_round+1, active_question_id=$1, board_status=1 WHERE code=$2",
+      [qid, rc]
+    );
+
+    // Reset players' submission state
     await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
 
     await emitPlayerList(rc);
 
     const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
     const { activeCount } = await getActiveStats(rc);
+
     io.to(rc).emit("roundStarted", {
       questionId: qid,
       prompt: q.rows[0].prompt,
       playerCount: activeCount,
       roundNumber: roundNum,
-      myAnswer: null
+      myAnswer: null,
+      popup: true   // tell clients to auto-show popup
     });
+
+    // We do want After broadcasting, mark popup dismissed globally (phase 2); Keep board_status=1 until a client dismisses the popup
+    // await pool.query("UPDATE rooms SET board_status=2 WHERE code=$1", [rc]);
   });
 
-	socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
-	  const rc = roomCode.toUpperCase();
-	  const normalizedName = name.trim().toLowerCase();
+  
+  // handler: clients call this when they close the popup
+  socket.on("dismissPopup", async ({ roomCode }) => {
+    const rc = roomCode.toUpperCase();
+    await pool.query("UPDATE rooms SET board_status=2 WHERE code=$1", [rc]);
+  });
 
-	  const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-	  if (!room.rows.length || room.rows[0].active_question_id !== questionId) return;
+  
+  socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
+    const rc = roomCode.toUpperCase();
+    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
+    if (!room.rows.length || room.rows[0].active_question_id !== questionId) return;
 
-	  await pool.query(
-		"INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
-		[rc, normalizedName, questionId, room.rows[0].current_round, answer]
-	  );
-	  await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, normalizedName]);
-
+    await pool.query(
+      "INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
+      [rc, name, questionId, room.rows[0].current_round, answer]
+    );
+    await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, name]);
 
     await emitPlayerList(rc);
 
@@ -327,51 +372,62 @@ io.on("connection", (socket) => {
     );
     io.to(rc).emit("answersRevealed", rr.rows);
 
-    // Also emit latest scoreboard so toggles can reflect prior points for this round
     await emitScoreboard(rc);
   });
 
-  // Award or update points for a player and round
-	socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
-	  const rc = roomCode.toUpperCase();
-	  const normalizedName = playerName.trim().toLowerCase();   // <-- NEW LINE
+  socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
+    const rc = roomCode.toUpperCase();
+    await pool.query(
+      `INSERT INTO scores (room_code, player_name, round_number, points)
+       VALUES ($1,$2,$3,$4)
+       ON CONFLICT (room_code, player_name, round_number)
+       DO UPDATE SET points=$4`,
+      [rc, playerName, roundNumber, points]
+    );
+    await emitScoreboard(rc);
+  });
 
-	  await pool.query(
-		`INSERT INTO scores (room_code, player_name, round_number, points)
-		 VALUES ($1,$2,$3,$4)
-		 ON CONFLICT (room_code, player_name, round_number)
-		 DO UPDATE SET points=$4`,
-		[rc, normalizedName, roundNumber, points]               // <-- USE normalizedName
-	  );
-
-	  await emitScoreboard(rc);
-	});
-
-
-  // End Game / Close Room handler
   socket.on("closeRoom", async ({ roomCode }) => {
     const rc = roomCode.toUpperCase();
-    // Mark room closed in DB
     await pool.query("UPDATE rooms SET status='closed' WHERE code=$1", [rc]);
-
-    // Notify all clients in this room
     io.to(rc).emit("roomClosed");
   });
 
-  
   socket.on("disconnect", async () => {
     const r = socket.data?.roomCode;
     if (r) {
       await emitPlayerList(r);
     }
   });
+
+  // : move showQuestion inside connection block
+  socket.on("showQuestion", async ({ roomCode }) => {
+    const rc = roomCode.toUpperCase();
+
+    const room = await pool.query("SELECT active_question_id, current_round FROM rooms WHERE code=$1", [rc]);
+    if (room.rows.length === 0) return;
+
+    const qid = room.rows[0].active_question_id;
+    const roundNum = room.rows[0].current_round;
+
+    const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
+
+    io.to(rc).emit("roundStarted", {
+      questionId: qid,
+      prompt: q.rows[0].prompt,
+      playerCount: (await getActiveStats(rc)).activeCount,
+      roundNumber: roundNum,
+      myAnswer: null,
+      popup: true   // force popup again
+    });
+  });
 });
+
+//  DELETE: standalone socket.on("showQuestion") at bottom of file
+// (removed because it was outside io.on("connection") and caused ReferenceError)
 
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
-
-
-
 
 
