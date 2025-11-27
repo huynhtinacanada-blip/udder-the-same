@@ -192,15 +192,30 @@ function isPlayerActive(roomCode, playerName) {
 
 
 // ---------------- Admin Login API ----------------
+// Define an Express POST route for admin login
 app.post("/api/admin/login", (req, res) => {
+  // Extract username and password from the request body (sent by the login form)
   const { username, password } = req.body;
-  const ADMIN_USER = process.env.ADMIN_USER || "game-admin";
-  const ADMIN_PASS = process.env.ADMIN_PASS || "Rainbow6GoldenEye";
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    return res.json({ success: true });
+
+  // Load admin credentials from environment variables (never hard‑code secrets!)
+  const ADMIN_USER = process.env.ADMIN_USER;
+  const ADMIN_PASS = process.env.ADMIN_PASS;
+
+  // If credentials are not set in the environment, return a server error
+  if (!ADMIN_USER || !ADMIN_PASS) {
+    return res.status(500).json({ error: "Admin credentials not configured" });
   }
+
+  // Check if the provided username and password match the configured admin credentials
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    // If they match, return a success response with a redirect path
+    return res.json({ success: true, redirect: "/admin-dashboard.html" });
+  }
+
+  // If credentials don’t match, return an unauthorized error
   res.status(401).json({ error: "Invalid credentials" });
 });
+
 
 // ---------------- Room Management APIs ----------------
 app.get("/api/rooms", async (_req, res) => {
@@ -493,6 +508,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
