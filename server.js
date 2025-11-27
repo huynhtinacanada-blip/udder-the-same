@@ -123,28 +123,33 @@ async function getActiveStats(roomCode) {
 }
 
 
+// ---------------- Helpers ----------------
 async function getScoreboard(roomCode) {
+  // Run a SQL query to build the scoreboard for a given room
   const r = await pool.query(
     `SELECT 
-        p.name AS player_name,                          -- Always include every player in the room
-        COALESCE(SUM(s.points),0) AS total,             -- Sum of points, default to 0 if none
+        p.name AS player_name,                          -- Select each player's name from the players table
+        COALESCE(SUM(s.points),0) AS total,             -- Sum all points for that player, default to 0 if none
         COALESCE(
-          json_object_agg(s.round_number, s.points)     -- Build a JSON object of {round:points}
+          json_object_agg(s.round_number, s.points)     -- Build a JSON object mapping round_number -> points
           FILTER (WHERE s.points IS NOT NULL), 
-          '{}'                                          -- Default to empty object if no scores
+          '{}'                                          -- If no scores exist, return an empty JSON object
         ) AS rounds
      FROM players p
      LEFT JOIN scores s
        ON p.room_code = s.room_code                     -- Match scores to players in the same room
       AND LOWER(p.name) = LOWER(s.player_name)          -- Case-insensitive match on player name
-     WHERE p.room_code=$1                               -- Only include players from this room
-     GROUP BY p.name                                    -- One row per player
-     ORDER BY p.name`,                                  -- Sort alphabetically by player name
-    [roomCode]
+     WHERE p.room_code=$1                               -- Only include players from the requested room
+     GROUP BY p.name                                    -- Group results by player name (one row per player)
+     ORDER BY p.name`,                                  
+    [roomCode]                                          // Bind the roomCode parameter to the query
   );
 
-  // Returns an array of objects like:
-  // [{ player_name: "Alice", total: 0, rounds: {} }, { player_name: "Bob", total: 5, rounds: {"1":5} }]
+  // Example return format:
+  // [
+  //   { player_name: "Alice", total: 0, rounds: {} },
+  //   { player_name: "Bob", total: 5, rounds: {"1":5} }
+  // ]
   return r.rows;
 }
 
@@ -488,6 +493,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
