@@ -255,7 +255,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0a)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0b)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -278,6 +278,7 @@
       </table>
       <div id="controls">
         <button id="startBtn">Start Round</button>
+		<button id="showQuestionBtn" disabled>Show Question</button>
         <button id="showAnswersBtn" disabled>Show Answers</button>
         <p id="statusMessage"></p>
       </div>
@@ -334,13 +335,14 @@
     </div>
   </div>
   
-    <!-- Popup Modal -->
-  <div id="roundPopup" class="popup">
-    <div class="popup-content">
-      <span id="closePopup" class="close-btn">&times;</span>
-      <h1 id="popupQuestion"></h1>
-    </div>
+<!-- Popup Modal -->
+<div id="roundPopup" class="popup">
+  <div class="popup-content">
+    <span id="closePopup" class="close-btn">&times;</span>
+    <h1 id="popupQuestion"></h1>
   </div>
+</div>
+
 
   <!-- Disclaimer Footer (outside card/accordion area) -->
   <div class="disclaimer">
@@ -618,6 +620,15 @@ document.getElementById("roundPopup").addEventListener("click", e => {
     document.getElementById("roundPopup").style.display = "none";
   }
 });
+
+const showQuestionBtn = document.getElementById("showQuestionBtn");
+
+showQuestionBtn.onclick = () => {
+  const promptText = document.getElementById("questionPrompt").innerText;
+  document.getElementById("popupQuestion").innerText = promptText;
+  document.getElementById("roundPopup").style.display = "flex";
+};
+
 
   </script>
 </body>
