@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Admin Dashboard — Udderly the Same</title>
   <style>
+    /* Global Layout */
     body { 
       font-family: Arial, sans-serif; 
       background:#f4f6f9; 
@@ -14,15 +15,24 @@
       border-radius:12px; 
       box-shadow:0 4px 12px rgba(0,0,0,0.1); 
     }
+
+    /* Logo Styling */
     .logo {
-      max-width:120px;
-      width:100%;
-      height:auto;
-      margin:0 auto 20px;
-      display:block;
-      cursor:pointer;
+      max-width:120px;   /* restrict logo size */
+      width:100%;        /* responsive scaling */
+      height:auto;       /* maintain aspect ratio */
+      margin:0 auto 20px;/* center logo with spacing below */
+      display:block;     /* block-level for centering */
+      cursor:pointer;    /* pointer cursor on hover */
     }
-    h1 { font-size:32px; margin-bottom:25px; }
+
+    /* Heading */
+    h1 { 
+      font-size:32px; 
+      margin-bottom:25px; 
+    }
+
+    /* Buttons */
     .btn { 
       display:inline-block; 
       width:220px; 
@@ -34,17 +44,28 @@
       text-decoration:none; 
       border-radius:8px; 
     }
-    .btn:hover { background:#6AF781; }
+    .btn:hover { 
+      background:#6AF781; /* hover effect */
+    }
   </style>
 </head>
 <body>
+
+  <!-- Version footer -->
+  <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
+    Admin Dashboard Ver. 1.0.0
+  </div>
+
   <!-- Logo that links back to index.html -->
   <a href="/index.html">
-    <img src="udder-consensus-logo.png" alt="Udderly the Same Logo" class="logo">
+    <img src="udderly-logo-login.png" alt="Udderly the Same Logo" class="logo">
   </a>
 
+  <!-- Main heading -->
   <h1>🛠️ Admin Dashboard</h1>
   <p>Manage the game:</p>
+
+  <!-- Navigation buttons -->
   <div>
     <a class="btn" href="/admin-rooms.html">Room Management</a>
     <a class="btn" href="/admin-cards.html">Cards</a>

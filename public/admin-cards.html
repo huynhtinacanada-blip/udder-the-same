@@ -3,60 +3,106 @@
 <head>
   <meta charset="utf-8" />
   <title>Cards — Udderly the Same</title>
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; max-width:900px; margin:40px auto; background:#f9f9f9; }
-    h1 { text-align:center; margin-bottom:20px; }
-    input,button { font-size:16px; padding:8px; margin:6px 0; }
-    #questionText { width:70%; max-width:700px; display:inline-block; }
-    #addBtn { display:inline-block; margin-left:8px; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-    th,td { border:1px solid #ccc; padding:8px; text-align:left; }
-    th { background:#eee; }
-    .btn { background:#333; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; display:inline-block; margin-bottom:16px; }
-    .btn:hover { background:#F7AC4D; }
-    .action-btn { font-size:14px; padding:4px 8px; border:none; border-radius:4px; cursor:pointer; }
-    .edit-btn { background:#2e7d32; color:#fff; }
-    .edit-btn:hover { background:#388e3c; }
-    .delete-btn { background:#c62828; color:#fff; }
-    .delete-btn:hover { background:#e53935; }
-    .actions { display:flex; gap:8px; } /* ensures buttons are side by side */
-    .bottom-bar { margin-top:30px; text-align:center; }
-    .header {
-      display: flex;
-      align-items: center;   /* vertically center logo and text */
-      gap: 12px;             /* small horizontal space between logo and heading */
-      margin-bottom: 20px;   /* space below the header bar */
-    }
-    .logo {
-      max-width: 100px;       /* smaller logo size so it fits nicely */
-      height: auto;
-      display: block;
-    }
-  </style>
+<style>
+  /* Global Layout */
+  body { 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    max-width:900px; 
+    margin:40px auto; 
+    background:#f9f9f9; 
+  }
+  h1 { text-align:center; margin-bottom:20px; }
+
+  /* Form Inputs & Buttons */
+  input,button,textarea { font-size:16px; padding:8px; margin:6px 0; }
+  .btn { 
+    background:#333; 
+    color:#fff; 
+    padding:8px 12px; 
+    border-radius:6px; 
+    text-decoration:none; 
+    display:inline-block; 
+    margin-bottom:16px; 
+  }
+  .btn:hover { background:#F7AC4D; }
+
+  /* Question Row */
+  .question-row {
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+  }
+  #questionText { 
+    flex:1;              
+    min-height:40px;    
+    resize:vertical;     
+  }
+  #addBtn { flex-shrink:0; }
+
+  /* Table Styling */
+  table { 
+    width:100%; 
+    border-collapse:collapse; 
+    margin-top:12px; 
+    background:#fff; 
+    box-shadow:0 2px 6px rgba(0,0,0,0.1); 
+  }
+  th,td { border:1px solid #ccc; padding:8px; text-align:left; }
+  th { background:#eee; }
+
+  /* Action Buttons */
+  .action-btn { font-size:14px; padding:4px 8px; border:none; border-radius:4px; cursor:pointer; }
+  .edit-btn { background:#2e7d32; color:#fff; }
+  .edit-btn:hover { background:#388e3c; }
+  .delete-btn { background:#c62828; color:#fff; }
+  .delete-btn:hover { background:#e53935; }
+  .actions { display:flex; gap:8px; }
+
+  /* Header & Logo */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .logo {
+    max-width: 100px;
+    height: auto;
+    display: block;
+  }
+
+  /* Footer */
+  .bottom-bar { margin-top:30px; text-align:center; }
+</style>
 </head>
 <body>
   <!-- Logo at the top -->
   <div class="header">
-    <img src="udder-consensus-logo.png" alt="Udderly the Same Logo" class="logo">
+    <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
     <h1>Card Management</h1>
   </div>
 
   <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
 
-  <div>
-    <input id="questionText" placeholder="New question text" />
+  <!-- Question input row -->
+  <div class="question-row">
+    <textarea id="questionText" placeholder="New question text"></textarea>
     <button id="addBtn">Add Question</button>
   </div>
+
   <table id="cardsTable">
     <thead>
-      <tr><th>ID</th><th>Question</th><th>Sort Number</th><th>Actions</th></tr>
+      <tr><th>ID</th><th>Question Card</th><th>Discard</th><th>Actions</th></tr>
     </thead>
     <tbody></tbody>
   </table>
   <div class="bottom-bar">
     <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
   </div>
-
+  <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
+    Card Management Ver. 1.0.1
+  </div>
+  
   <script>
     let editingId = null;
 
@@ -67,7 +113,7 @@
         `<tr>
           <td>${q.id}</td>
           <td>${escapeHTML(q.prompt)}</td>
-          <td>${q.sort_number || q.id}</td>
+          <td>${formatDiscardDate(q.discard)}</td>
           <td>
             <div class="actions">
               <button class="action-btn edit-btn" onclick="editQuestion(${q.id}, '${escapeHTML(q.prompt)}')">Edit</button>
@@ -78,6 +124,18 @@
       ).join('');
     }
 
+  function formatDiscardDate(discard){
+    if (!discard) return ""; // blank if no date
+    const d = new Date(discard);
+    if (isNaN(d)) return discard; // if not a valid date, just show raw value
+    const yyyy = d.getFullYear();
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    return `${yyyy}-${dd}-${mm}`; // YYYY-DD-MM format
+  }
+
+
+    
     document.getElementById('addBtn').onclick = async () => {
       const text = document.getElementById('questionText').value.trim();
       if (!text) return alert('Enter a question');
@@ -137,3 +195,4 @@
   </script>
 </body>
 </html>
+
