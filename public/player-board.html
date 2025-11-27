@@ -39,6 +39,41 @@
 	  font-weight:bold;     /* optional: bold text */
 	}
 
+
+
+/* Hide the default radio */
+.unicornRadio {
+  display: none;
+}
+
+/* Custom circle */
+.unicornLabel {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #afc;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.unicornLabel:hover {
+  border-color: #888;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+
+/* Checked state: show unicorn emoji */
+.unicornRadio:checked + .unicornLabel::after {
+  content: "🦄";
+  font-size: 18px;
+  position: absolute;
+  top: -2px;
+  left: -2px;
+}
+
+
 /* Wrapper for horizontal scroll */
 .table-wrapper {
   overflow-x: auto;
@@ -163,16 +198,19 @@
 
 
 
+/* Score Table formmatting */
+
 /* General cell padding */
 #scoreTable th, #scoreTable td {
   padding: 6px;
+  white-space: nowrap; /* prevent wrapping that changes widths */
 }
 
-/* Freeze first column (ID) */
+/* Freeze first column (TAG) */
 #scoreTable th:first-child,
 #scoreTable td:first-child {
   text-align: center;
-  width: 60px;              /* adjust as needed */
+  width: 40px;              /* fits 🦄 nicely */
   position: sticky;
   left: 0;
   background: #fff;
@@ -184,9 +222,9 @@
 #scoreTable td:nth-child(2) {
   text-align: left;
   padding-left: 10px;
-  width: 120px;             /* adjust as needed */
+  width: 150px;             /* allow longer names */
   position: sticky;
-  left: 60px;               /* equal to width of first column */
+  left: 40px;               /* equal to TAG width */
   background: #fff;
   z-index: 3;
 }
@@ -195,9 +233,9 @@
 #scoreTable th:nth-child(3),
 #scoreTable td:nth-child(3) {
   text-align: center;
-  width: 60px;              /* adjust as needed */
+  width: 80px;              /* enough for totals */
   position: sticky;
-  left: 180px;              /* sum of widths of first + second columns */
+  left: 190px;              /* TAG (40) + Player (150) */
   background: #fff;
   z-index: 3;
 }
@@ -206,8 +244,10 @@
 #scoreTable th:nth-child(n+4),
 #scoreTable td.roundCell {
   text-align: center;
-  width: 35px;
+  width: 50px;              /* slightly wider for dropdowns */
 }
+
+
 
 .scoreSelect {
   width: 100%;
@@ -300,7 +340,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0ac)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.2.0a)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -645,48 +685,67 @@
       }
     });
 
-    // Render scoreboard with dropdowns
-    function renderScoreboard(data) {
-      const allRounds = data.flatMap(d => Object.keys(d.rounds || {}).map(n => parseInt(n, 10)));
-      const maxRound = Math.max(0, ...allRounds);
 
-      //const header = "<tr><th>Player</th><th>Total</th>" +
 
-	 const header = "<tr><th>TAG</th><th>Player</th><th>Total</th>" +	
-        Array.from({length: maxRound}, (_, i) => `<th>#${i+1}</th>`).join("") +
-        "</tr>";
-      document.querySelector("#scoreTable thead").innerHTML = header;
+// Render scoreboard with dropdowns
+function renderScoreboard(data) {
+  // Find the maximum round number across all players
+  const allRounds = data.flatMap(d =>
+    Object.keys(d.rounds || {}).map(n => parseInt(n, 10))
+  );
+  const maxRound = Math.max(0, ...allRounds);
 
-      const rows = data.map(d => {
-        const total = d.total || 0;
-        const roundCells = Array.from({length: maxRound}, (_, i) => {
-          const rnum = i + 1;
-          const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
-          return `
-            <td class="roundCell">
-              <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect">
-                <option value="0" ${val == 0 ? "selected" : ""}>0</option>
-                <option value="1" ${val == 1 ? "selected" : ""}>1</option>
-              </select>
-            </td>
-          `;
-        }).join("");
-		return `<tr><td>X</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+  // Build the header row
+  const header =
+    "<tr><th>TAG</th><th>Player</th><th>Total</th>" +
+    Array.from({ length: maxRound }, (_, i) => `<th>#${i + 1}</th>`).join("") +
+    "</tr>";
+  document.querySelector("#scoreTable thead").innerHTML = header;
 
+  // Build each player row
+  const rows = data
+    .map(d => {
+      const total = d.total || 0;
+      const roundCells = Array.from({ length: maxRound }, (_, i) => {
+        const rnum = i + 1;
+        const val =
+          (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
+        return `
+          <td class="roundCell">
+            <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect">
+              <option value="0" ${val == 0 ? "selected" : ""}>0</option>
+              <option value="1" ${val == 1 ? "selected" : ""}>1</option>
+            </select>
+          </td>
+        `;
       }).join("");
 
-      document.querySelector("#scoreTable tbody").innerHTML = rows;
+return `<tr><td>${d.hasUnicorn ? "🦄" : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
 
-      // Auto-persist dropdown changes
-      document.querySelectorAll(".scoreSelect").forEach(select => {
-        select.addEventListener("change", e => {
-          const player = e.target.dataset.player;
-          const round = parseInt(e.target.dataset.round, 10);
-          const points = parseInt(e.target.value, 10);
-          socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
-        });
+    })
+    .join("");
+
+
+  document.querySelector("#scoreTable tbody").innerHTML = rows;
+
+  // Auto-persist dropdown changes
+  document.querySelectorAll(".scoreSelect").forEach(select => {
+    select.addEventListener("change", e => {
+      const player = e.target.dataset.player;
+      const round = parseInt(e.target.dataset.round, 10);
+      const points = parseInt(e.target.value, 10);
+      socket.emit("awardPoint", {
+        roomCode,
+        playerName: player,
+        roundNumber: round,
+        points
       });
-    }
+    });
+  });
+}
+
+
+
 
     function toRoundMap(data, round) {
       const map = {};
