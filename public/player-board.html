@@ -278,6 +278,7 @@
       </table>
       <div id="controls">
         <button id="startBtn">Start Round</button>
+		<button id="showQuestionBtn" disabled>Show Question</button>
         <button id="showAnswersBtn" disabled>Show Answers</button>
         <p id="statusMessage"></p>
       </div>
@@ -334,6 +335,21 @@
     </div>
   </div>
 
+  <!-- Popup Modal -->
+  <div id="roundPopup" class="popup">
+    <div class="popup-content">
+      <span id="closePopup" class="close-btn">&times;</span>
+      <h1 id="popupQuestion"></h1>
+    </div>
+  </div>
+
+  <!-- Disclaimer Footer (outside card/accordion area) -->
+  <div class="disclaimer">
+    This online game is inspired by Herd Mentality, created by Big Potato Games. 
+    It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
+  </div>
+
+
   <script>
     const urlParams=new URLSearchParams(window.location.search);
     const roomCode=(urlParams.get("room")||"").toUpperCase();
@@ -342,17 +358,41 @@
     const socket=io();
     socket.emit("joinLobby",{roomCode,name:myName});
 
-    const startBtn=document.getElementById("startBtn");
-    const showBtn=document.getElementById("showAnswersBtn");
-    const statusMsg=document.getElementById("statusMessage");
-    const submitBtn=document.getElementById("submitAnswerBtn");
-    const inputBox=document.getElementById("answerInput");
-	
 	const endGameBtn = document.getElementById("endGameBtn");
-	const signOutBtn = document.getElementById("signOutBtn");
+	const statusMsg = document.getElementById("statusMessage");
+	const submitBtn = document.getElementById("submitAnswerBtn");
+	const inputBox = document.getElementById("answerInput");
+	const startBtn = document.getElementById("startBtn");
+	const showBtn = document.getElementById("showAnswersBtn");
+	const showQuestionBtn = document.getElementById("showQuestionBtn");
 
 	signOutBtn.onclick = () => window.location.href = "/player-login.html";	
 	
+	let roomIsClosed = false;
+
+	// End Game button handler
+	endGameBtn.onclick = () => {
+	  if (confirm("Are you sure you want to end this game?")) {
+		socket.emit("closeRoom", { roomCode });
+	  }
+	};
+
+	// Listen for server confirmation
+	socket.on("roomClosed", () => {
+	  roomIsClosed = true;
+	  statusMsg.innerText = "This game room has been closed.";
+
+	  // Disable all controls
+	  startBtn.disabled = true;
+	  showBtn.disabled = true;
+	  showQuestionBtn.disabled = true;
+	  submitBtn.disabled = true;
+	  inputBox.disabled = true;
+	  endGameBtn.disabled = true;
+
+	  // Show the Game Over banner
+	  document.getElementById("gameOverBanner").classList.remove("hidden");
+	});
 
 	let allPlayers = new Set();
 	let answersShown = false;
@@ -390,7 +430,7 @@
         .join("");
 
       //statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
-      //document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+      document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
 
       if (document.getElementById("qaSection").style.display === "block") {
         document.getElementById("progress").innerText = `Submitted: ${submittedCount} / ${activeCount}`;
@@ -430,6 +470,11 @@
       document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
+	  // 🔴 Show popup with the question text
+	  document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
+	  document.getElementById("roundPopup").style.display = "flex";
+	  
+  
       if (answersShown || myAnswer) {
         submitBtn.disabled=true;
         inputBox.disabled=true;
@@ -460,6 +505,36 @@
       socket.emit("showAnswers",{roomCode});
       answersShown = true;
     };
+	
+   // Popup close logic
+    document.getElementById("closePopup").onclick = () => {
+      document.getElementById("roundPopup").style.display = "none";
+      //showQuestionBtn.disabled = false;
+    };
+    document.getElementById("roundPopup").addEventListener("click", e => {
+      if (e.target.id === "roundPopup") {
+        document.getElementById("roundPopup").style.display = "none";
+       //showQuestionBtn.disabled = false;
+      }
+    });
+
+	showQuestionBtn.onclick = () => {
+	  // Copy the current question prompt into the popup
+	  const promptText = document.getElementById("questionPrompt").innerText;
+	  document.getElementById("popupQuestion").innerText = promptText;
+	
+	  // Show the popup again
+	  document.getElementById("roundPopup").style.display = "flex";
+	};
+
+
+	// Close popup button now tells server
+	document.getElementById("closePopupBtn").onclick = () => {
+		document.getElementById("roundPopup").style.display = "none";
+		socket.emit("dismissPopup", { roomCode });  // tell server popup dismissed
+	};	
+	
+	
 
     socket.on("answersRevealed", rows => {
       const roundMap = toRoundMap(scoreboard, currentRound);
