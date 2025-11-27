@@ -144,10 +144,10 @@
     <img src="udderly-logo-main-a.png" alt="Home Page Logo" class="logo" id="logoA">
   </div>
 
-	<div class="loading-bar">
-  <div class="progress"></div>
-</div>
-
+	<!-- Loading bar -->
+	<div id="loader" class="loading-bar">
+	  <div class="progress"></div>
+	</div>
 	
   <p><strong>Welcome! Choose your path:</strong></p>
 	<section>
@@ -219,27 +219,30 @@
 
   const skipAnimation = localStorage.getItem('seenLogoAnimation');
 
-  if (!skipAnimation) {
-    // Run animation sequence
+if (!skipAnimation) {
+  // First timeout: show logo B after DELAY_TO_LOGO_B ms
+  setTimeout(() => {
+    logoB.classList.add('show');
+  }, DELAY_TO_LOGO_B);
+
+  // Second timeout: after DELAY_TO_LOGO_A ms, hide logo B and show logo A
+  setTimeout(() => {
+    logoB.classList.remove('show');
+    logoA.classList.add('show');
+
+    // Nested timeout: after FADE_DURATION ms, enable buttons and hide loader
     setTimeout(() => {
-      logoB.classList.add('show');
-    }, DELAY_TO_LOGO_B);
+      adminBtn.removeAttribute('disabled');              // enable admin button
+      playerBtn.removeAttribute('disabled');             // enable player button
+      document.getElementById("loader").style.display = "none"; // hide loading bar
 
-    setTimeout(() => {
-      logoB.classList.remove('show');
-      logoA.classList.add('show');
+      // Mark animation as seen so it can be skipped next time
+      localStorage.setItem('seenLogoAnimation', 'true');
+      skipAnimationCheckbox.checked = true;              // auto-check skip box
+    }, FADE_DURATION);
+  }, DELAY_TO_LOGO_A);
 
-      setTimeout(() => {
-        adminBtn.removeAttribute('disabled');
-        playerBtn.removeAttribute('disabled');
-
-        // ✅ Mark animation as seen once it finishes
-        localStorage.setItem('seenLogoAnimation', 'true');
-        skipAnimationCheckbox.checked = true; // auto-check the box
-      }, FADE_DURATION);
-    }, DELAY_TO_LOGO_A);
-
-  } else {
+} else {
     // Skip animation, show Logo A immediately
     logoA.classList.add('show');
     adminBtn.removeAttribute('disabled');
@@ -259,6 +262,7 @@
   </script>
 </body>
 </html>
+
 
 
 
