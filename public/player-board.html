@@ -300,7 +300,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0sc)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0ac)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -585,19 +585,20 @@
           const checked = roundMap[name] === 1 ? "checked" : "";
           const labelText = roundMap[name] === 1 ? "+1" : "0";
           const labelClass = roundMap[name] === 1 ? "pointLabel green" : "pointLabel blue";
-          return `
-            <tr>
-              <td>
-                <label class="switch">
-                  <input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
-                  <span class="slider"></span>
-                  <span class="${labelClass}">${labelText}</span>
-                </label>
-              </td>
-              <td>${name}</td>
-              <td>${ans}</td>
-            </tr>
-          `;
+			return `
+			  <tr>
+				<td>
+				  <label class="switch">
+					<input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
+					<span class="slider"></span>
+					<span class="${labelClass}">${labelText}</span>
+				  </label>
+				</td>
+				<td>X</td> <!-- TAG column placeholder -->
+				<td>${name}</td>
+				<td>${ans}</td>
+			  </tr>
+			`;
         })
         .join("");
 
@@ -670,7 +671,8 @@
             </td>
           `;
         }).join("");
-        return `<td>X</td><tr><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+		return `<tr><td>X</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+
       }).join("");
 
       document.querySelector("#scoreTable tbody").innerHTML = rows;
@@ -727,8 +729,3 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
-
-
-
-
-
