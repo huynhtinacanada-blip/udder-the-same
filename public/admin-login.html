@@ -1,5 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Login — Udderly the Same</title>
+  <style>
+    /* Global Layout */
+    body { 
+      font-family: Arial, sans-serif; 
+      background: #f4f6f9;    
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      margin: 0; 
+    }
+
+    /* Card Container */
+    .card { 
+      background: #f4f6f9; 
+      padding: 30px; 
+      border-radius: 16px; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
+      width: 100%; 
+      max-width: 400px; 
+      text-align: center;
+    }
+
+    /* Logo Styling */
+    .logo {
+      max-width: 120px;
+      width: 100%;
+      height: auto;
+      margin: 0 auto 20px;
+      display: block;
+      cursor: pointer;
+    }
+
+    /* Heading */
+    h1 { 
+      font-size: 32px; 
+      margin-bottom: 25px; 
+      text-align: center; 
+    }
+
+    /* Form Layout */
+    form { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 18px; 
+      text-align: left;
+    }
+    label { 
+      font-size: 16px; 
+    }
+    input { 
+      font-size: 18px; 
+      padding: 12px; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+    }
+
+    /* Button Styling */
+    button { 
+      font-size: 20px; 
+      padding: 16px; 
+      background: #333;   /* default admin button color */
+      color: #fff; 
+      border: none; 
+      border-radius: 8px; 
+      cursor: pointer; 
+    }
+    button:hover { 
+      background: #1976d2; /* hover color */
+    }
+
+    /* Message Area */
+    #msg { 
+      margin-top: 12px; 
+      font-size: 15px; 
+      text-align: center; 
+      min-height: 20px; 
+    }
+    #msg.error { 
+      color: red; 
+    }
+    #msg.success { 
+      color: blue; 
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login card -->
+  <div class="card">
+
+    <!-- Version info -->
+    <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
+      Form Ver. 1.0.0a
+    </div>
+
+    <!-- Logo that links back to index.html -->
+    <a href="/index.html">
+      <img src="udderly-logo-login.png" alt="Udderly the Same Logo" class="logo">
+    </a>
+
+    <!-- Page heading -->
+    <h1>🛡️ Admin Login</h1>
+
+    <!-- Login form -->
+    <form id="adminForm">
+      <label for="username">Username</label>
+      <input id="username" name="username" required />
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required />
+
+      <button type="submit">Login</button>
+    </form>
+
+    <!-- Error or success message -->
+    <div id="msg"></div>
+
+  </div>
+</body>
+</html>
+
+
 <script>
-  // ===== Form Submission Logic =====
+  // Form Submission Logic
   const form = document.getElementById('adminForm');   // <-- restore this line
   const msg = document.getElementById('msg');
 
@@ -35,3 +163,4 @@
     }
   });
 </script>
+
