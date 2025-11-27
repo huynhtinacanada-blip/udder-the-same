@@ -207,18 +207,19 @@
     </div>
   </div>
 
-  <script>
 
+	<script>
   const logoB = document.getElementById('logoB');
   const logoA = document.getElementById('logoA');
   const adminBtn = document.getElementById('adminBtn');
   const playerBtn = document.getElementById('playerBtn');
   const skipAnimationCheckbox = document.getElementById('skipAnimation');
+  const loadingBar = document.querySelector('.loading-bar');
+  const loadingText = document.querySelector('.loading-text');
 
   // Initialize checkbox state based on localStorage
   skipAnimationCheckbox.checked = !!localStorage.getItem('seenLogoAnimation');
 
-  // Listen for changes to the checkbox
   skipAnimationCheckbox.addEventListener('change', () => {
     if (skipAnimationCheckbox.checked) {
       localStorage.setItem('seenLogoAnimation', 'true');
@@ -227,63 +228,66 @@
     }
   });
 
-  // Constants for timing (in ms)
   const FADE_DURATION = 2000;
   const DELAY_TO_LOGO_B = 2000;
   const DELAY_TO_LOGO_A = 3000;
 
   const skipAnimation = localStorage.getItem('seenLogoAnimation');
 
-if (!skipAnimation) {
-	// Hide the loading text
-	document.querySelector('.loading-text').style.display = 'none';
-	
-  // First timeout: show logo B after DELAY_TO_LOGO_B ms
-  setTimeout(() => {
-    logoB.classList.add('show');
-  }, DELAY_TO_LOGO_B);
+  if (!skipAnimation) {
+    // Show loading bar + text
+    loadingBar.style.display = 'block';
+    loadingText.style.display = 'block';
 
-  // Second timeout: after DELAY_TO_LOGO_A ms, hide logo B and show logo A
-  setTimeout(() => {
-    logoB.classList.remove('show');
-    logoA.classList.add('show');
-
-    // Nested timeout: after FADE_DURATION ms, enable buttons and hide loader
+    // Fade out text after 2s (CSS handles opacity)
     setTimeout(() => {
-      adminBtn.removeAttribute('disabled');              // enable admin button
-      playerBtn.removeAttribute('disabled');             // enable player button
-      document.getElementById("loader").style.display = "none"; // hide loading bar
+      loadingText.style.opacity = 0;
+    }, 2000);
 
-      // Mark animation as seen so it can be skipped next time
-      localStorage.setItem('seenLogoAnimation', 'true');
-      skipAnimationCheckbox.checked = true;              // auto-check skip box
-    }, FADE_DURATION);
-  }, DELAY_TO_LOGO_A);
+    // Show logo B after delay
+    setTimeout(() => {
+      logoB.classList.add('show');
+    }, DELAY_TO_LOGO_B);
 
-} else {
-    // Skip animation, show Logo A immediately
-	// Hide the loading text
-	document.querySelector('.loading-text').style.display = 'none';
-	// Hide the loading text
-	document.querySelector('.loading-text').style.display = 'none';	
+    // Swap logos after next delay
+    setTimeout(() => {
+      logoB.classList.remove('show');
+      logoA.classList.add('show');
+
+      // After fade duration, enable buttons and hide loader
+      setTimeout(() => {
+        adminBtn.removeAttribute('disabled');
+        playerBtn.removeAttribute('disabled');
+        loadingBar.style.display = 'none'; // hide bar completely
+
+        localStorage.setItem('seenLogoAnimation', 'true');
+        skipAnimationCheckbox.checked = true;
+      }, FADE_DURATION);
+    }, DELAY_TO_LOGO_A);
+
+  } else {
+    // Skip animation: hide bar/text, show logo A immediately
+    loadingBar.style.display = 'none';
     logoA.classList.add('show');
     adminBtn.removeAttribute('disabled');
     playerBtn.removeAttribute('disabled');
   }
 
-    // Modal logic
-    const helpBtn = document.getElementById('helpBtn');
-    const modal = document.getElementById('howToPlayModal');
-    const closeModal = document.getElementById('closeModal');
+  // Modal logic
+  const helpBtn = document.getElementById('helpBtn');
+  const modal = document.getElementById('howToPlayModal');
+  const closeModal = document.getElementById('closeModal');
 
-    helpBtn.onclick = () => modal.style.display = 'block';
-    closeModal.onclick = () => modal.style.display = 'none';
-    window.onclick = (event) => {
-      if (event.target === modal) modal.style.display = 'none';
-    };
-  </script>
+  helpBtn.onclick = () => modal.style.display = 'block';
+  closeModal.onclick = () => modal.style.display = 'none';
+  window.onclick = (event) => {
+    if (event.target === modal) modal.style.display = 'none';
+  };
+</script>
+
 </body>
 </html>
+
 
 
 
