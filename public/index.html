@@ -35,9 +35,9 @@
 	  }
 	  .logo.show { opacity: 1; /* visible when "show" class applied */ }
 
-		
 		/* Container for the loading bar */
 		.loading-bar {
+		  position: relative;             /* allow text to sit on top */
 		  width: 250px;                  /* total width of the bar */
 		  height: 24px;                  /* thickness of the bar */
 		  background: #ddd;              /* light gray background track */
@@ -45,8 +45,23 @@
 		  overflow: hidden;              /* hide anything that overflows the container */
 		  margin: 20px auto;             /* center horizontally with margin above/below */
 		}
-		
-		/* Inner progress element that fills up */
+		.loading-text {
+		  position: absolute;
+		  top: 50%;                       
+		  left: 50%;                      
+		  transform: translate(-50%, -50%);
+		  font-size: 14px;
+		  font-weight: bold;
+		  color: black;
+		  z-index: 2;
+		  animation: fadeOut 1s ease forwards;
+		  animation-delay: 2s;   /* wait 2 seconds before fading out */
+		}
+
+		@keyframes fadeOut {
+		  to { opacity: 0; }
+		}
+
 		.progress {
 		  width: 0;                      /* start with no fill */
 		  height: 100%;                  /* same height as the container */
@@ -77,9 +92,7 @@
 		  100% { background-position: 100% 50%; } /* shift gradient fully to right */
 		}
 
-
-
-		
+	
 	  /* Buttons layout */
 	  section {
 		display: flex; justify-content: center; flex-wrap: wrap; /* responsive row */
@@ -145,9 +158,11 @@
   </div>
 
 	<!-- Loading bar -->
-	<div id="loader" class="loading-bar">
-	  <div class="progress"></div>
-	</div>
+<div class="loading-bar">
+  <span class="loading-text">Loading...</span>
+  <div class="progress"></div>
+</div>
+	
 	
   <p><strong>Welcome! Choose your path:</strong></p>
 	<section>
@@ -220,6 +235,9 @@
   const skipAnimation = localStorage.getItem('seenLogoAnimation');
 
 if (!skipAnimation) {
+	// Hide the loading text
+	document.querySelector('.loading-text').style.display = 'none';
+	
   // First timeout: show logo B after DELAY_TO_LOGO_B ms
   setTimeout(() => {
     logoB.classList.add('show');
@@ -244,6 +262,10 @@ if (!skipAnimation) {
 
 } else {
     // Skip animation, show Logo A immediately
+	// Hide the loading text
+	document.querySelector('.loading-text').style.display = 'none';
+	// Hide the loading text
+	document.querySelector('.loading-text').style.display = 'none';	
     logoA.classList.add('show');
     adminBtn.removeAttribute('disabled');
     playerBtn.removeAttribute('disabled');
@@ -262,6 +284,7 @@ if (!skipAnimation) {
   </script>
 </body>
 </html>
+
 
 
 
