@@ -255,7 +255,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0p)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0beta)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -460,17 +460,6 @@
     };
 
     socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
-
-		  // Log all values to the browser console
-//  console.log("roundStarted event:", {
-//    questionId,
- //   prompt,
- //   playerCount,
- //   roundNumber,
- //   myAnswer,
- //   popup
-/  });
-		
       currentRound = roundNumber;
       answersShown = false;
 
@@ -488,14 +477,18 @@
       document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
-	
-  // Only show popup if server says so
-//  if (popup) {
-    const promptText = document.getElementById("questionPrompt").innerText;
-    document.getElementById("popupQuestion").innerText = promptText;
-    document.getElementById("roundPopup").style.display = "flex";
- // }
+// Log the popup flag to the browser console
+ // console.log("Popup flag Before:", popup);
+		
+  // Only auto-show popup if server says popup=true
 
+  const promptText = document.getElementById("questionPrompt").innerText;
+  document.getElementById("popupQuestion").innerText = promptText;
+  document.getElementById("roundPopup").style.display = "flex";
+
+	// Log the popup flag to the browser console
+  //console.log("Popup flag After :", popup);
+		
  // if (popup) {
  //   document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
  //   document.getElementById("roundPopup").style.display = "flex";
@@ -526,18 +519,6 @@
       }
     });
 
-
-// When someone dismisses popup, hide it for everyone
-socket.on("popupDismissed", () => {
-  document.getElementById("roundPopup").style.display = "none";
-});
-
-// Close button tells server to dismiss popup
-document.getElementById("closePopup").onclick = () => {
-  document.getElementById("roundPopup").style.display = "none";
-  socket.emit("dismissPopup", { roomCode });
-};
-	
     socket.on("allSubmitted", () => {
       showBtn.disabled=false;
       document.getElementById("toggleShow").checked = true;
@@ -694,16 +675,9 @@ showQuestionBtn.onclick = () => {
   document.getElementById("roundPopup").style.display = "flex";
 };
 
-
   </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
 
