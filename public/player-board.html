@@ -789,8 +789,20 @@ showQuestionBtn.onclick = () => {
   document.getElementById("roundPopup").style.display = "flex";
 };
 
+
+
+	document.addEventListener("change", e => {
+  if (e.target.classList.contains("unicornRadio")) {
+    const player = e.target.dataset.player;
+    const round = parseInt(e.target.dataset.round, 10);
+    socket.emit("assignUnicorn", { roomCode, playerName: player, roundNumber: round });
+  }
+});
+
+	
   </script>
 </body>
 </html>
+
 
 
