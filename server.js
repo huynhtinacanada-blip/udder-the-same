@@ -43,7 +43,7 @@ const pool = new Pool({
   await pool.query(`CREATE TABLE IF NOT EXISTS questions (
     id SERIAL PRIMARY KEY,
     prompt TEXT NOT NULL,
-    sort_number INT,
+     discard DATE DEFAULT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
   );`);
 
@@ -105,7 +105,7 @@ app.patch("/api/rooms/:code", async (req, res) => {
 
 // ---------------- Question Management APIs ----------------
 app.get("/api/questions", async (_req, res) => {
-  const r = await pool.query("SELECT id, prompt, sort_number FROM questions ORDER BY id DESC");
+  const r = await pool.query("SELECT id, prompt, discard FROM questions ORDER BY id DESC");
   res.json(r.rows);
 });
 app.post("/api/questions", async (req, res) => {
@@ -113,14 +113,14 @@ app.post("/api/questions", async (req, res) => {
   if (!text) return res.status(400).json({ error: "Prompt required" });
   const r = await pool.query("INSERT INTO questions (prompt) VALUES ($1) RETURNING id, prompt", [text.trim()]);
   const newId = r.rows[0].id;
-  await pool.query("UPDATE questions SET sort_number = $1 WHERE id = $1", [newId]);
-  res.json({ id: newId, prompt: r.rows[0].prompt, sort_number: newId });
+ await pool.query("UPDATE questions SET discard=$1 WHERE id=$2", [today, qid]);
+  res.json({ id: newId, prompt: r.rows[0].prompt, discard: today});
 });
 app.put("/api/questions/:id", async (req, res) => {
   const { text } = req.body;
   const id = parseInt(req.params.id, 10);
   if (!text) return res.status(400).json({ error: "Prompt required" });
-  const r = await pool.query("UPDATE questions SET prompt=$1 WHERE id=$2 RETURNING id, prompt, sort_number", [text.trim(), id]);
+  const r = await pool.query("UPDATE questions SET prompt=$1 WHERE id=$2 RETURNING id, prompt, discard", [text.trim(), today]);
   if (r.rowCount === 0) return res.status(404).json({ error: "Question not found" });
   res.json(r.rows[0]);
 });
@@ -254,7 +254,7 @@ io.on("connection", (socket) => {
 
   socket.on("startRound", async ({ roomCode }) => {
     const rc = roomCode.toUpperCase();
-    const qr = await pool.query("SELECT id FROM questions ORDER BY sort_number ASC");
+    const qr = await pool.query("SELECT id FROM questions ORDER BY discard ASC");
     if (qr.rows.length === 0) return;
     const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
     const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
@@ -338,4 +338,5 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+
 
