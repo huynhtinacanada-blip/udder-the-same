@@ -478,6 +478,12 @@
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
   // Only auto-show popup if server says popup=true
+
+  const promptText = document.getElementById("questionPrompt").innerText;
+  document.getElementById("popupQuestion").innerText = promptText;
+  document.getElementById("roundPopup").style.display = "flex";
+
+		
  // if (popup) {
  //   document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
  //   document.getElementById("roundPopup").style.display = "flex";
@@ -668,5 +674,6 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
