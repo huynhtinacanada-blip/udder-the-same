@@ -403,10 +403,9 @@ io.on("connection", (socket) => {
       // Update room state: increment round, set active question
       await pool.query("UPDATE rooms SET current_round = current_round+1, active_question_id=$1 WHERE code=$2", [qid, rc]);
       // Reset player submissions
-     //  await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
+   await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
 
-      // Reset player submissions AND clear old answers
-    await pool.query("UPDATE players SET submitted=false, answer=NULL WHERE room_code=$1", [rc] );
+ 
       
       await emitPlayerList(rc);
 
@@ -530,6 +529,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
