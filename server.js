@@ -129,11 +129,13 @@ async function getActiveStats(roomCode) {
   return { merged, activeCount, submittedActiveCount };
 }
 
+// Function to build the scoreboard for a given room
 async function getScoreboard(roomCode) {
   const r = await pool.query(
     `SELECT p.name AS player_name,
             COALESCE(SUM(s.points),0) AS total,
-            COALESCE(json_object_agg(s.round_number, s.points) FILTER (WHERE s.points IS NOT NULL), '{}') AS rounds
+            COALESCE(json_object_agg(s.round_number, s.points) FILTER (WHERE s.points IS NOT NULL), '{}') AS rounds,
+            MAX(s.tag) AS tag   -- NEW: include unicorn tag if present
      FROM players p
      LEFT JOIN scores s
        ON p.room_code = s.room_code
@@ -143,9 +145,9 @@ async function getScoreboard(roomCode) {
      ORDER BY p.name`,
     [roomCode]
   );
-  // console.log("// **Debug Output: DB READ -> scoreboard:", r.rows);
   return r.rows;
 }
+
 
 async function emitPlayerList(roomCode) {
   const { merged, activeCount, submittedActiveCount } = await getActiveStats(roomCode);
@@ -507,4 +509,5 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
