@@ -627,16 +627,20 @@
           const labelClass = roundMap[name] === 1 ? "pointLabel green" : "pointLabel blue";
 			return `
 			  <tr>
-				<td>
-				  <label class="switch">
-					<input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
-					<span class="slider"></span>
-					<span class="${labelClass}">${labelText}</span>
-				  </label>
-				</td>
-				<td>X</td> <!-- TAG column placeholder -->
-				<td>${name}</td>
-				<td>${ans}</td>
+			    <td>
+			      <label class="switch">
+			        <input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
+			        <span class="slider"></span>
+			        <span class="${labelClass}">${labelText}</span>
+			      </label>
+			    </td>
+			    <td>
+			      <input type="radio" name="unicornTag" class="unicornRadio"
+			             data-player="${name}" data-round="${currentRound}" id="unicorn-${name}">
+			      <label for="unicorn-${name}" class="unicornLabel"></label>
+			    </td>
+			    <td>${name}</td>
+			    <td>${ans}</td>
 			  </tr>
 			`;
         })
@@ -788,4 +792,5 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
