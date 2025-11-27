@@ -352,6 +352,11 @@
 
 
   <script>
+	  
+	// 1. Global flags
+	let roomIsClosed = false;
+
+	// 2. DOM references
     const urlParams=new URLSearchParams(window.location.search);
     const roomCode=(urlParams.get("room")||"").toUpperCase();
     const myName=urlParams.get("name")||"";
@@ -361,14 +366,42 @@
 
     const startBtn=document.getElementById("startBtn");
     const showBtn=document.getElementById("showAnswersBtn");
-    const statusMsg=document.getElementById("statusMessage");
+    const statusMessage=document.getElementById("statusMessage");
     const submitBtn=document.getElementById("submitAnswerBtn");
     const inputBox=document.getElementById("answerInput");
 	
 	const endGameBtn = document.getElementById("endGameBtn");
 	const signOutBtn = document.getElementById("signOutBtn");
 
-	signOutBtn.onclick = () => window.location.href = "/player-login.html";	
+	// 3. Event handlers
+		signOutBtn.onclick = () => window.location.href = "/player-login.html";
+		
+	// Handler to emit closeRoom event
+	endGameBtn.onclick = () => {
+	  if (confirm("Are you sure you want to end this game?")) {
+		socket.emit("closeRoom", { roomCode });
+	  }
+	};
+	  
+	
+	// 4. Socket listeners
+	// Listen for server confirmation
+	socket.on("roomClosed", () => {
+	  roomIsClosed = true;
+	  statusMsg.innerText = "This game room has been closed.";
+	
+	  // Disable all controls
+	  startBtn.disabled = true;
+	  showBtn.disabled = true;
+	  showQuestionBtn.disabled = true;
+	  submitBtn.disabled = true;
+	  inputBox.disabled = true;
+	  endGameBtn.disabled = true;
+	
+		// Show a "Game Over" badge/message
+		document.getElementById("gameOverBanner").classList.remove("hidden");
+		statusMessage.textContent = "Game over.";
+	});
 	
 
 	let allPlayers = new Set();
@@ -406,7 +439,7 @@
         })
         .join("");
 
-      //statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+      //statusMessage.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
       //document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
 
       if (document.getElementById("qaSection").style.display === "block") {
@@ -439,7 +472,7 @@
       showBtn.disabled=true;
       document.getElementById("toggleShow").checked = false;
 
-      statusMsg.innerText="Round in progress…";
+      statusMessage.innerText="Round in progress…";
       document.getElementById("qaSection").style.display="block";
       openAccordion("questionBox");
       closeAccordion("answersTableWrapper");
@@ -518,7 +551,7 @@
       document.getElementById("toggleShow").checked = false;
       startBtn.disabled=false;
       document.getElementById("toggleStart").checked = true;
-      statusMsg.innerText="Round finished. You can start a new round.";
+      statusMessage.innerText="Round finished. You can start a new round.";
     });
 
     // Persist point toggles
@@ -636,9 +669,3 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
-
-
-
-
-
-
