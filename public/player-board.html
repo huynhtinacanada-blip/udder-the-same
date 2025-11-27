@@ -255,15 +255,14 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0g)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0a)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
 
-<!-- --- Banner --- -->
-<div id="gameOverBanner" class="hidden">🎮 Game Over</div>
-
-
+	<!-- --- Banner --- -->
+	<div id="gameOverBanner" class="hidden">🎮 Game Over</div>
+		
   <!-- Game Room Info -->
   <div class="accordion">
     <div class="accordion-header" onclick="toggleAccordion('questionBox')">Game Room Info</div>
@@ -343,15 +342,13 @@
   </div>
 </div>
 
-
   <!-- Disclaimer Footer (outside card/accordion area) -->
   <div class="disclaimer">
     This online game is inspired by Herd Mentality, created by Big Potato Games. 
     It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
   </div>
 
-
-  <script>
+<script>
 	  
 	// 1. Global flags
 	let roomIsClosed = false;
@@ -480,15 +477,17 @@
       document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
+  // Only auto-show popup if server says popup=true
+  if (popup) {
+    document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
+    document.getElementById("roundPopup").style.display = "flex";
+  }
 
-	// popup logic
-//  if (popup) {
- //   document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
-  //  document.getElementById("roundPopup").style.display = "flex";
-  //}
-
+  // Keep local toggle enabled at all times
+  showQuestionBtn.disabled = false;
 		
-      if (answersShown || myAnswer) {
+  // Answer submission logic
+	if (answersShown || myAnswer) {
         submitBtn.disabled=true;
         inputBox.disabled=true;
         document.getElementById("toggleSubmit").checked = false;
@@ -669,3 +668,4 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
