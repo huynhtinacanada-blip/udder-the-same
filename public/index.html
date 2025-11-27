@@ -1,0 +1,75 @@
+<!-- File: index.html 
+     Purpose: Landing page for Udderly the Same game 
+     Contains: Logo, navigation buttons for Admin and Player login 
+-->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Udderly the Same</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #fdfcfb, #e2d1c3);
+      max-width: 800px;
+      margin: 100px auto;
+      text-align: center;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { font-size: 36px; margin-bottom: 10px; }
+    h3 { margin-top: 0; font-weight: normal; }
+    .logo {
+      max-width: 150px;
+      width: 100%;
+      height: auto;
+      margin: 20px auto 10px;
+      display: block;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 24px;
+      margin: 8px;
+      font-size: 18px;
+      background: #333;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .btn:hover { 
+      background: #F7AC4D; 
+      transform: scale(1.05); 
+    }
+    p {
+      margin-top: 16px;
+      font-size: 15px;
+      color: #444;
+    }
+    p:first-of-type { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Udderly the Same</h1>
+  <h3>🐮 Inspired by Herd Mentality, created by Big Potato Games.</h3>
+
+  <img src="udderly-logo-main.png" alt="Home Page Logo" class="logo">
+
+  <p><strong>Welcome! Choose your path:</strong></p>
+  <section>
+    <a class="btn" href="/admin-login.html">Admin Login</a>
+    <a class="btn" href="/player-login.html">Join as Player</a>
+  </section>
+  <p>
+    Players: Click on <em>Join as Player</em> and enter your name and room code.<br>
+    Admins: Click on <em>Admin Login</em> to create rooms and manage questions.
+  </p>
+  <h4>v1.1.2</h4>
+</body>
+</html>
+

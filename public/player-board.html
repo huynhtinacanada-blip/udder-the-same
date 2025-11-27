@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Player Dashboard — Udderly the Same</title>
+  <script src="/socket.io/socket.io.js"></script>
+
+<style>
+    body {
+      font-family:'Segoe UI',Arial,sans-serif;
+      max-width:900px;
+      margin:30px auto;
+      background:linear-gradient(135deg,#fdfcfb,#e2d1c3);
+      padding:20px;
+      border-radius:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    .header { display:flex; align-items:center; gap:12px; margin-bottom:20px;}
+    .logo { max-width:100px; height:auto; display:block;}
+    h2 { margin:0;}
+    #statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444;}
+    button {
+      padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
+      cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
+    }
+    button:hover:enabled { background:#F7AC4D;}
+    button:disabled { background:#999; cursor:not-allowed;}
+    .accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+    .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold;}
+    .accordion-header:hover { background:#F7AC4D;}
+    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px;}
+    .accordion-content.open { padding:15px; max-height:1000px;}
+    #answersTable, #playersTable, #scoreTable {
+      font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
+    }
+    #answersTable th, #answersTable td,
+    #playersTable th, #playersTable td,
+    #scoreTable th, #scoreTable td {
+      border-bottom:1px solid #ccc; padding:8px;
+    }
+    #answersTable th, #answersTable td { text-align:left; }
+
+    /* Explicit column widths for Answers table */
+    #answersTable th:first-child,
+    #answersTable td:first-child {
+      width: 120px;       /* toggle column */
+      text-align: center;
+    }
+    #answersTable th:nth-child(2),
+    #answersTable td:nth-child(2) {
+      width: 200px;       /* player name column */
+    }
+    #answersTable th:nth-child(3),
+    #answersTable td:nth-child(3) {
+      width: auto;        /* answer column fills remaining space */
+    }
+
+    textarea {
+      width:100%; max-width:800px; padding:10px; border-radius:6px;
+      border:1px solid #ccc; margin-bottom:10px; font-size:16px;
+    }
+
+    /* Pill-style switch (default for override controls) */
+    .switch { display:block; margin-bottom:12px; }
+    .switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
+    .switch input { display:none; }
+    .slider {
+      position: relative;
+      width: 60px;
+      height: 28px;
+      background-color: #ccc;
+      border-radius: 28px;
+      transition: background-color 0.3s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      left: 2px;
+      top: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+    .switch input:checked + .slider { background-color: #2e7d32; }
+    .switch input:checked + .slider::before { transform: translateX(32px); }
+
+    /* Top status styling */
+    #topStatus { font-weight:bold; color:#444; margin-left:auto; }
+    .roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .small { font-size: 12px; color: #666; }
+
+    /* Scoreboard styling */
+    #scoreTable th, #scoreTable td { padding: 6px; }
+    #scoreTable th:first-child, #scoreTable td:first-child {
+      text-align: left;
+      padding-left: 10px;
+    }
+    #scoreTable th:nth-child(2), #scoreTable td:nth-child(2) {
+      text-align: center;
+      width: 60px;
+    }
+    #scoreTable th:nth-child(n+3), #scoreTable td.roundCell {
+      text-align: center;
+      width: 35px;
+    }
+    .scoreSelect { width: 100%; text-align: center; }
+
+    /* Answer toggle labels */
+    .pointLabel { margin-left: 8px; font-weight: bold; }
+    .pointLabel.green { color: #2e7d32; }
+    .pointLabel.blue  { color: #0d47a1; text-shadow: 0 0 2px #fff; }
+
+    /* Wider pill + tint ONLY for point toggles in Answers table */
+    #answersTable .slider {
+      width: 80px;
+      height: 32px;
+      background-color: #90caf9;   /* medium blue tint when OFF */
+      border-radius: 32px;
+      transition: background-color 0.3s;
+    }
+    #answersTable .slider::before {
+      width: 28px;
+      height: 28px;
+      left: 2px;
+      top: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s, background-color 0.3s;
+    }
+    #answersTable .switch input:checked + .slider {
+      background-color: #66bb6a;   /* medium green tint when ON */
+    }
+    #answersTable .switch input:checked + .slider::before {
+      transform: translateX(48px);
+    }
+</style>
+
+
+</head>
+<body>
+  <div class="header">
+    <img src="udder-consensus-logo.png" alt="Udderly the Same Logo" class="logo">
+    <h2>🐮 Player Dashboard <span class="small">(v 1.1.3e)</span></h2>
+  </div>
+
+  <!-- Game Room Info -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('questionBox')">Game Room Info</div>
+    <div id="questionBox" class="accordion-content open">
+      <div class="roomHeader">
+        <p id="roomLabel"></p>
+        <span id="topStatus"></span>
+      </div>
+      <table id="playersTable">
+        <thead><tr><th>Player</th><th>Out</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="controls">
+        <button id="startBtn">Start Round</button>
+        <button id="showAnswersBtn" disabled>Show Answers</button>
+        <p id="statusMessage"></p>
+      </div>
+      <div id="qaSection" style="display:none;">
+        <p id="questionPrompt"></p>
+        <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
+        <button id="submitAnswerBtn">Submit Answer</button>
+        <p id="progress"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control Switches -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
+    <div id="controlsBox" class="accordion-content">
+      <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
+      <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
+      <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
+    </div>
+  </div>
+
+  <!-- Answers -->
+  <div id="answersAccordion" class="accordion" style="display:none;">
+    <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
+    <div id="answersTableWrapper" class="accordion-content">
+      <table id="answersTable">
+        <thead><tr><th>Point</th><th>Name</th><th>Answer</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Scoreboard -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('scoreboardBox')">Scoreboard</div>
+    <div id="scoreboardBox" class="accordion-content">
+      <table id="scoreTable">
+        <thead><tr><th>Player</th><th>Total</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const urlParams=new URLSearchParams(window.location.search);
+    const roomCode=(urlParams.get("room")||"").toUpperCase();
+    const myName=urlParams.get("name")||"";
+    document.getElementById("roomLabel").innerText=`Room: ${roomCode} — You: ${myName}`;
+    const socket=io();
+    socket.emit("joinLobby",{roomCode,name:myName});
+
+    const startBtn=document.getElementById("startBtn");
+    const showBtn=document.getElementById("showAnswersBtn");
+    const statusMsg=document.getElementById("statusMessage");
+    const submitBtn=document.getElementById("submitAnswerBtn");
+    const inputBox=document.getElementById("answerInput");
+
+let allPlayers = new Set();
+let answersShown = false;
+let currentRound = 0;
+let scoreboard = []; // server-sourced [{player_name, total, rounds:{round:points}}]
+
+
+    // Switch overrides
+    document.getElementById("toggleStart").addEventListener("change", e => {
+      startBtn.disabled = !e.target.checked;
+    });
+    document.getElementById("toggleShow").addEventListener("change", e => {
+      showBtn.disabled = !e.target.checked;
+    });
+    document.getElementById("toggleSubmit").addEventListener("change", e => {
+      const on = e.target.checked;
+      submitBtn.disabled = !on;
+      inputBox.disabled = !on;
+    });
+
+    // Player list updates
+    socket.on("playerList", data => {
+      const players = data.players || data;
+      const activeCount = data.activeCount || players.filter(p => p.active).length;
+      const submittedCount = data.submittedCount || players.filter(p => p.active && p.submitted).length;
+
+      players.forEach(p => allPlayers.add(p.name));
+      document.querySelector("#playersTable tbody").innerHTML = Array.from(allPlayers)
+        .map(name => {
+          const player = players.find(p => p.name === name);
+          const ghost = player && player.active ? "" : "👻";
+          const submitted = player ? (player.submitted ? "✅ Submitted" : "⌛ Waiting") : "";
+          return `<tr><td>${escapeHTML(name)}</td><td>${ghost}</td><td>${submitted}</td></tr>`;
+        })
+        .join("");
+
+      statusMsg.innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+      document.getElementById("topStatus").innerText = `Active: ${activeCount} | Submitted: ${submittedCount}`;
+
+      if (document.getElementById("qaSection").style.display === "block") {
+        document.getElementById("progress").innerText = `Submitted: ${submittedCount} / ${activeCount}`;
+      }
+    });
+
+    socket.on("submissionProgress", ({submittedCount,totalPlayers}) => {
+      document.getElementById("progress").innerText=`Submitted: ${submittedCount} / ${totalPlayers}`;
+      if (totalPlayers > 0 && submittedCount === totalPlayers) {
+        showBtn.disabled = false;
+        document.getElementById("toggleShow").checked = true;
+      } else {
+        showBtn.disabled = true;
+        document.getElementById("toggleShow").checked = false;
+      }
+    });
+
+    startBtn.onclick = () => {
+      socket.emit("startRound",{roomCode});
+    };
+
+    socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
+      currentRound = roundNumber;
+      answersShown = false;
+
+      startBtn.disabled=true;
+      document.getElementById("toggleStart").checked = false;
+
+      showBtn.disabled=true;
+      document.getElementById("toggleShow").checked = false;
+
+      statusMsg.innerText="Round in progress…";
+      document.getElementById("qaSection").style.display="block";
+      openAccordion("questionBox");
+      closeAccordion("answersTableWrapper");
+      document.getElementById("answersAccordion").style.display="none";
+      document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
+      document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
+
+      if (answersShown || myAnswer) {
+        submitBtn.disabled=true;
+        inputBox.disabled=true;
+        document.getElementById("toggleSubmit").checked = false;
+        inputBox.value = myAnswer || "";
+      } else {
+        submitBtn.disabled=false;
+        inputBox.disabled=false;
+        document.getElementById("toggleSubmit").checked = true;
+        inputBox.value = "";
+        submitBtn.onclick=()=>{
+          const answer=inputBox.value.trim();
+          if(!answer) return;
+          socket.emit("submitAnswer",{roomCode,name:myName,questionId,answer});
+          submitBtn.disabled=true;
+          inputBox.disabled=true;
+          document.getElementById("toggleSubmit").checked = false;
+        };
+      }
+    });
+
+    socket.on("allSubmitted", () => {
+      showBtn.disabled=false;
+      document.getElementById("toggleShow").checked = true;
+    });
+
+    showBtn.onclick = () => {
+      socket.emit("showAnswers",{roomCode});
+      answersShown = true;
+    };
+
+    socket.on("answersRevealed", rows => {
+      const roundMap = toRoundMap(scoreboard, currentRound);
+      document.querySelector("#answersTable tbody").innerHTML = rows
+        .map(r => {
+          const name = escapeHTML(r.name);
+          const ans = escapeHTML(r.answer);
+          const checked = roundMap[name] === 1 ? "checked" : "";
+          const labelText = roundMap[name] === 1 ? "+1" : "0";
+          const labelClass = roundMap[name] === 1 ? "pointLabel green" : "pointLabel blue";
+          return `
+            <tr>
+              <td>
+                <label class="switch">
+                  <input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
+                  <span class="slider"></span>
+                  <span class="${labelClass}">${labelText}</span>
+                </label>
+              </td>
+              <td>${name}</td>
+              <td>${ans}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      document.getElementById("answersAccordion").style.display="block";
+      openAccordion("answersTableWrapper");
+      closeAccordion("questionBox");
+      showBtn.disabled=true;
+      document.getElementById("toggleShow").checked = false;
+      startBtn.disabled=false;
+      document.getElementById("toggleStart").checked = true;
+      statusMsg.innerText="Round finished. You can start a new round.";
+    });
+
+    // Persist point toggles
+    document.addEventListener("change", e => {
+      if (e.target.classList.contains("scoreToggle")) {
+        const player = e.target.dataset.player;
+        const round = parseInt(e.target.dataset.round, 10);
+        const points = e.target.checked ? 1 : 0;
+        socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
+
+        const labelSpan = e.target.closest("label").querySelector(".pointLabel");
+        if (labelSpan) {
+          labelSpan.textContent = points === 1 ? "+1" : "0";
+          labelSpan.className = points === 1 ? "pointLabel green" : "pointLabel blue";
+        }
+      }
+    });
+
+    socket.on("scoreboardUpdated", data => {
+      scoreboard = data || [];
+      renderScoreboard(scoreboard);
+      if (document.getElementById("answersAccordion").style.display === "block") {
+        const roundMap = toRoundMap(scoreboard, currentRound);
+        document.querySelectorAll(".scoreToggle").forEach(cb => {
+          const player = cb.dataset.player;
+          cb.checked = roundMap[player] === 1;
+          const labelSpan = cb.closest("label").querySelector(".pointLabel");
+          if (labelSpan) {
+            labelSpan.textContent = cb.checked ? "+1" : "0";
+            labelSpan.className = cb.checked ? "pointLabel green" : "pointLabel blue";
+          }
+        });
+      }
+    });
+
+    // Render scoreboard with dropdowns
+    function renderScoreboard(data) {
+      const allRounds = data.flatMap(d => Object.keys(d.rounds || {}).map(n => parseInt(n, 10)));
+      const maxRound = Math.max(0, ...allRounds);
+
+      const header = "<tr><th>Player</th><th>Total</th>" +
+        Array.from({length: maxRound}, (_, i) => `<th>#${i+1}</th>`).join("") +
+        "</tr>";
+      document.querySelector("#scoreTable thead").innerHTML = header;
+
+      const rows = data.map(d => {
+        const total = d.total || 0;
+        const roundCells = Array.from({length: maxRound}, (_, i) => {
+          const rnum = i + 1;
+          const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
+          return `
+            <td class="roundCell">
+              <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect">
+                <option value="0" ${val == 0 ? "selected" : ""}>0</option>
+                <option value="1" ${val == 1 ? "selected" : ""}>1</option>
+              </select>
+            </td>
+          `;
+        }).join("");
+        return `<tr><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+      }).join("");
+
+      document.querySelector("#scoreTable tbody").innerHTML = rows;
+
+      // Auto-persist dropdown changes
+      document.querySelectorAll(".scoreSelect").forEach(select => {
+        select.addEventListener("change", e => {
+          const player = e.target.dataset.player;
+          const round = parseInt(e.target.dataset.round, 10);
+          const points = parseInt(e.target.value, 10);
+          socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
+        });
+      });
+    }
+
+    function toRoundMap(data, round) {
+      const map = {};
+      (data || []).forEach(d => {
+        const val = (d.rounds && d.rounds[round]) != null ? d.rounds[round] : 0;
+        map[escapeHTML(d.player_name)] = parseInt(val, 10) === 1 ? 1 : 0;
+      });
+      return map;
+    }
+
+    function escapeHTML(str){
+      const div=document.createElement('div');
+      div.innerText=String(str||"");
+      return div.innerHTML;
+    }
+    function toggleAccordion(id){document.getElementById(id).classList.toggle("open");}
+    function openAccordion(id){document.getElementById(id).classList.add("open");}
+    function closeAccordion(id){document.getElementById(id).classList.remove("open");}
+  </script>
+</body>
+</html>
+

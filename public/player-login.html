@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Player Login — Udderly the Same</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      background:#e8f5e9; 
+      display:flex; 
+      justify-content:center; 
+      align-items:center; 
+      min-height:100vh; 
+      margin:0; 
+    }
+    .card { 
+      background:#fff; 
+      padding:60px; 
+      border-radius:16px; 
+      box-shadow:0 8px 24px rgba(0,0,0,0.12); 
+      width:100%; 
+      max-width:480px; 
+      text-align:center;
+    }
+    .logo {
+      max-width:120px;
+      width:100%;
+      height:auto;
+      margin:0 auto 20px;
+      display:block;
+      cursor:pointer;
+    }
+    h1 { 
+      font-size:28px; 
+      margin-bottom:24px; 
+      text-align:center; 
+    }
+    form { 
+      display:flex; 
+      flex-direction:column; 
+      gap:18px; 
+      text-align:left;
+    }
+    label { font-size:16px; }
+    input { 
+      font-size:18px; 
+      padding:12px; 
+      border:1px solid #ccc; 
+      border-radius:8px; 
+    }
+    button { 
+      font-size:20px; 
+      padding:16px; 
+      background:#2e7d32; 
+      color:#fff; 
+      border:none; 
+      border-radius:8px; 
+      cursor:pointer; 
+    }
+    button:hover { background:#F76ACF; }
+    #msg { 
+      margin-top:12px; 
+      font-size:15px; 
+      color:red; 
+      text-align:center; 
+      min-height:20px; 
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <!-- Logo that links back to index.html -->
+    <a href="/index.html">
+      <img src="udder-consensus-logo.png" alt="Udderly the Same Logo" class="logo">
+    </a>
+
+    <h1>🐮 Player Login</h1>
+    <form id="joinForm">
+      <label>Your Name</label>
+      <input id="name" name="name" required />
+      <label>Room Code</label>
+      <input id="roomCode" name="roomCode" required />
+      <button type="submit">Join Game Room</button>
+    </form>
+    <div id="msg"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('joinForm');
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
+      const res = await fetch('/api/player/join', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name, roomCode})
+      });
+      if(res.ok){
+        const j = await res.json();
+        location.href = j.redirect;
+      } else {
+        const j = await res.json().catch(()=>({}));
+        document.getElementById('msg').textContent = j.error || 'Error joining room';
+      }
+    });
+  </script>
+</body>
+</html>
