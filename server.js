@@ -1,4 +1,4 @@
-// v1.0.1a — Game Server
+// v1.1.0 release — Game Server
 // -----------------------------------
 // This file sets up the Express server, PostgreSQL tables, and Socket.IO game logic.
 //  - Proper filtering of questions with discard IS NULL
@@ -39,7 +39,10 @@ const pool = new Pool({
       popup_active BOOLEAN DEFAULT false,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );`);
-    console.log("// **CONSOLE CODE: DB INIT -> rooms table ensured");
+	
+	// if (!process.env.DEBUG) {
+    // console.log("// **Debug Output: DB INIT -> rooms table created or already exists.");
+	// }
 
     await pool.query(`CREATE TABLE IF NOT EXISTS players (
       id SERIAL PRIMARY KEY,
@@ -49,11 +52,11 @@ const pool = new Pool({
       has_unicorn BOOLEAN DEFAULT false, -- corrected from TINYINT
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );`);
-    console.log("// **CONSOLE CODE: DB INIT -> players table ensured");
+    // console.log("// **Debug Output: DB INIT -> players table created or already exists.");
 
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS players_name_room_unique
       ON players (LOWER(name), room_code);`);
-    console.log("// **CONSOLE CODE: DB INIT -> players unique index ensured");
+    // console.log("// **Debug Output: DB INIT -> players unique index created or already exists.");
 
     await pool.query(`CREATE TABLE IF NOT EXISTS questions (
       id SERIAL PRIMARY KEY,
@@ -61,7 +64,7 @@ const pool = new Pool({
       discard DATE DEFAULT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );`);
-    console.log("// **CONSOLE CODE: DB INIT -> questions table ensured");
+    // console.log("// **Debug Output: DB INIT -> questions table created or already exists.");
 
     await pool.query(`CREATE TABLE IF NOT EXISTS answers (
       id SERIAL PRIMARY KEY,
@@ -72,11 +75,11 @@ const pool = new Pool({
       answer TEXT NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );`);
-    console.log("// **CONSOLE CODE: DB INIT -> answers table ensured");
+    // console.log("// **Debug Output: DB INIT -> answers table created or already exists.");
 
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS answers_unique_per_round
       ON answers (room_code, LOWER(player_name), question_id, round_number);`);
-    console.log("// **CONSOLE CODE: DB INIT -> answers unique index ensured");
+    // console.log("// **Debug Output: DB INIT -> answers unique index created or already exists.");
 
     await pool.query(`CREATE TABLE IF NOT EXISTS scores (
       id SERIAL PRIMARY KEY,
@@ -88,11 +91,11 @@ const pool = new Pool({
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       UNIQUE (room_code, player_name, round_number)
     );`);
-    console.log("// **CONSOLE CODE: DB INIT -> scores table ensured");
+    // console.log("// **Debug Output: DB INIT -> scores table created or already exists.");
 
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS scores_unique_per_round
       ON scores (room_code, LOWER(player_name), round_number);`);
-    console.log("// **CONSOLE CODE: DB INIT -> scores unique index ensured");
+    // console.log("// **Debug Output: DB INIT -> scores unique index created or already exists.");
   } catch (err) {
     console.error("Error initializing tables:", err);
   }
@@ -113,7 +116,7 @@ function getActiveNames(roomCode) {
 
 async function getActiveStats(roomCode) {
   const dbPlayers = await pool.query("SELECT name, submitted FROM players WHERE room_code=$1 ORDER BY name ASC", [roomCode]);
-  console.log("// **CONSOLE CODE: DB READ -> players:", dbPlayers.rows);
+  // console.log("// **Debug Output: DB READ -> players:", dbPlayers.rows);
 
   const activeNames = getActiveNames(roomCode);
   const merged = dbPlayers.rows.map(p => ({
@@ -140,7 +143,7 @@ async function getScoreboard(roomCode) {
      ORDER BY p.name`,
     [roomCode]
   );
-  console.log("// **CONSOLE CODE: DB READ -> scoreboard:", r.rows);
+  // console.log("// **Debug Output: DB READ -> scoreboard:", r.rows);
   return r.rows;
 }
 
@@ -176,7 +179,7 @@ function isPlayerActive(roomCode, playerName) {
 // ---------------- Admin Login API ----------------
 app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
-  console.log("// **CONSOLE CODE: ADMIN LOGIN attempt:", { username, password });
+  // console.log("// **Debug Output: ADMIN LOGIN attempt:", { username, password });
   const ADMIN_USER = process.env.ADMIN_USER;
   const ADMIN_PASS = process.env.ADMIN_PASS;
   if (!ADMIN_USER || !ADMIN_PASS) {
@@ -191,14 +194,14 @@ app.post("/api/admin/login", (req, res) => {
 // ---------------- Room Management APIs ----------------
 app.get("/api/rooms", async (_req, res) => {
   const r = await pool.query("SELECT code, status, created_at FROM rooms ORDER BY id DESC");
-  console.log("// **CONSOLE CODE: DB READ -> rooms:", r.rows);
+  // console.log("// **Debug Output: DB READ -> rooms:", r.rows);
   res.json(r.rows);
 });
 
 app.post("/api/rooms", async (req, res) => {
   const { code, status } = req.body;
   await pool.query("INSERT INTO rooms (code, status) VALUES ($1,$2)", [code.toUpperCase(), status || "open"]);
-  console.log("// **CONSOLE CODE: DB WRITE -> rooms:", { code: code.toUpperCase(), status: status || "open" });
+  // console.log("// **Debug Output: DB WRITE -> rooms:", { code: code.toUpperCase(), status: status || "open" });
   res.json({ success: true });
 });
 
@@ -206,21 +209,21 @@ app.patch("/api/rooms/:code", async (req, res) => {
   const { status } = req.body;
   const code = req.params.code.toUpperCase();
   const r = await pool.query("UPDATE rooms SET status=$1 WHERE code=$2 RETURNING code,status", [status, code]);
-  console.log("// **CONSOLE CODE: DB WRITE -> rooms update:", r.rows);
+  // console.log("// **Debug Output: DB WRITE -> rooms update:", r.rows);
   res.json(r.rows[0]);
 });
 
 // ---------------- Question Management APIs ----------------
 app.get("/api/questions", async (_req, res) => {
   const r = await pool.query("SELECT id, prompt, discard FROM questions ORDER BY id DESC");
-  console.log("// **CONSOLE CODE: DB READ -> questions:", r.rows);
+  // console.log("// **Debug Output: DB READ -> questions:", r.rows);
   res.json(r.rows);
 });
 
 app.post("/api/questions", async (req, res) => {
   const { text } = req.body;
   const r = await pool.query("INSERT INTO questions (prompt) VALUES ($1) RETURNING id, prompt", [text.trim()]);
-  console.log("// **CONSOLE CODE: DB WRITE -> questions:", r.rows[0]);
+  // console.log("// **Debug Output: DB WRITE -> questions:", r.rows[0]);
   res.json(r.rows[0]);
 });
 
@@ -228,14 +231,14 @@ app.put("/api/questions/:id", async (req, res) => {
   const { text } = req.body;
   const id = parseInt(req.params.id, 10);
   const r = await pool.query("UPDATE questions SET prompt=$1 WHERE id=$2 RETURNING id, prompt, discard", [text.trim(), id]);
-  console.log("// **CONSOLE CODE: DB WRITE -> questions update:", r.rows[0]);
+  // console.log("// **Debug Output: DB WRITE -> questions update:", r.rows[0]);
   res.json(r.rows[0]);
 });
 
 app.delete("/api/questions/:id", async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const r = await pool.query("DELETE FROM questions WHERE id=$1 RETURNING id", [id]);
-  console.log("// **CONSOLE CODE: DB DELETE -> questions:", r.rows);
+  // console.log("// **Debug Output: DB DELETE -> questions:", r.rows);
   res.json({ success: true });
 });
 
@@ -338,48 +341,66 @@ io.on("connection", (socket) => {
   // Assign unicorn
   socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
     await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [roomCode]);
-    console.log("DB WRITE -> players unicorn reset:", { roomCode });
+    // console.log("**Debug Output: DB WRITE -> players unicorn reset:", { roomCode });
 
     await pool.query("UPDATE players SET has_unicorn=true WHERE room_code=$1 AND name=$2", [roomCode, playerName]);
-    console.log("DB WRITE -> players unicorn assign:", { roomCode, playerName });
+    // console.log("**Debug Output: DB WRITE -> players unicorn assign:", { roomCode, playerName });
 
     await pool.query(
       "UPDATE scores SET tag='🦄' WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
       [roomCode, roundNumber, playerName]
     );
-    console.log("DB WRITE -> scores unicorn tag:", { roomCode, roundNumber, playerName });
+    // console.log("**Debug Output: DB WRITE -> scores unicorn tag:", { roomCode, roundNumber, playerName });
 
-    const scoreboard = await getScoreboard(roomCode);
-    io.to(roomCode).emit("scoreboardUpdated", scoreboard);
-  });
+  // Broadcast updated scoreboard
+  const scoreboard = await getScoreboard(roomCode);
+  io.to(roomCode).emit("scoreboardUpdated", scoreboard);
+
+  // NEW CODE: also broadcast updated answers list with unicorn tag
+  const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [roomCode]);
+  if (room.rows.length) {
+    const answers = await pool.query(
+      `SELECT a.player_name AS name, a.answer, s.tag
+       FROM answers a
+       LEFT JOIN scores s
+         ON a.room_code=s.room_code
+        AND a.round_number=s.round_number
+        AND LOWER(a.player_name)=LOWER(s.player_name)
+       WHERE a.room_code=$1 AND a.question_id=$2 AND a.round_number=$3
+       ORDER BY name ASC`,
+      [roomCode, room.rows[0].active_question_id, room.rows[0].current_round]
+    );
+    io.to(roomCode).emit("answersRevealed", answers.rows);
+  }
+});
 
   // Start a new round
   socket.on("startRound", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
       const qr = await pool.query("SELECT id FROM questions WHERE discard IS NULL ORDER BY id ASC");
-      console.log("DB READ -> questions available:", qr.rows);
+      // console.log("**Debug Output: DB READ -> questions available:", qr.rows);
 
       if (qr.rows.length === 0) return;
       const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
       const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
-      console.log("DB READ -> question chosen:", q.rows[0]);
+      // console.log("**Debug Output: DB READ -> question chosen:", q.rows[0]);
 
       await pool.query(
         "UPDATE rooms SET current_round=current_round+1, active_question_id=$1, popup_active=true WHERE code=$2",
         [qid, rc]
       );
-      console.log("DB WRITE -> rooms startRound:", { room_code: rc, active_question_id: qid });
+      // console.log("**Debug Output: DB WRITE -> rooms startRound:", { room_code: rc, active_question_id: qid });
 
       await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
-      console.log("DB WRITE -> players reset submitted:", { room_code: rc });
+      // console.log("**Debug Output: DB WRITE -> players reset submitted:", { room_code: rc });
 
       await emitPlayerList(rc);
       const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
-      console.log("DB READ -> rooms current_round:", roundNum);
+      // console.log("**Debug Output: DB READ -> rooms current_round:", roundNum);
 
       const roomState = await pool.query("SELECT popup_active FROM rooms WHERE code=$1", [rc]);
-      console.log("DB READ -> rooms popup_active:", roomState.rows[0]);
+      // console.log("**Debug Output: DB READ -> rooms popup_active:", roomState.rows[0]);
 
       io.to(rc).emit("roundStarted", {
         questionId: qid,
@@ -399,16 +420,16 @@ io.on("connection", (socket) => {
     try {
       const rc = roomCode.toUpperCase();
       const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-      console.log("DB READ -> rooms submitAnswer:", room.rows[0]);
+      // console.log("**Debug Output: DB READ -> rooms submitAnswer:", room.rows[0]);
 
       await pool.query(
         "INSERT INTO answers (room_code, player_name, question_id, round_number, answer) VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
         [rc, name, questionId, room.rows[0].current_round, answer]
       );
-      console.log("DB WRITE -> answers:", { room_code: rc, player_name: name, question_id: questionId, round_number: room.rows[0].current_round, answer });
+      // console.log("**Debug Output: DB WRITE -> answers:", { room_code: rc, player_name: name, question_id: questionId, round_number: room.rows[0].current_round, answer });
 
       await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND LOWER(name)=LOWER($2)", [rc, name]);
-      console.log("DB WRITE -> players submitted flag:", { room_code: rc, player_name: name });
+      // console.log("**Debug Output: DB WRITE -> players submitted flag:", { room_code: rc, player_name: name });
 
       await emitPlayerList(rc);
     } catch (err) {
@@ -421,13 +442,13 @@ io.on("connection", (socket) => {
     try {
       const rc = roomCode.toUpperCase();
       const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-      console.log("DB READ -> rooms showAnswers:", room.rows[0]);
+      // console.log("**Debug Output: DB READ -> rooms showAnswers:", room.rows[0]);
 
       const rr = await pool.query(
         "SELECT player_name AS name, answer FROM answers WHERE room_code=$1 AND question_id=$2 AND round_number=$3 ORDER BY name ASC",
         [rc, room.rows[0].active_question_id, room.rows[0].current_round]
       );
-      console.log("DB READ -> answers showAnswers:", rr.rows);
+      // console.log("**Debug Output: DB READ -> answers showAnswers:", rr.rows);
 
       io.to(rc).emit("answersRevealed", rr.rows);
       await emitScoreboard(rc);
@@ -447,7 +468,7 @@ io.on("connection", (socket) => {
          DO UPDATE SET points=$4`,
         [rc, playerName, roundNumber, points]
       );
-      console.log("DB WRITE -> scores awardPoint:", { room_code: rc, player_name: playerName, round_number: roundNumber, points });
+      // console.log("**Debug Output: DB WRITE -> scores awardPoint:", { room_code: rc, player_name: playerName, round_number: roundNumber, points });
 
       await emitScoreboard(rc);
     } catch (err) {
@@ -460,7 +481,7 @@ io.on("connection", (socket) => {
     try {
       const rc = roomCode.toUpperCase();
       await pool.query("UPDATE rooms SET status='closed', active_question_id=NULL WHERE code=$1", [rc]);
-      console.log("DB WRITE -> rooms closeRoom:", { room_code: rc, status: "closed" });
+      // console.log("**Debug Output: DB WRITE -> rooms closeRoom:", { room_code: rc, status: "closed" });
 
       io.to(rc).emit("roomClosed");
       console.log(`Room ${rc} closed by ${socket.data.name}`);
@@ -486,5 +507,4 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
-
 
