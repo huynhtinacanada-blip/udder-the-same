@@ -47,6 +47,7 @@ const pool = new Pool({
       name TEXT NOT NULL,
       room_code TEXT REFERENCES rooms(code) ON DELETE CASCADE,
       submitted BOOLEAN DEFAULT FALSE,
+	  has_unicorn TINYINT(1) DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );`);
     await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS players_name_room_unique
@@ -82,6 +83,7 @@ const pool = new Pool({
       player_name TEXT NOT NULL,
       round_number INT NOT NULL,
       points INT NOT NULL DEFAULT 0,
+	  tag TEXT DEFAULT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       UNIQUE (room_code, player_name, round_number)
     );`);
@@ -389,6 +391,26 @@ io.on("connection", (socket) => {
     }
   });
 
+socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
+  // 1. Remove unicorn from any other player in this room
+  await db.query("UPDATE players SET has_unicorn = 0 WHERE room_code = ?", [roomCode]);
+
+  // 2. Assign unicorn to this player
+  await db.query("UPDATE players SET has_unicorn = 1 WHERE room_code = ? AND name = ?", [roomCode, playerName]);
+
+  // 3. Save to round_scores table
+  await db.query(
+    "UPDATE round_scores SET tag = '🦄' WHERE room_code = ? AND round_number = ? AND player_name = ?",
+    [roomCode, roundNumber, playerName]
+  );
+
+  // 4. Broadcast updated scoreboard
+  const scoreboard = await getScoreboard(roomCode);
+  io.to(roomCode).emit("scoreboardUpdated", scoreboard);
+});
+
+
+
   // Start a new round
   socket.on("startRound", async ({ roomCode }) => {
     try {
@@ -500,7 +522,6 @@ io.on("connection", (socket) => {
       console.error("Error in awardPoint:", err);
     }
   });
-
 
 	// Close a room (End Game)
 	socket.on("closeRoom", async ({ roomCode }) => {
