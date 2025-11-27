@@ -477,18 +477,14 @@
       document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
-// Log the popup flag to the browser console
- // console.log("Popup flag Before:", popup);
-		
-  // Only auto-show popup if server says popup=true
+	
+  // Only show popup if server says so
+  if (popup) {
+    const promptText = document.getElementById("questionPrompt").innerText;
+    document.getElementById("popupQuestion").innerText = promptText;
+    document.getElementById("roundPopup").style.display = "flex";
+  }
 
-  const promptText = document.getElementById("questionPrompt").innerText;
-  document.getElementById("popupQuestion").innerText = promptText;
-  document.getElementById("roundPopup").style.display = "flex";
-
-	// Log the popup flag to the browser console
-  //console.log("Popup flag After :", popup);
-		
  // if (popup) {
  //   document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
  //   document.getElementById("roundPopup").style.display = "flex";
@@ -519,6 +515,18 @@
       }
     });
 
+
+// When someone dismisses popup, hide it for everyone
+socket.on("popupDismissed", () => {
+  document.getElementById("roundPopup").style.display = "none";
+});
+
+// Close button tells server to dismiss popup
+document.getElementById("closePopup").onclick = () => {
+  document.getElementById("roundPopup").style.display = "none";
+  socket.emit("dismissPopup", { roomCode });
+};
+	
     socket.on("allSubmitted", () => {
       showBtn.disabled=false;
       document.getElementById("toggleShow").checked = true;
@@ -679,6 +687,7 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
