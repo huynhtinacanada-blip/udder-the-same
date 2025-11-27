@@ -492,6 +492,24 @@ io.on("connection", (socket) => {
     }
   });
 
+
+  // Close a room (End Game)
+  socket.on("closeRoom", async ({ roomCode }) => {
+    try {
+      const rc = roomCode.toUpperCase();
+
+      // Optionally mark the room as closed in DB
+      await pool.query("UPDATE rooms SET active_question_id=NULL WHERE code=$1", [rc]);
+
+      // Broadcast to all players in this room
+      io.to(rc).emit("roomClosed");
+
+      console.log(`Room ${rc} closed by ${socket.data.name}`);
+    } catch (err) {
+      console.error("Error in closeRoom:", err);
+    }
+  }); 
+
   // Handle disconnect
   socket.on("disconnect", async () => {
     try {
@@ -508,6 +526,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
