@@ -385,7 +385,7 @@
 	// Listen for server confirmation
 	socket.on("roomClosed", () => {
 	  roomIsClosed = true;
-	  statusMessage.innerText = "This game room has been closed.";
+	 
 	
 	  // Disable all controls
 	  startBtn.disabled = true;
@@ -397,7 +397,7 @@
 	
 		// Show a "Game Over" badge/message
 		document.getElementById("gameOverBanner").classList.remove("hidden");
-		statusMessage.textContent = "🎮 Game over.";
+		statusMessage.innerText = "🎮 This game room has been closed.";
 	});
 	
 
@@ -668,4 +668,5 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
