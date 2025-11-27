@@ -333,6 +333,21 @@
       </table>
     </div>
   </div>
+  
+    <!-- Popup Modal -->
+  <div id="roundPopup" class="popup">
+    <div class="popup-content">
+      <span id="closePopup" class="close-btn">&times;</span>
+      <h1 id="popupQuestion"></h1>
+    </div>
+  </div>
+
+  <!-- Disclaimer Footer (outside card/accordion area) -->
+  <div class="disclaimer">
+    This online game is inspired by Herd Mentality, created by Big Potato Games. 
+    It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
+  </div>
+
 
   <script>
     const urlParams=new URLSearchParams(window.location.search);
@@ -429,6 +444,11 @@
       document.getElementById("answersAccordion").style.display="none";
       document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
+	  
+	  if (popup) {
+		document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
+		document.getElementById("roundPopup").style.display = "flex";
+	  }
 
       if (answersShown || myAnswer) {
         submitBtn.disabled=true;
@@ -586,6 +606,19 @@
     function toggleAccordion(id){document.getElementById(id).classList.toggle("open");}
     function openAccordion(id){document.getElementById(id).classList.add("open");}
     function closeAccordion(id){document.getElementById(id).classList.remove("open");}
+	
+	
+	// --- Popup close logic ---
+document.getElementById("closePopup").onclick = () => {
+  document.getElementById("roundPopup").style.display = "none";
+};
+
+document.getElementById("roundPopup").addEventListener("click", e => {
+  if (e.target.id === "roundPopup") {
+    document.getElementById("roundPopup").style.display = "none";
+  }
+});
+
   </script>
 </body>
 </html>
