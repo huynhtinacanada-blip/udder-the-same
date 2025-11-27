@@ -82,8 +82,13 @@ const pool = new Pool({
       round_number INT NOT NULL,
       points INT NOT NULL DEFAULT 0,
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      UNIQUE (room_code, LOWER(player_name), round_number)
+      UNIQUE (room_code, player_name, round_number)
     );`);
+
+
+    // Add functional unique index separately
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS scores_unique_per_round
+      ON scores (room_code, LOWER(player_name), round_number);`);
   } catch (err) {
     console.error("Error initializing tables:", err);
   }
@@ -182,21 +187,36 @@ app.delete("/api/questions/:id", async (req, res) => {
 app.post("/api/player/join", async (req, res) => {
   const { name, roomCode } = req.body;
   const rc = roomCode.toUpperCase();
+
   try {
     const room = await pool.query("SELECT * FROM rooms WHERE code=$1", [rc]);
     if (room.rows.length === 0) return res.status(404).json({ error: "Room not found" });
     if (room.rows[0].status === "closed") return res.status(403).json({ error: "Room closed" });
 
+    // Insert if not exists
     await pool.query(
       "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
       [name, rc]
     );
 
-    res.json({ success: true, redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(name)}` });
+    // Always fetch the canonical name from DB (case-insensitive match)
+    const player = await pool.query(
+      "SELECT name FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
+      [rc, name]
+    );
+
+    const canonicalName = player.rows[0].name;
+
+    res.json({
+      success: true,
+      redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(canonicalName)}`
+    });
   } catch (err) {
+    console.error("Error in player join:", err);
     res.status(500).json({ error: "Failed to join room" });
   }
 });
+
 
 // ---------------- Helpers ----------------
 function getActiveNames(roomCode) {
@@ -395,4 +415,5 @@ io.on("connection", (socket) => {
 
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
-server.listen(PORT, () => console.log("Herd Mentality Game running on port " + PORT));
+server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
