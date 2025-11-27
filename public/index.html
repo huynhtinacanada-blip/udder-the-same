@@ -35,6 +35,51 @@
 	  }
 	  .logo.show { opacity: 1; /* visible when "show" class applied */ }
 
+		
+		/* Container for the loading bar */
+		.loading-bar {
+		  width: 250px;                  /* total width of the bar */
+		  height: 24px;                  /* thickness of the bar */
+		  background: #ddd;              /* light gray background track */
+		  border-radius: 6px;            /* rounded corners */
+		  overflow: hidden;              /* hide anything that overflows the container */
+		  margin: 20px auto;             /* center horizontally with margin above/below */
+		}
+		
+		/* Inner progress element that fills up */
+		.progress {
+		  width: 0;                      /* start with no fill */
+		  height: 100%;                  /* same height as the container */
+		  background: linear-gradient(    /* rainbow gradient background */
+		    90deg,
+		    red,
+		    orange,
+		    yellow,
+		    green,
+		    blue,
+		    indigo,
+		    violet
+		  );
+		  background-size: 300% 100%;    /* make gradient wider so it can animate across */
+		  animation: 
+		    load 3s linear forwards,     /* animate width from 0 → 100% over 3 seconds */
+		    rainbow 2s linear infinite;  /* continuously animate gradient colors sliding */
+		}
+		
+		/* Keyframes for the fill animation (bar grows) */
+		@keyframes load {
+		  to { width: 100%; }            /* final state: bar fully filled */
+		}
+		
+		/* Keyframes for the gradient animation (colors move sideways) */
+		@keyframes rainbow {
+		  0%   { background-position: 0% 50%; }   /* start gradient at left */
+		  100% { background-position: 100% 50%; } /* shift gradient fully to right */
+		}
+
+
+
+		
 	  /* Buttons layout */
 	  section {
 		display: flex; justify-content: center; flex-wrap: wrap; /* responsive row */
@@ -99,6 +144,11 @@
     <img src="udderly-logo-main-a.png" alt="Home Page Logo" class="logo" id="logoA">
   </div>
 
+	<div class="loading-bar">
+  <div class="progress"></div>
+</div>
+
+	
   <p><strong>Welcome! Choose your path:</strong></p>
 	<section>
 	  <button class="btn" id="adminBtn" disabled onclick="location.href='/admin-login.html'">Admin Login</button>
@@ -209,5 +259,6 @@
   </script>
 </body>
 </html>
+
 
 
