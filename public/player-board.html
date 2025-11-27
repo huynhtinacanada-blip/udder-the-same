@@ -255,7 +255,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0a)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0beta)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -477,8 +477,8 @@
       document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
       document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
 
-				  // Log the popup flag to the browser console
-  console.log("Popup flag Before:", popup);
+// Log the popup flag to the browser console
+ // console.log("Popup flag Before:", popup);
 		
   // Only auto-show popup if server says popup=true
 
@@ -486,8 +486,8 @@
   document.getElementById("popupQuestion").innerText = promptText;
   document.getElementById("roundPopup").style.display = "flex";
 
-		  // Log the popup flag to the browser console
-  console.log("Popup flag After :", popup);
+	// Log the popup flag to the browser console
+  //console.log("Popup flag After :", popup);
 		
  // if (popup) {
  //   document.getElementById("popupQuestion").innerText = `Round ${roundNumber}: ${prompt}`;
@@ -679,6 +679,7 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
