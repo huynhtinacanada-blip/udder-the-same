@@ -340,7 +340,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0ac)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0 beta)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -627,20 +627,20 @@
           const labelClass = roundMap[name] === 1 ? "pointLabel green" : "pointLabel blue";
 			return `
 			  <tr>
-			    <td>
-			      <label class="switch">
-			        <input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
-			        <span class="slider"></span>
-			        <span class="${labelClass}">${labelText}</span>
-			      </label>
-			    </td>
-			    <td>
-			      <input type="radio" name="unicornTag" class="unicornRadio"
-			             data-player="${name}" data-round="${currentRound}" id="unicorn-${name}">
-			      <label for="unicorn-${name}" class="unicornLabel"></label>
-			    </td>
-			    <td>${name}</td>
-			    <td>${ans}</td>
+				<td>
+				  <label class="switch">
+					<input type="checkbox" class="scoreToggle" data-player="${name}" data-round="${currentRound}" ${checked}>
+					<span class="slider"></span>
+					<span class="${labelClass}">${labelText}</span>
+				  </label>
+				</td>
+				<td>
+				  <input type="radio" name="unicornTag" class="unicornRadio"
+						 data-player="${name}" data-round="${currentRound}" id="unicorn-${name}" ${r.tag === "🦄" ? "checked" : ""}>
+				  <label for="unicorn-${name}" class="unicornLabel"></label>
+				</td>
+				<td>${name}</td>
+				<td>${ans}</td>
 			  </tr>
 			`;
         })
@@ -724,7 +724,10 @@ function renderScoreboard(data) {
         `;
       }).join("");
 
-return `<tr><td>${d.hasUnicorn ? "🦄" : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+	// The scoreboard’s TAG column will now display the 🦄 emoji whenever the server marks a player with tag: "🦄". d.tag.
+	// This keeps the scoreboard perfectly in sync with the answers table, since both are using the same tag field from the server.
+
+	return `<tr><td>${d.tag ? d.tag : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
 
     })
     .join("");
@@ -789,9 +792,7 @@ showQuestionBtn.onclick = () => {
   document.getElementById("roundPopup").style.display = "flex";
 };
 
-
-
-	document.addEventListener("change", e => {
+  document.addEventListener("change", e => {
   if (e.target.classList.contains("unicornRadio")) {
     const player = e.target.dataset.player;
     const round = parseInt(e.target.dataset.round, 10);
@@ -803,6 +804,3 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
-
-
-
