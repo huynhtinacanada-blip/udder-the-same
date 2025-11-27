@@ -37,6 +37,7 @@ const pool = new Pool({
       status TEXT NOT NULL DEFAULT 'open',
       current_round INT DEFAULT 0,
       active_question_id INT,
+	  popup_active BOOLEAN DEFAULT false,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );`);
 
@@ -392,6 +393,7 @@ io.on("connection", (socket) => {
   socket.on("startRound", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
+		
       // Only select questions that are not discarded
       const qr = await pool.query("SELECT id FROM questions WHERE discard IS NULL ORDER BY id ASC");
       if (qr.rows.length === 0) return;
@@ -400,25 +402,29 @@ io.on("connection", (socket) => {
       const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
       const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
 
-      // Update room state: increment round, set active question
-      await pool.query("UPDATE rooms SET current_round = current_round+1, active_question_id=$1 WHERE code=$2", [qid, rc]);
-      // Reset player submissions
+    // Update room state: increment round, set active question, and mark popup_active=true
+    await pool.query(
+      "UPDATE rooms SET current_round = current_round+1, active_question_id=$1, popup_active=true WHERE code=$2",
+      [qid, rc]
+    );
+		
+      // Reset player submissions		
    await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
-
- 
-      
+		
       await emitPlayerList(rc);
-
       const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
       const { activeCount } = await getActiveStats(rc);
 
+	// Read popup_active from DB instead of hard‑coding
+    const roomState = await pool.query("SELECT popup_active FROM rooms WHERE code=$1", [rc]);
+		
       io.to(rc).emit("roundStarted", {
         questionId: qid,
         prompt: q.rows[0].prompt,
         playerCount: activeCount,
         roundNumber: roundNum,
         myAnswer: null,
-        popup: true
+        popup: roomState.rows[0].popup_active
       });
     } catch (err) {
       console.error("Error in startRound:", err);
@@ -533,3 +539,4 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
