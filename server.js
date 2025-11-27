@@ -1,4 +1,4 @@
-// v1.0.8 — Game Server
+// v1.0.1a — Game Server
 // -----------------------------------
 // This file sets up the Express server, PostgreSQL tables, and Socket.IO game logic.
 //  - Proper filtering of questions with discard IS NULL
@@ -93,6 +93,85 @@ const pool = new Pool({
     console.error("Error initializing tables:", err);
   }
 })();
+
+
+
+// ---------------- Helpers ----------------
+function getActiveNames(roomCode) {
+  const connected = io.sockets.adapter.rooms.get(roomCode) || new Set();
+  const activeNames = [];
+  for (const socketId of connected) {
+    const s = io.sockets.sockets.get(socketId);
+    if (s && s.data && s.data.name) {
+      activeNames.push(s.data.name);
+    }
+  }
+  return activeNames;
+}
+
+async function getActiveStats(roomCode) {
+  const dbPlayers = await pool.query("SELECT name, submitted FROM players WHERE room_code=$1 ORDER BY name ASC", [roomCode]);
+  const activeNames = getActiveNames(roomCode);
+  const merged = dbPlayers.rows.map(p => ({
+    name: p.name,
+    submitted: p.submitted,
+    active: activeNames.includes(p.name)
+  }));
+  const activeCount = merged.filter(p => p.active).length;
+  const submittedActiveCount = merged.filter(p => p.active && p.submitted).length;
+  return { merged, activeCount, submittedActiveCount };
+}
+
+async function getScoreboard(roomCode) {
+  const r = await pool.query(
+    `SELECT player_name,
+            COALESCE(SUM(points),0) AS total,
+            COALESCE(json_object_agg(round_number, points) FILTER (WHERE points IS NOT NULL), '{}') AS rounds
+     FROM scores
+     WHERE room_code=$1
+     GROUP BY player_name
+     ORDER BY player_name`,
+    [roomCode]
+  );
+  return r.rows; // [{player_name, total, rounds:{round:points,...}}]
+}
+
+async function emitPlayerList(roomCode) {
+  const { merged, activeCount, submittedActiveCount } = await getActiveStats(roomCode);
+  io.to(roomCode).emit("playerList", {
+    players: merged,
+    activeCount,
+    submittedCount: submittedActiveCount
+  });
+  // Keep progress synced on join/leave/submit
+  io.to(roomCode).emit("submissionProgress", {
+    submittedCount: submittedActiveCount,
+    totalPlayers: activeCount
+  });
+}
+
+async function emitScoreboard(roomCode) {
+  const scoreboard = await getScoreboard(roomCode);
+  io.to(roomCode).emit("scoreboardUpdated", scoreboard);
+}
+
+// Enforcing “only one active session per player name per room” in real time.
+// You don’t need to make isPlayerActive an async function — because it doesn’t touch the database, it only checks the current Socket.IO connections in memory.
+// Cons: server restarts, memory is wiped.
+// Pros: Very fast — no extra database queries; Automatically clears when a player disconnects.
+// For a small game project or single server: memory (Socket.IO) is simpler and sufficient.
+// Optional hybrid implementation (Socket.IO + DB flag)
+function isPlayerActive(roomCode, playerName) {
+  const connected = io.sockets.adapter.rooms.get(roomCode) || new Set();
+  for (const socketId of connected) {
+    const s = io.sockets.sockets.get(socketId);
+    if (s && s.data && s.data.name && s.data.name.toLowerCase() === playerName.toLowerCase()) {
+      return true; // player already connected
+    }
+  }
+  return false;
+}
+
 
 // ---------------- Admin Login API ----------------
 app.post("/api/admin/login", (req, res) => {
@@ -193,23 +272,24 @@ app.post("/api/player/join", async (req, res) => {
     if (room.rows.length === 0) return res.status(404).json({ error: "Room not found" });
     if (room.rows[0].status === "closed") return res.status(403).json({ error: "Room closed" });
 
-    // Insert if not exists (case-insensitive uniqueness enforced by index)
+    // Insert if not exists
     await pool.query(
       "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
       [name, rc]
     );
 
-    // Always fetch the canonical name from DB
+    // Fetch canonical name
     const player = await pool.query(
       "SELECT name FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
       [rc, name]
     );
-
-    if (!player.rows.length) {
-      return res.status(500).json({ error: "Player lookup failed" });
-    }
-
+    if (!player.rows.length) return res.status(500).json({ error: "Player lookup failed" });
     const canonicalName = player.rows[0].name;
+
+    // Check if player is already active in this room
+    if (isPlayerActive(rc, canonicalName)) {
+      return res.status(403).json({ error: "Player already logged somewhere." });
+    }
 
     res.json({
       success: true,
@@ -221,65 +301,6 @@ app.post("/api/player/join", async (req, res) => {
   }
 });
 
-
-// ---------------- Helpers ----------------
-function getActiveNames(roomCode) {
-  const connected = io.sockets.adapter.rooms.get(roomCode) || new Set();
-  const activeNames = [];
-  for (const socketId of connected) {
-    const s = io.sockets.sockets.get(socketId);
-    if (s && s.data && s.data.name) {
-      activeNames.push(s.data.name);
-    }
-  }
-  return activeNames;
-}
-
-async function getActiveStats(roomCode) {
-  const dbPlayers = await pool.query("SELECT name, submitted FROM players WHERE room_code=$1 ORDER BY name ASC", [roomCode]);
-  const activeNames = getActiveNames(roomCode);
-  const merged = dbPlayers.rows.map(p => ({
-    name: p.name,
-    submitted: p.submitted,
-    active: activeNames.includes(p.name)
-  }));
-  const activeCount = merged.filter(p => p.active).length;
-  const submittedActiveCount = merged.filter(p => p.active && p.submitted).length;
-  return { merged, activeCount, submittedActiveCount };
-}
-
-async function getScoreboard(roomCode) {
-  const r = await pool.query(
-    `SELECT player_name,
-            COALESCE(SUM(points),0) AS total,
-            COALESCE(json_object_agg(round_number, points) FILTER (WHERE points IS NOT NULL), '{}') AS rounds
-     FROM scores
-     WHERE room_code=$1
-     GROUP BY player_name
-     ORDER BY player_name`,
-    [roomCode]
-  );
-  return r.rows; // [{player_name, total, rounds:{round:points,...}}]
-}
-
-async function emitPlayerList(roomCode) {
-  const { merged, activeCount, submittedActiveCount } = await getActiveStats(roomCode);
-  io.to(roomCode).emit("playerList", {
-    players: merged,
-    activeCount,
-    submittedCount: submittedActiveCount
-  });
-  // Keep progress synced on join/leave/submit
-  io.to(roomCode).emit("submissionProgress", {
-    submittedCount: submittedActiveCount,
-    totalPlayers: activeCount
-  });
-}
-
-async function emitScoreboard(roomCode) {
-  const scoreboard = await getScoreboard(roomCode);
-  io.to(roomCode).emit("scoreboardUpdated", scoreboard);
-}
 
 
 // ---------------- Socket.IO Game Logic ----------------
@@ -454,6 +475,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
