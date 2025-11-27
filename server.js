@@ -122,19 +122,32 @@ async function getActiveStats(roomCode) {
   return { merged, activeCount, submittedActiveCount };
 }
 
+
 async function getScoreboard(roomCode) {
   const r = await pool.query(
-    `SELECT player_name,
-            COALESCE(SUM(points),0) AS total,
-            COALESCE(json_object_agg(round_number, points) FILTER (WHERE points IS NOT NULL), '{}') AS rounds
-     FROM scores
-     WHERE room_code=$1
-     GROUP BY player_name
-     ORDER BY player_name`,
+    `SELECT 
+        p.name AS player_name,                          -- Always include every player in the room
+        COALESCE(SUM(s.points),0) AS total,             -- Sum of points, default to 0 if none
+        COALESCE(
+          json_object_agg(s.round_number, s.points)     -- Build a JSON object of {round:points}
+          FILTER (WHERE s.points IS NOT NULL), 
+          '{}'                                          -- Default to empty object if no scores
+        ) AS rounds
+     FROM players p
+     LEFT JOIN scores s
+       ON p.room_code = s.room_code                     -- Match scores to players in the same room
+      AND LOWER(p.name) = LOWER(s.player_name)          -- Case-insensitive match on player name
+     WHERE p.room_code=$1                               -- Only include players from this room
+     GROUP BY p.name                                    -- One row per player
+     ORDER BY p.name`,                                  -- Sort alphabetically by player name
     [roomCode]
   );
-  return r.rows; // [{player_name, total, rounds:{round:points,...}}]
+
+  // Returns an array of objects like:
+  // [{ player_name: "Alice", total: 0, rounds: {} }, { player_name: "Bob", total: 5, rounds: {"1":5} }]
+  return r.rows;
 }
+
 
 async function emitPlayerList(roomCode) {
   const { merged, activeCount, submittedActiveCount } = await getActiveStats(roomCode);
@@ -475,6 +488,7 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
