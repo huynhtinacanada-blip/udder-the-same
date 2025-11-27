@@ -193,17 +193,21 @@ app.post("/api/player/join", async (req, res) => {
     if (room.rows.length === 0) return res.status(404).json({ error: "Room not found" });
     if (room.rows[0].status === "closed") return res.status(403).json({ error: "Room closed" });
 
-    // Insert if not exists
+    // Insert if not exists (case-insensitive uniqueness enforced by index)
     await pool.query(
       "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
       [name, rc]
     );
 
-    // Always fetch the canonical name from DB (case-insensitive match)
+    // Always fetch the canonical name from DB
     const player = await pool.query(
       "SELECT name FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
       [rc, name]
     );
+
+    if (!player.rows.length) {
+      return res.status(500).json({ error: "Player lookup failed" });
+    }
 
     const canonicalName = player.rows[0].name;
 
@@ -450,5 +454,6 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
