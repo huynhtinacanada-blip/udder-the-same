@@ -244,6 +244,40 @@ async function getActiveStats(roomCode) {
   return { merged, activeCount, submittedActiveCount };
 }
 
+async function getScoreboard(roomCode) {
+  const r = await pool.query(
+    `SELECT player_name,
+            COALESCE(SUM(points),0) AS total,
+            COALESCE(json_object_agg(round_number, points) FILTER (WHERE points IS NOT NULL), '{}') AS rounds
+     FROM scores
+     WHERE room_code=$1
+     GROUP BY player_name
+     ORDER BY player_name`,
+    [roomCode]
+  );
+  return r.rows; // [{player_name, total, rounds:{round:points,...}}]
+}
+
+async function emitPlayerList(roomCode) {
+  const { merged, activeCount, submittedActiveCount } = await getActiveStats(roomCode);
+  io.to(roomCode).emit("playerList", {
+    players: merged,
+    activeCount,
+    submittedCount: submittedActiveCount
+  });
+  // Keep progress synced on join/leave/submit
+  io.to(roomCode).emit("submissionProgress", {
+    submittedCount: submittedActiveCount,
+    totalPlayers: activeCount
+  });
+}
+
+async function emitScoreboard(roomCode) {
+  const scoreboard = await getScoreboard(roomCode);
+  io.to(roomCode).emit("scoreboardUpdated", scoreboard);
+}
+
+
 // ---------------- Socket.IO Game Logic ----------------
 io.on("connection", (socket) => {
   // Handle lobby join
@@ -416,4 +450,5 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
