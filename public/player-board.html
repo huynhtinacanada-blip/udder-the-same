@@ -255,7 +255,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0u)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0p)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -462,14 +462,14 @@
     socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
 
 		  // Log all values to the browser console
-  console.log("roundStarted event:", {
-    questionId,
-    prompt,
-    playerCount,
-    roundNumber,
-    myAnswer,
-    popup
-  });
+//  console.log("roundStarted event:", {
+//    questionId,
+ //   prompt,
+ //   playerCount,
+ //   roundNumber,
+ //   myAnswer,
+ //   popup
+/  });
 		
       currentRound = roundNumber;
       answersShown = false;
@@ -698,6 +698,7 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
