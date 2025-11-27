@@ -507,10 +507,11 @@ io.on("connection", (socket) => {
     } catch (err) {
       console.error("Error in disconnect:", err);
     }
-  });
+
 });
 
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
  
+
