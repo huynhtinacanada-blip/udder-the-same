@@ -451,10 +451,25 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
       const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
       // console.log("**Debug Output: DB READ -> rooms showAnswers:", room.rows[0]);
 
-      const rr = await pool.query(
-        "SELECT player_name AS name, answer FROM answers WHERE room_code=$1 AND question_id=$2 AND round_number=$3 ORDER BY name ASC",
-        [rc, room.rows[0].active_question_id, room.rows[0].current_round]
-      );
+		// JOIN because the unicorn 🦄 lives in the scores table, not the answers table. 
+		// Without joining, the front‑end would never know who has the unicorn when showing answers.
+	    const rr = await pool.query(
+	      `SELECT a.player_name AS name,
+	              a.answer,
+	              s.tag
+	       FROM answers a
+	       LEFT JOIN scores s
+	         ON a.room_code = s.room_code
+	        AND a.round_number = s.round_number
+	        AND LOWER(a.player_name) = LOWER(s.player_name)
+	       WHERE a.room_code=$1
+	         AND a.question_id=$2
+	         AND a.round_number=$3
+	       ORDER BY name ASC`,
+	      [rc, room.rows[0].active_question_id, room.rows[0].current_round]
+	    );
+
+		
       // console.log("**Debug Output: DB READ -> answers showAnswers:", rr.rows);
 
       io.to(rc).emit("answersRevealed", rr.rows);
@@ -514,6 +529,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
