@@ -197,12 +197,22 @@
     .small { font-size: 12px; color: #666; }
 
 
-/* Score Table formatting */
 
-/* General cell padding */
-#scoreTable th, #scoreTable td {
+	/* Score Table formatting */
+/* Score Table formatting */
+#scoreTable {
+  table-layout: fixed;
+  border-collapse: collapse;   /* collapse borders into single lines */
+  width: 100%;
+	  /* min-width will be set dynamically in JS */
+}
+
+/* General cell padding + border */
+#scoreTable th,
+#scoreTable td {
   padding: 6px;
-  white-space: nowrap; /* prevent wrapping that changes widths */
+  white-space: nowrap;         /* prevent wrapping that changes widths */
+  border: 1px solid #ccc;      /* consistent border for collapsed layout */
 }
 
 /* Freeze first column (TAG) */
@@ -243,9 +253,9 @@
 #scoreTable th:nth-child(4),
 #scoreTable td:nth-child(4) {
   text-align: center;
-  width: 75px;
+  width: 55px;              /* match dropdown width */
   position: sticky;
-  left: 270px; /* 40 + 150 + 80 */
+  left: 270px;              /* 40 + 150 + 80 */
   background: #fff;
   z-index: 3;
 }
@@ -254,7 +264,7 @@
 #scoreTable th:nth-child(n+5),
 #scoreTable td.roundCell {
   text-align: center;
-  width: 55px; /* slightly wider for dropdowns */
+  width: 55px;              /* consistent dropdown width */
 }
 
 /* Dropdown styling */
@@ -263,7 +273,6 @@
   text-align: center;
 }
 
-	
 
    /* Answers Table Toggle Styling */
     #answersTable .slider {
@@ -759,6 +768,12 @@ function renderScoreboard(data) {
       });
     });
   });
+  // ** Dynamic min-width so table scrolls inside card
+  const baseWidth = 345; // Tag (40) + Player (150) + Total (80) + Round #1 (75)
+  const roundWidth = 55; // width for each dropdown column
+  const minWidth = baseWidth + (maxRound - 1) * roundWidth;
+  document.querySelector("#scoreTable").style.minWidth = minWidth + "px";
+	
 }
 
 
@@ -814,6 +829,7 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
