@@ -198,7 +198,7 @@
 
 
 
-/* Score Table formmatting */
+/* Score Table formatting */
 
 /* General cell padding */
 #scoreTable th, #scoreTable td {
@@ -210,7 +210,7 @@
 #scoreTable th:first-child,
 #scoreTable td:first-child {
   text-align: center;
-  width: 40px;              /* fits 🦄 nicely */
+  width: 40px;
   position: sticky;
   left: 0;
   background: #fff;
@@ -222,9 +222,9 @@
 #scoreTable td:nth-child(2) {
   text-align: left;
   padding-left: 10px;
-  width: 150px;             /* allow longer names */
+  width: 150px;
   position: sticky;
-  left: 40px;               /* equal to TAG width */
+  left: 40px; /* width of TAG */
   background: #fff;
   z-index: 3;
 }
@@ -233,22 +233,32 @@
 #scoreTable th:nth-child(3),
 #scoreTable td:nth-child(3) {
   text-align: center;
-  width: 80px;              /* enough for totals */
+  width: 80px;
   position: sticky;
-  left: 190px;              /* TAG (40) + Player (150) */
+  left: 190px; /* 40 + 150 */
   background: #fff;
   z-index: 3;
 }
 
-/* Remaining round cells */
-#scoreTable th:nth-child(n+4),
-#scoreTable td.roundCell {
+/* OPTIONAL: Freeze fourth column (Round #1) */
+#scoreTable th:nth-child(4),
+#scoreTable td:nth-child(4) {
   text-align: center;
-  width: 50px;              /* slightly wider for dropdowns */
+  width: 75px;
+  position: sticky;
+  left: 270px; /* 40 + 150 + 80 */
+  background: #fff;
+  z-index: 3;
 }
 
+/* Remaining round cells scroll normally */
+#scoreTable th:nth-child(n+5),
+#scoreTable td.roundCell {
+  text-align: center;
+  width: 75px; /* slightly wider for dropdowns */
+}
 
-
+/* Dropdown styling */
 .scoreSelect {
   width: 100%;
   text-align: center;
@@ -804,3 +814,4 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
