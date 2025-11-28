@@ -393,6 +393,14 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
       const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
       // console.log("**Debug Output: DB READ -> question chosen:", q.rows[0]);
 
+	    //  Mark this question as discarded with today's date
+	    await pool.query(
+	      "UPDATE questions SET discard = CURRENT_DATE WHERE id=$1",
+	      [qid]
+	    );
+// console.log(`**Debug Output: DB WRITE -> questions discard: id=${qid}, date=${discardResult.rows[0].discard}`);
+
+		
       await pool.query(
         "UPDATE rooms SET current_round=current_round+1, active_question_id=$1, popup_active=true WHERE code=$2",
         [qid, rc]
@@ -529,6 +537,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
