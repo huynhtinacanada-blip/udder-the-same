@@ -340,25 +340,29 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Assign unicorn
-  socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
-    await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [roomCode]);
-    // console.log("**Debug Output: DB WRITE -> players unicorn reset:", { roomCode });
+// Assign unicorn
+socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
+  // Reset unicorn flag in players table
+  await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [roomCode]);
+  await pool.query("UPDATE players SET has_unicorn=true WHERE room_code=$1 AND name=$2", [roomCode, playerName]);
 
-    await pool.query("UPDATE players SET has_unicorn=true WHERE room_code=$1 AND name=$2", [roomCode, playerName]);
-    // console.log("**Debug Output: DB WRITE -> players unicorn assign:", { roomCode, playerName });
+  // Reset unicorn tag for this round in scores
+  await pool.query(
+    "UPDATE scores SET tag=NULL WHERE room_code=$1 AND round_number=$2",
+    [roomCode, roundNumber]
+  );
 
-    await pool.query(
-      "UPDATE scores SET tag='🦄' WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
-      [roomCode, roundNumber, playerName]
-    );
-    // console.log("**Debug Output: DB WRITE -> scores unicorn tag:", { roomCode, roundNumber, playerName });
+  // Assign unicorn to selected player
+  await pool.query(
+    "UPDATE scores SET tag='🦄' WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
+    [roomCode, roundNumber, playerName]
+  );
 
   // Broadcast updated scoreboard
   const scoreboard = await getScoreboard(roomCode);
   io.to(roomCode).emit("scoreboardUpdated", scoreboard);
 
-  // NEW CODE: also broadcast updated answers list with unicorn tag
+  // Broadcast updated answers list with tag
   const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [roomCode]);
   if (room.rows.length) {
     const answers = await pool.query(
@@ -375,6 +379,7 @@ io.on("connection", (socket) => {
     io.to(roomCode).emit("answersRevealed", answers.rows);
   }
 });
+
 
   // Start a new round
   socket.on("startRound", async ({ roomCode }) => {
@@ -509,5 +514,6 @@ io.on("connection", (socket) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
