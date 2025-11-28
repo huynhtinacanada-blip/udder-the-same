@@ -249,19 +249,8 @@
   z-index: 3;
 }
 
-/* Freeze fourth column (#1) */
-#scoreTable th:nth-child(4),
-#scoreTable td:nth-child(4) {
-  text-align: center;
-  width: 55px;              /* match dropdown width */
-  position: sticky;
-  left: 270px;              /* 40 + 150 + 80 */
-  background: #fff;
-  z-index: 3;
-}
-
 /* Remaining round cells scroll normally */
-#scoreTable th:nth-child(n+5),
+#scoreTable th:nth-child(n+4),
 #scoreTable td.roundCell {
   text-align: center;
   width: 55px;              /* consistent dropdown width */
@@ -358,7 +347,7 @@
   <!-- Header -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.0r)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.3r)</span></h2>
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -769,7 +758,7 @@ function renderScoreboard(data) {
     });
   });
   // ** Dynamic min-width so table scrolls inside card
-  const baseWidth = 345; // Tag (40) + Player (150) + Total (80) + Round #1 (75)
+  const baseWidth = 270; // Tag (40) + Player (150) + Total (80) + Round #1 (75)
   const roundWidth = 55; // width for each dropdown column
   const minWidth = baseWidth + (maxRound - 1) * roundWidth;
   document.querySelector("#scoreTable").style.minWidth = minWidth + "px";
@@ -829,6 +818,7 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
