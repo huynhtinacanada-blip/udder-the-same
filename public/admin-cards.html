@@ -75,7 +75,36 @@
   .bottom-bar { margin-top:30px; text-align:center; }
 
 
-    /* Scroll to Top Button */
+.table-wrapper {
+  position: relative; /* anchor for absolute positioning */
+}
+
+#scrollTopBtn {
+  position: absolute;
+  top: 10px;          /* adjust vertical placement */
+  right: -60px;       /* sits just outside the table */
+  display: none;      /* hidden until scroll */
+  background-color: #333;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 20%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+#scrollTopBtn img {
+  width: 36px;
+  height: 36px;
+  display: block;
+  margin: auto;
+}
+
+#scrollTopBtn:hover {
+  background-color: #fff;
+}
+
+
+  
+/*
     #scrollTopBtn {
       display: none; /* hidden by default */
       position: fixed;
@@ -99,6 +128,7 @@
     #scrollTopBtn:hover {
       background-color: #fff;
     }
+*/
   
 </style>
 </head>
@@ -117,27 +147,26 @@
     <button id="addBtn">Add Question</button>
   </div>
 
-  <table id="cardsTable">
-    <thead>
-      <tr><th>ID</th><th>Question Card</th><th>Discard</th><th>Actions</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <div class="bottom-bar">
-    <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
-  </div>
-  <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-  📇 Card Management Ver. 1.0.1
-  </div>
+  <div class="table-wrapper">
+    <table id="cardsTable">
+      <thead>
+        <tr><th>ID</th><th>Question Card</th><th>Discard</th><th>Actions</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="bottom-bar">
+      <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
+    </div>
+    <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
+    📇 Card Management Ver. 1.0.1
+    </div>
 
-  <!-- Scroll to Top Button -->
-  <!-- Option 1: Emoji -->
-  <!-- <button id="scrollTopBtn">⬆️</button> -->
+    <!-- Scroll to Top Button -->
+    <button id="scrollTopBtn">
+      <img src="top.png" alt="Scroll to top">
+    </button>
+   </div>
 
-  <!-- Option 2: Image -->
-  <button id="scrollTopBtn">
-    <img src="top.png" alt="Scroll to top">
-  </button>
   
   <script>
     let editingId = null;
@@ -251,6 +280,7 @@
 
 </body>
 </html>
+
 
 
 
