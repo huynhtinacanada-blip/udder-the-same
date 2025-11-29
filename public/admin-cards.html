@@ -80,15 +80,16 @@
 }
 
 #scrollTopBtn {
-  position: absolute;
-  top: 10px;          /* adjust vertical placement */
-  right: -60px;       /* sits just outside the table */
-  display: none;      /* hidden until scroll */
+  position: fixed;
+  bottom: 30px;              /* always at bottom */
+  left: calc(50% + 450px);   /* aligns to the right of a 900px table centered on page */
+  display: none;
   background-color: #333;
   cursor: pointer;
   padding: 5px;
   border-radius: 20%;
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  z-index: 999;
 }
 
 #scrollTopBtn img {
@@ -280,6 +281,7 @@
 
 </body>
 </html>
+
 
 
 
