@@ -45,6 +45,25 @@
       cursor: not-allowed;   /* show disabled cursor */
     }
 
+  /* ---- Button bar ---- */
+  .button-bar {
+    display: flex;
+    justify-content: space-between; /* left group vs right group */
+    align-items: center;
+    margin-top: 10px;
+  }
+  
+  .left-buttons {
+    display: inline-flex;
+    gap: 6px; /* spacing between Clear/Set Discard */
+  }
+  
+  .right-buttons {
+    display: inline-flex;
+  }
+
+
+    
     /* ---- Question input row ---- */
     .question-row { display: flex; align-items: flex-start; gap: 10px; }
     #questionText { flex: 1; min-height: 40px; resize: vertical; }
@@ -250,9 +269,17 @@
   
     <!-- ---- Navigation and clear button ---- -->
     <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
-    <button id="clearDiscardBtn" class="btn clear-btn" disabled>Clear Discard</button>
-    <button id="cancelEditBtn" class="btn">Cancel</button>
-    
+
+    <div class="button-bar">
+      <div class="left-buttons">
+        <button id="clearDiscardBtn" class="btn clear-btn" disabled>Clear Discard</button>
+        <button id="setDiscardBtn" class="btn" disabled>Set Discard</button>
+      </div>
+      <div class="right-buttons">
+        <button id="cancelEditBtn" class="btn">Cancel</button>
+      </div>
+    </div>
+        
     <!-- ---- Question input ---- -->
     <div class="question-row">
       <textarea id="questionText" placeholder="New question text"></textarea>
@@ -563,7 +590,53 @@
       alert('Error: ' + err.message);
     }
   });
+
+  /* ---- Set Discard button logic ----
+     - Enabled when one or more checkboxes are selected
+     - Sets discard date to today for selected IDs */
+  const setDiscardBtn = document.getElementById('setDiscardBtn');
+  setDiscardBtn.disabled = true;
   
+  // Enable/disable both Clear and Set Discard buttons together
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('row-select') || e.target.id === 'selectAll') {
+      const anyChecked = [...document.querySelectorAll('.row-select')].some(cb => cb.checked);
+      clearBtn.disabled = !anyChecked;
+      setDiscardBtn.disabled = !anyChecked;
+    }
+  });
+  
+  // Handle Set Discard click
+  setDiscardBtn.addEventListener('click', async () => {
+    const selectedIds = [...document.querySelectorAll('.row-select')]
+      .map((cb, i) => cb.checked ? document.querySelector(`#cardsTable tbody tr:nth-child(${i+1}) td:nth-child(2)`).textContent : null)
+      .filter(id => id);
+  
+    try {
+      const res = await fetch('/api/questions/setDiscard', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: selectedIds })
+      });
+  
+      if (res.ok) {
+        loadQuestions(); // refresh table
+        setDiscardBtn.disabled = true;
+        clearBtn.disabled = true;
+        document.getElementById('selectAll').checked = false;
+  
+        // Show status message
+        const statusBox = document.getElementById('statusMessage');
+        statusBox.textContent = "🎴 Discard set.";
+        statusBox.style.color = "blue";
+      } else {
+        alert('Failed to set discard date');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  });
+   
   /* ---- Cancel edit button ----
      - Clears textarea
      - Resets editing state
@@ -573,11 +646,11 @@
     document.getElementById('questionText').value = ''; // clear text box
     document.getElementById('addBtn').textContent = 'Add Question'; // reset button label
   });
-
-    
+   
   </script>
 </body>
 </html>
+
 
 
 
