@@ -4,102 +4,103 @@
   <meta charset="utf-8" />
   <title>Admin Login — Udderly the Same</title>
   <style>
-    /* Global Layout */
+    /* ---- Global Layout ---- */
     body { 
-      font-family: Arial, sans-serif; 
-      background: #f4f6f9;    
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100vh; 
-      margin: 0; 
+      font-family: Arial, sans-serif;       /* readable, common font */
+      background: #f4f6f9;                  /* light gray background for contrast */
+      display: flex;                        /* use flexbox to center card */
+      justify-content: center;              /* horizontally center card */
+      align-items: center;                  /* vertically center card */
+      min-height: 100vh;                    /* full viewport height */
+      margin: 0;                            /* remove default browser margins */
     }
 
-    /* Card Container */
+    /* ---- Card Container ---- */
     .card { 
-      background: #f4f6f9; 
-      padding: 30px; 
-      border-radius: 16px; 
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
-      width: 100%; 
-      max-width: 400px; 
-      text-align: center;
+      background: #f4f6f9;                  /* same background as body for consistency */
+      padding: 30px;                        /* inner spacing around content */
+      border-radius: 16px;                  /* rounded corners for modern look */
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12); /* subtle shadow for depth */
+      width: 100%;                          /* responsive width */
+      max-width: 400px;                     /* limit width for readability */
+      text-align: center;                   /* center text inside card */
     }
 
-    /* Logo Styling */
-    .logo {
-      max-width: 120px;
-      width: 100%;
-      height: auto;
-      margin: 0 auto 20px;
-      display: block;
-      cursor: pointer;
-    }
+  /* -------------------- Logo Styling -------------------- */
+  .logo {
+    max-width:120px;       /* prevent logo from being too large */
+    width:auto;            /* use natural width, don’t stretch full line */
+    height:auto;           /* keep aspect ratio correct */
+    margin:20px auto;      /* add vertical gap, auto centers horizontally */
+    display:inline-block;  /* shrink clickable area to image size only */
+    cursor:pointer;        /* show pointer cursor on hover */
+  }
 
-    /* Heading */
+    /* ---- Heading ---- */
     h1 { 
-      font-size: 32px; 
-      margin-bottom: 25px; 
-      text-align: center; 
+      font-size: 32px;                      /* large heading for prominence */
+      margin-bottom: 25px;                  /* space below heading */
+      text-align: center;                   /* center heading text */
     }
 
-    /* Form Layout */
+    /* ---- Form Layout ---- */
     form { 
-      display: flex; 
-      flex-direction: column; 
-      gap: 18px; 
-      text-align: left;
+      display: flex;                        /* flexbox for vertical stacking */
+      flex-direction: column;               /* stack inputs top-to-bottom */
+      gap: 18px;                            /* consistent spacing between inputs */
+      text-align: left;                     /* align labels/inputs to left */
     }
     label { 
-      font-size: 16px; 
+      font-size: 16px;                      /* readable label size */
     }
     input { 
-      font-size: 18px; 
-      padding: 12px; 
-      border: 1px solid #ccc; 
-      border-radius: 8px; 
+      font-size: 18px;                      /* larger input text for clarity */
+      padding: 12px;                        /* inner spacing for comfort */
+      border: 1px solid #ccc;               /* light gray border */
+      border-radius: 8px;                   /* rounded corners */
     }
 
-    /* Button Styling */
+    /* ---- Button Styling ---- */
     button { 
-      font-size: 20px; 
-      padding: 16px; 
-      background: #333;   /* default admin button color */
-      color: #fff; 
-      border: none; 
-      border-radius: 8px; 
-      cursor: pointer; 
+      font-size: 20px;                      /* larger button text */
+      padding: 16px;                        /* comfortable click area */
+      background: #333;                     /* default dark background */
+      color: #fff;                          /* white text for contrast */
+      border: none;                         /* remove default border */
+      border-radius: 8px;                   /* rounded corners */
+      cursor: pointer;                      /* pointer cursor on hover */
     }
     button:hover { 
-      background: #1976d2; /* hover color */
+      background: #1976d2;                  /* blue hover color */
     }
 
-    /* Message Area */
+    /* ---- Message Area ---- */
     #msg { 
-      margin-top: 12px; 
-      font-size: 15px; 
-      text-align: center; 
-      min-height: 20px; 
+      margin-top: 12px;                     /* space above message */
+      font-size: 15px;                      /* smaller than form text */
+      text-align: center;                   /* center message text */
+      min-height: 20px;                     /* reserve space even when empty */
     }
     #msg.error { 
-      color: red; 
+      color: red;                           /* red for error messages */
     }
     #msg.success { 
-      color: blue; 
+      color: blue;                          /* blue for success messages */
     }
   </style>
 </head>
 <body>
 
-  <!-- Login card -->
+  <!-- ---- Login Card ---- -->
   <div class="card">
 
-    <!-- Version info -->
+    <!-- Version info (top-right inside card) -->
     <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
       Form Ver. 1.0.0r
     </div>
 
     <!-- Logo that links back to index.html -->
+    <!-- Clicking logo takes user back to main index page -->
     <a href="/index.html">
       <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
     </a>
@@ -108,6 +109,7 @@
     <h1>🛡️ Admin Login</h1>
 
     <!-- Login form -->
+    <!-- Collects username and password, then submits via JavaScript -->
     <form id="adminForm">
       <label for="username">Username</label>
       <input id="username" name="username" required />
@@ -119,25 +121,28 @@
     </form>
 
     <!-- Error or success message -->
+    <!-- Displays feedback after login attempt -->
     <div id="msg"></div>
 
   </div>
 </body>
 </html>
 
-
 <script>
-  // Form Submission Logic
-  const form = document.getElementById('adminForm');   // <-- restore this line
-  const msg = document.getElementById('msg');
+  // ---- Form Submission Logic ----
+  const form = document.getElementById('adminForm');   // reference to login form
+  const msg = document.getElementById('msg');          // reference to message area
 
+  // Add event listener for form submission
   form.addEventListener('submit', async e => {
-    e.preventDefault();
+    e.preventDefault(); // prevent default page reload
 
+    // Get trimmed values from inputs
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value.trim();
 
     try {
+      // Send login request to backend API
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -150,18 +155,18 @@
         msg.textContent = "Login successful!";
         msg.className = "success";   // apply success style
         setTimeout(() => {
-          location.href = j.redirect;  // redirect to dashboard
+          location.href = j.redirect;  // redirect to dashboard after short delay
         }, 500);
       } else {
+        // Handle invalid login response
         const j = await res.json().catch(() => ({}));
         msg.textContent = j.error || 'Error logging in';
         msg.className = "error";     // apply error style
       }
     } catch (err) {
+      // Handle network/server errors
       msg.textContent = "Server unreachable";
       msg.className = "error";       // apply error style
     }
   });
 </script>
-
-
