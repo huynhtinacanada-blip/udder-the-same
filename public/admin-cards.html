@@ -85,16 +85,18 @@
       max-height: 600px;          /* enough space for table scroll */
     }
       
-    /* ---- Table styling ----
-       includes extra spacing before header */
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-top: 14px; /* breathing room below sticky section */
-      background: #fff; 
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
-    }
-  
+  /* ---- Table styling ----
+     - full width table with collapsed borders
+     - margin-top adds spacing above the table inside accordion
+     - background + box-shadow give a card-like look */
+  table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 14px; /* spacing above table inside accordion */
+    background: #fff; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+  }
+
     /* ---- Table cells ----
        - border for separation
        - padding for readability
@@ -111,20 +113,16 @@
     }
   
     /* ---- Sticky table headers ----
-       - position: sticky keeps header row visible while scrolling
-       - top: adjust to height of sticky top-section so headers sit just below it
-       - already have a sticky .top-section (logo, buttons, input bar) at the very top of the page.
-       If that section is, say, 100px tall, then setting top: 100px makes the table header stick
-       just below it, without overlapping the top-section. Adjust this value to match the actual
-       height of your .top-section so the header aligns correctly.
+       - position: sticky keeps header row visible while scrolling inside the accordion
+       - top: 0 anchors the header to the top of the accordion’s scrollable area
        - z-index: 2 keeps headers above table rows */
     thead th { 
       position: sticky; 
-      top: 0px; /* adjust this to match your .top-section height */
-      background: #eee;  /* it prevents the header from blending with rows when sticky */
-      z-index: 2; /* higher priority, appears above box1 */
+      top: 0; /* stick to the top of accordion content */
+      background: #eee;  /* prevents the header from blending with rows when sticky */
+      z-index: 2; /* higher priority, appears above table rows */
     }
-  
+    
     /* ---- Checkbox column ----
        - centers checkboxes
        - fixed width for consistency */
@@ -477,4 +475,5 @@
   </script>
 </body>
 </html>
+
 
