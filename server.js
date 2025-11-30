@@ -288,9 +288,23 @@ app.patch("/api/questions/setDiscard", async (req, res) => {
     console.error("Error setting discard:", err);
     res.status(500).json({ error: "Failed to set discard" });
   }
+});// ---------------- Reset Data route ----------------
+app.delete("/api/admin/reset/:table", async (req, res) => {
+  const { table } = req.params;
+  const allowedTables = ["scores", "rooms", "players", "rounds"]; // whitelist
+
+  if (!allowedTables.includes(table)) {
+    return res.status(400).json({ error: "Invalid table" });
+  }
+
+  try {
+    await pool.query(`DELETE FROM ${table}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(`Error resetting table ${table}:`, err);
+    res.status(500).json({ error: `Failed to reset ${table}` });
+  }
 });
-
-
 
 // ---------------- Player Join API ----------------
 app.post("/api/player/join", async (req, res) => {
@@ -587,6 +601,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
