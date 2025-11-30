@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reset Data</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #1976d2;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .warning {
+      background: #fff3cd;
+      border: 1px solid #ffeeba;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      color: #856404;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 24px;
+      margin: 10px 5px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .btn-danger {
+      background: #d32f2f;
+      color: white;
+    }
+    .btn-danger:hover {
+      background: #b71c1c;
+    }
+    #statusMessage {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>Reset Data</header>
+  <div class="container">
+    <h2>Reset Individual Tables</h2>
+    <div class="warning">
+      ⚠️ These actions will permanently delete data from the selected table.  
+      <strong>The questions table will not be affected.</strong>
+    </div>
+
+    <button class="btn btn-danger" onclick="resetTable('scores')">Reset Scores</button>
+    <button class="btn btn-danger" onclick="resetTable('rooms')">Reset Rooms</button>
+    <button class="btn btn-danger" onclick="resetTable('players')">Reset Players</button>
+    <button class="btn btn-danger" onclick="resetTable('rounds')">Reset Rounds</button>
+    <!-- Add more reset buttons for other tables as needed -->
+
+    <div id="statusMessage"></div>
+  </div>
+
+  <script>
+    async function resetTable(tableName) {
+      if (!confirm(`Are you sure you want to reset ${tableName}? This cannot be undone.`)) return;
+      try {
+        const res = await fetch(`/api/admin/reset/${tableName}`, { method: 'DELETE' });
+        const statusBox = document.getElementById('statusMessage');
+        if (res.ok) {
+          statusBox.textContent = `✨ ${tableName} reset successfully!`;
+          statusBox.style.color = "green";
+        } else {
+          statusBox.textContent = `❌ Failed to reset ${tableName}.`;
+          statusBox.style.color = "red";
+        }
+      } catch (err) {
+        const statusBox = document.getElementById('statusMessage');
+        statusBox.textContent = "❌ Error: " + err.message;
+        statusBox.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>
