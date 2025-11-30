@@ -4,37 +4,91 @@
   <meta charset="utf-8" />
   <title>Room Management — Udderly the Same</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width:900px; margin:40px auto; background:#f9f9f9; }
-    h1 { text-align:center; margin-bottom:20px; }
-    input,button,select { font-size:16px; padding:8px; margin:6px 0; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; background:#fff; }
-    th,td { border:1px solid #ccc; padding:8px; }
-    .top-bar { display:flex; gap:8px; align-items:center; margin-bottom:16px; }
-    .btn { background:#333; color:#fff; padding:8px 12px; border-radius:6px; text-decoration:none; display:inline-block; }
-    .btn:hover { background:#F7AC4D; }
-    .bottom-bar { margin-top:24px; text-align:center; }
-	.header {
-	  display: flex;
-	  align-items: center;   /* vertically center logo and text */
-	  gap: 12px;             /* small horizontal space between logo and heading */
-	  margin-bottom: 20px;   /* space below the header bar */
-	}
+    /* ---- Global Layout ---- */
+    body { 
+      font-family: Arial, sans-serif;   /* simple, readable font */
+      max-width:900px;                  /* limit width for readability */
+      margin:40px auto;                 /* center page horizontally with top margin */
+      background:#f9f9f9;               /* light gray background */
+    }
 
-	.logo {
-	  max-width: 100px;       /* smaller logo size so it fits nicely */
-	  height: auto;
-	  display: block;
-	}	
+    /* ---- Heading ---- */
+    h1 { 
+      text-align:center;                /* center heading text */
+      margin-bottom:20px;               /* space below heading */
+    }
+
+    /* ---- Form Inputs and Buttons ---- */
+    input,button,select { 
+      font-size:16px;                   /* consistent text size */
+      padding:8px;                      /* inner spacing for comfort */
+      margin:6px 0;                     /* vertical spacing between elements */
+    }
+
+    /* ---- Table Styling ---- */
+    table { 
+      width:100%;                       /* full width table */
+      border-collapse:collapse;         /* remove gaps between borders */
+      margin-top:12px;                  /* space above table */
+      background:#fff;                  /* white background for clarity */
+    }
+    th,td { 
+      border:1px solid #ccc;            /* light gray borders */
+      padding:8px;                      /* inner spacing for readability */
+    }
+
+    /* ---- Top Bar (controls + back button) ---- */
+    .top-bar { 
+      display:flex;                     /* flex layout for horizontal alignment */
+      gap:8px;                          /* spacing between items */
+      align-items:center;               /* vertically center items */
+      margin-bottom:16px;               /* space below bar */
+    }
+
+    /* ---- Buttons ---- */
+    .btn { 
+      background:#333;                  /* dark background */
+      color:#fff;                       /* white text for contrast */
+      padding:8px 12px;                 /* inner spacing */
+      border-radius:6px;                /* rounded corners */
+      text-decoration:none;             /* remove underline for links */
+      display:inline-block;             /* shrink to content size */
+    }
+    .btn:hover { 
+      background:#F7AC4D;               /* orange hover effect */
+    }
+
+    /* ---- Bottom Bar ---- */
+    .bottom-bar { 
+      margin-top:24px;                  /* space above bottom bar */
+      text-align:center;                /* center back button */
+    }
+
+    /* ---- Header (logo + heading) ---- */
+    .header {
+      display: flex;                    /* flex layout for logo + heading */
+      align-items: center;              /* vertically center both */
+      gap: 12px;                        /* spacing between logo and text */
+      margin-bottom: 20px;              /* space below header */
+    }
+
+    /* ---- Logo Styling ---- */
+    .logo {
+      max-width: 100px;                 /* restrict logo size */
+      height: auto;                     /* maintain aspect ratio */
+      display: block;                   /* block ensures margin works */
+      /* Suggestion: inline-block would shrink clickable area to image only */
+    }   
   </style>
 </head>
 <body>
-  <!-- Logo at the top (not linked) -->
-   <div class="header">
+  <!-- ---- Header with logo and page title ---- -->
+  <div class="header">
     <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
     <h1>🚪Room Management</h1>   
-   </div>
+  </div>
 
-
+  <!-- ---- Top bar with inputs, controls, and back button ---- -->
   <div class="top-bar">
     <input id="roomCode" placeholder="Room Code" />
     <select id="roomStatus">
@@ -43,10 +97,11 @@
     </select>
     <button id="createBtn">Create</button>
     <button id="refreshBtn">Refresh</button>
-    <!-- Back button with arrow -->
+    <!-- Back button aligned to the right -->
     <a class="btn" href="/admin-dashboard.html" style="margin-left:auto;">← Back to Dashboard</a>
   </div>
 
+  <!-- ---- Table of rooms ---- -->
   <table id="roomsTable">
     <thead>
       <tr><th>Code</th><th>Status</th><th>Created</th><th>Update</th></tr>
@@ -54,20 +109,27 @@
     <tbody></tbody>
   </table>
 
-  <!-- Bottom back button -->
+  <!-- ---- Bottom back button ---- -->
   <div class="bottom-bar">
     <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
   </div>
   
+  <!-- ---- Version info ---- -->
   <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
    🚪Room Management Ver. 1.0.0
   </div>  
 
   <script>
+    /* ---- Load Rooms Function ----
+       - Fetches room data from API
+       - Populates table with rows
+       - Adds update button handlers */
     async function loadRooms(){
       const res = await fetch('/api/rooms');
       const rooms = await res.json();
       const tbody = document.querySelector('#roomsTable tbody');
+
+      // Build table rows dynamically
       tbody.innerHTML = rooms.map(r =>
         `<tr>
           <td>${r.code}</td>
@@ -83,6 +145,7 @@
         </tr>`
       ).join('');
 
+      // Attach update button handlers
       document.querySelectorAll('.updateBtn').forEach(btn => {
         btn.onclick = async () => {
           const code = btn.dataset.code;
@@ -92,11 +155,15 @@
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({status:sel.value})
           });
-          loadRooms();
+          loadRooms(); // reload table after update
         };
       });
     }
 
+    /* ---- Create Room Button ----
+       - Reads input values
+       - Sends POST request to API
+       - Clears input and reloads table */
     document.getElementById('createBtn').onclick = async () => {
       const code = document.getElementById('roomCode').value.trim().toUpperCase();
       const status = document.getElementById('roomStatus').value;
@@ -110,9 +177,12 @@
       loadRooms();
     };
 
+    /* ---- Refresh Button ----
+       - Reloads table data from API */
     document.getElementById('refreshBtn').onclick = loadRooms;
+
+    // Initial load when page opens
     loadRooms();
   </script>
 </body>
 </html>
-
