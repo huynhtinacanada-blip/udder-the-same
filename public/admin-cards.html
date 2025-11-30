@@ -41,6 +41,24 @@
     #questionText { flex: 1; min-height: 40px; resize: vertical; }
     #addBtn { flex-shrink: 0; }
 
+    /* ---- Sticky top section ----
+       - position: sticky keeps header + controls visible while scrolling
+       - top: 0 anchors it to the top of viewport
+       - z-index: 1000 ensures it stays above table content
+       - background: inherit so it doesn’t overlap with transparent background */
+    .top-section {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #f9f9f9;
+      padding-bottom: 10px; /* small gap below sticky area */
+    }
+    
+    /* ---- Extra spacing before table header ---- */
+    table {
+      margin-top: 24px; /* increased gap before table */
+    }
+    
     /* ---- Table styling ---- */
     table { 
       width: 100%; 
@@ -109,22 +127,25 @@
   </style>
 </head>
 <body>
-  <!-- ---- Header section ---- -->
-  <div class="header">
-    <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
-    <h1>📇 Card Management</h1>
+  <!-- ---- Sticky top section ---- -->
+  <div class="top-section">
+    <!-- ---- Header section ---- -->
+    <div class="header">
+      <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
+      <h1>📇 Card Management</h1>
+    </div>
+  
+    <!-- ---- Navigation and clear button ---- -->
+    <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
+    <button id="clearDiscardBtn" class="btn clear-btn">Clear Discard: All</button>
+  
+    <!-- ---- Question input ---- -->
+    <div class="question-row">
+      <textarea id="questionText" placeholder="New question text"></textarea>
+      <button id="addBtn">Add Question</button>
+    </div>
   </div>
-
-  <!-- ---- Navigation and clear button ---- -->
-  <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
-  <button id="clearDiscardBtn" class="btn clear-btn">Clear Discard: All</button>
-
-  <!-- ---- Question input ---- -->
-  <div class="question-row">
-    <textarea id="questionText" placeholder="New question text"></textarea>
-    <button id="addBtn">Add Question</button>
-  </div>
-
+  
   <!-- ---- Table ---- -->
   <div class="table-wrapper">
     <table id="cardsTable">
@@ -146,7 +167,7 @@
 
     <!-- ---- Version info ---- -->
     <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-      📇 Card Management Ver. 1.0.2r
+      📇 Card Management Ver. 1.0.1r
     </div>
 
     <!-- ---- Scroll-to-top button ---- -->
@@ -316,5 +337,6 @@
 </html>
 
      
+
 
 
