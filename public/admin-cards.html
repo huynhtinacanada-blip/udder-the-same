@@ -56,92 +56,119 @@
       background: #f9f9f9;
       padding-bottom: 10px; /* small gap below sticky area */
     }
-      
-  /* ---- Table styling ----
-     includes extra spacing before header */
-  table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 14px; /* breathing room below sticky section */
-    background: #fff; 
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
-  }
-  
-  /* ---- Table cells ----
-     - border for separation
-     - padding for readability
-     - left alignment for text */
-  th, td { 
-    border: 1px solid #ccc; 
-    padding: 8px; 
-    text-align: left; 
-  }
-  
-  /* ---- Table header background ---- */
-  th { 
-    background: #eee; 
-  }
-  
-  /* ---- Sticky table headers ----
-     - position: sticky keeps header row visible while scrolling
-     - top: adjust to height of sticky top-section so headers sit just below it
-     - already have a sticky .top-section (logo, buttons, input bar) at the very top of the page.
-   If that section is, say, 100px tall, then setting top: 100px makes the table header stick
-   just below it, without overlapping the top-section. Adjust this value to match the actual
-   height of your .top-section so the header aligns correctly. */
-     - z-index: 2 keeps headers above table rows */
-  thead th { 
-    position: sticky; 
-    top: 120px; /* adjust this to match your .top-section height */
-    background: #eee;  /* it prevents the header from blending with rows when sticky */
-    z-index: 2; /* higher priority, appears above box1 */
-  }
-  
-  /* ---- Checkbox column ----
-     - centers checkboxes
-     - fixed width for consistency */
-  td:first-child, th:first-child {
-    text-align: center;
-    width: 40px;
-  }
-  
-  /* ---- Modern checkbox styling ----
-     - removes default browser style
-     - adds rounded corners, hover, and checkmark */
-  .modern-checkbox {
-    appearance: none;        /* remove default browser style */
-    width: 18px;
-    height: 18px;
-    border: 2px solid #555;
-    border-radius: 4px;      /* rounded corners */
-    background-color: #fff;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-  
-  /* ---- Hover effect ---- */
-  .modern-checkbox:hover {
-    border-color: #0078d4;   /* accent blue */
-  }
-  
-  /* ---- Checked state ---- */
-  .modern-checkbox:checked {
-    background-color: #0078d4;
-    border-color: #0078d4;
-  }
-  
-  /* ---- Checkmark pseudo-element ----
-     - adds a white ✔ symbol inside when checked */
-  .modern-checkbox:checked::after {
-    content: "✔";
-    color: #fff;
-    font-size: 14px;
-    position: absolute;
-    top: -2px;
-    left: 2px;
-  }
 
+    /* ---- Accordion ----
+       - toggle button shows/hides table
+       - content expands/collapses smoothly */
+    .accordion { margin-top: 20px; }
+
+    .accordion-toggle {
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+
+    .accordion-toggle:hover { background: #F7AC4D; }
+
+    .accordion-content {
+      max-height: 0;              /* collapsed by default */
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .accordion-content.open {
+      max-height: 600px;          /* enough space for table scroll */
+    }
+      
+    /* ---- Table styling ----
+       includes extra spacing before header */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 14px; /* breathing room below sticky section */
+      background: #fff; 
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+    }
+  
+    /* ---- Table cells ----
+       - border for separation
+       - padding for readability
+       - left alignment for text */
+    th, td { 
+      border: 1px solid #ccc; 
+      padding: 8px; 
+      text-align: left; 
+    }
+  
+    /* ---- Table header background ---- */
+    th { 
+      background: #eee; 
+    }
+  
+    /* ---- Sticky table headers ----
+       - position: sticky keeps header row visible while scrolling
+       - top: adjust to height of sticky top-section so headers sit just below it
+       - already have a sticky .top-section (logo, buttons, input bar) at the very top of the page.
+       If that section is, say, 100px tall, then setting top: 100px makes the table header stick
+       just below it, without overlapping the top-section. Adjust this value to match the actual
+       height of your .top-section so the header aligns correctly.
+       - z-index: 2 keeps headers above table rows */
+    thead th { 
+      position: sticky; 
+      top: 120px; /* adjust this to match your .top-section height */
+      background: #eee;  /* it prevents the header from blending with rows when sticky */
+      z-index: 2; /* higher priority, appears above box1 */
+    }
+  
+    /* ---- Checkbox column ----
+       - centers checkboxes
+       - fixed width for consistency */
+    td:first-child, th:first-child {
+      text-align: center;
+      width: 40px;
+    }
+  
+    /* ---- Modern checkbox styling ----
+       - removes default browser style
+       - adds rounded corners, hover, and checkmark */
+    .modern-checkbox {
+      appearance: none;        /* remove default browser style */
+      width: 18px;
+      height: 18px;
+      border: 2px solid #555;
+      border-radius: 4px;      /* rounded corners */
+      background-color: #fff;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+  
+    /* ---- Hover effect ---- */
+    .modern-checkbox:hover {
+      border-color: #0078d4;   /* accent blue */
+    }
+  
+    /* ---- Checked state ---- */
+    .modern-checkbox:checked {
+      background-color: #0078d4;
+      border-color: #0078d4;
+    }
+  
+    /* ---- Checkmark pseudo-element ----
+       - adds a white ✔ symbol inside when checked */
+    .modern-checkbox:checked::after {
+      content: "✔";
+      color: #fff;
+      font-size: 14px;
+      position: absolute;
+      top: -2px;
+      left: 2px;
+    }
 
     /* ---- Action buttons inside table ---- */
     .action-btn { font-size: 14px; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; }
@@ -157,14 +184,14 @@
     /* ---- Table wrapper ----
        position: relative ensures absolutely positioned children
        (like overlays/buttons) are anchored here.
-      For sticky headers to work, the parent must allow scrolling. 
-      Overflow-y: auto.
-      max-height + overflow-y makes table scrollable so sticky headers work */
-  .table-wrapper { 
-    position: relative; 
-    max-height: 500px;   /* set scrollable height */
-    overflow-y: auto;    /* enable vertical scroll */
-  }
+       For sticky headers to work, the parent must allow scrolling. 
+       Overflow-y: auto.
+       max-height + overflow-y makes table scrollable so sticky headers work */
+    .table-wrapper { 
+      position: relative; 
+      max-height: 500px;   /* set scrollable height */
+      overflow-y: auto;    /* enable vertical scroll */
+    }
 
     /* ---- Scroll-to-top button ----
        fixed positioning keeps visible while scrolling
@@ -205,7 +232,7 @@
   <div class="top-section">
     <!-- ---- Header section ---- -->
     <div class="header">
-      <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
+       <img src="udderly-logo-admin.png" alt="Udderly the Same Logo" class="logo">
       <h1>📇 Card Management</h1>
     </div>
   
@@ -220,40 +247,44 @@
     </div>
   </div>
     
-  <!-- ---- Table section ---- -->
-  <div class="table-wrapper">
-    <table id="cardsTable">
-      <thead>
-        <tr>
-          <!-- Checkbox column header (master checkbox to select/deselect all rows) -->
-          <th scope="col">
-            <input type="checkbox" id="selectAll" class="modern-checkbox">
-          </th>
-          <th scope="col">ID</th>
-          <th scope="col">Question Card</th>
-          <th scope="col">Discard</th>
-          <th scope="col">Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <!-- ---- Accordion for table section ---- -->
+  <div class="accordion">
+    <button class="accordion-toggle">▼ Show Questions Table</button>
+    <div class="accordion-content">
+      <div class="table-wrapper">
+        <table id="cardsTable">
+          <thead>
+            <tr>
+              <!-- Checkbox column header (master checkbox to select/deselect all rows) -->
+              <th scope="col">
+                <input type="checkbox" id="selectAll" class="modern-checkbox">
+              </th>
+              <th scope="col">ID</th>
+              <th scope="col">Question Card</th>
+              <th scope="col">Discard</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-    <!-- ---- Footer navigation ---- -->
-    <div class="bottom-bar">
-      <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
-    </div>
-  
-    <!-- ---- Version info ---- -->
-    <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-      📇 Card Management Ver. 1.0.4r
-    </div>
-  
-    <!-- ---- Scroll-to-top button ---- -->
-    <button id="scrollTopBtn">
-      <img src="top.png" alt="Scroll to top">
-    </button>
+  <!-- ---- Footer navigation ---- -->
+  <div class="bottom-bar">
+    <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
   </div>
+  
+  <!-- ---- Version info ---- -->
+  <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
+    📇 Card Management Ver. 1.0.4r
+  </div>
+  
+  <!-- ---- Scroll-to-top button ---- -->
+  <button id="scrollTopBtn">
+    <img src="top.png" alt="Scroll to top">
+  </button>
 
   <script>
     /* ---- State management ----
@@ -414,35 +445,35 @@
       window.scrollTo({ top: 0, behavior: 'smooth' }); // smooth scroll to top
     });
 
+    /* ---- Select all checkboxes logic ----
+       - Placed AFTER scroll-to-top because:
+         1. DOM timing: ensures table rows exist before attaching listeners.
+         2. Organization: keeps table-related logic grouped together, separate from scroll feature. */
+    document.getElementById('selectAll').addEventListener('change', function() {
+      const checked = this.checked;
+      document.querySelectorAll('.row-select').forEach(cb => cb.checked = checked);
+    });
 
-  /* Select all checkboxes logic
-     - Placed AFTER scroll-to-top because:
-       1. DOM timing: ensures table rows exist before attaching listeners.
-       2. Organization: keeps table-related logic grouped together, separate from scroll feature. */
-  document.getElementById('selectAll').addEventListener('change', function() {
-    const checked = this.checked;
-    document.querySelectorAll('.row-select').forEach(cb => cb.checked = checked);
-  });
+    /* ---- Sync master checkbox with row checkboxes ----
+       - If any row is unchecked, master unchecks.
+       - If all rows are checked, master checks itself. */
+    document.addEventListener('change', function(e) {
+      if (e.target.classList.contains('row-select')) {
+        const allChecked = [...document.querySelectorAll('.row-select')].every(cb => cb.checked);
+        document.getElementById('selectAll').checked = allChecked;
+      }
+    });
 
-  /* Sync master checkbox with row checkboxes
-     - If any row is unchecked, master unchecks.
-     - If all rows are checked, master checks itself. */
-  document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('row-select')) {
-      const allChecked = [...document.querySelectorAll('.row-select')].every(cb => cb.checked);
-      document.getElementById('selectAll').checked = allChecked;
-    }
-  });
+    /* ---- Accordion toggle ----
+       - Expands/collapses table section
+       - Updates button text accordingly */
+    document.querySelector('.accordion-toggle').addEventListener('click', function() {
+      const content = document.querySelector('.accordion-content');
+      content.classList.toggle('open');
+      this.textContent = content.classList.contains('open')
+        ? '▲ Hide Questions Table'
+        : '▼ Show Questions Table';
+    });
   </script>
 </body>
 </html>
-
-     
-
-
-
-
-
-
-
-
