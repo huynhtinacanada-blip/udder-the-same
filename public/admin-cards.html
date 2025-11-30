@@ -530,8 +530,26 @@
   
         // ---- Show status message ----
         const statusBox = document.getElementById('statusMessage');
-        statusBox.textContent = "✅ Discard cleared successfully!";
+        statusBox.textContent = "💾 Discard cleared successfully!";
         statusBox.style.color = "green";
+  
+        // ---- Clear status on scroll or another button click ----
+        function clearStatus() {
+          statusBox.textContent = "";
+          // remove listeners so it only clears once
+          window.removeEventListener('scroll', clearStatus);
+          document.querySelectorAll('button').forEach(btn => btn.removeEventListener('click', clearStatus));
+        }
+  
+        // listen for scroll
+        window.addEventListener('scroll', clearStatus);
+  
+        // listen for any button click (except the clear discard itself)
+        document.querySelectorAll('button').forEach(btn => {
+          if (btn.id !== 'clearDiscardBtn') {
+            btn.addEventListener('click', clearStatus);
+          }
+        });
       } else {
         alert('Failed to clear discard dates');
       }
@@ -543,6 +561,7 @@
   </script>
 </body>
 </html>
+
 
 
 
