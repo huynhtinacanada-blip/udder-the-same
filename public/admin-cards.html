@@ -236,8 +236,8 @@
   
     <!-- ---- Navigation and clear button ---- -->
     <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
-    <button id="clearDiscardBtn" class="btn clear-btn">Clear Discard</button>
-  
+    <button id="clearDiscardBtn" class="btn clear-btn" disabled>Clear Discard</button>
+
     <!-- ---- Question input ---- -->
     <div class="question-row">
       <textarea id="questionText" placeholder="New question text"></textarea>
@@ -472,9 +472,60 @@
         ? '▲ Hide Questions Table'
         : '▼ Show Questions Table';
     });
+
+
+  /* ---- Clear Discard button logic ----
+     - Disabled until at least one row checkbox is selected
+     - If ALL rows are selected: clears discard for ALL questions
+     - If SOME rows are selected: clears discard only for those IDs */
+  const clearBtn = document.getElementById('clearDiscardBtn');
+  clearBtn.disabled = true; // start disabled
+  
+  // Enable/disable button when checkboxes change
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('row-select') || e.target.id === 'selectAll') {
+      const anyChecked = [...document.querySelectorAll('.row-select')].some(cb => cb.checked);
+      clearBtn.disabled = !anyChecked;
+    }
+  });
+  
+  // Handle clear discard click
+  clearBtn.addEventListener('click', async () => {
+    const selectedIds = [...document.querySelectorAll('.row-select')]
+      .map((cb, i) => cb.checked ? document.querySelector(`#cardsTable tbody tr:nth-child(${i+1}) td:nth-child(2)`).textContent : null)
+      .filter(id => id);
+  
+    try {
+      let res;
+      if (document.getElementById('selectAll').checked) {
+        // Clear ALL discards
+        res = await fetch('/api/questions/clearDiscardAll', { method: 'PATCH' });
+      } else {
+        // Clear selected discards
+        res = await fetch('/api/questions/clearDiscardSome', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selectedIds })
+        });
+      }
+  
+      if (res.ok) {
+        loadQuestions(); // refresh table
+        clearBtn.disabled = true; // reset button
+        document.getElementById('selectAll').checked = false;
+      } else {
+        alert('Failed to clear discard dates');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  });
+
+    
   </script>
 </body>
 </html>
+
 
 
 
