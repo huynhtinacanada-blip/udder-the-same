@@ -122,3 +122,22 @@
 </body>
 </html>
 
+<!-- 
+  ---- Script Placement Best Practices ----
+
+  1. Inside <body> (at the bottom)
+     // Most common and perfectly valid.
+     // Ensures DOM elements already exist when script runs.
+     // Keeps script visually grouped with the content it controls.
+
+  2. Just before </html> (outside <body>)
+     // Also valid, but less common.
+     // Browsers will still execute it.
+     // Semantically cleaner to keep scripts inside <body> or in <head> with defer.
+
+  3. Inside <head> with defer
+     // Modern best practice.
+     // Loads script early but defers execution until DOM is ready.
+     // Prevents blocking page rendering.
+-->
+
