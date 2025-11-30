@@ -244,6 +244,36 @@ app.delete("/api/questions/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+
+// ---------------- Clear Discard APIs ----------------
+
+// Clear discard for ALL questions
+app.patch("/api/questions/clearDiscardAll", async (_req, res) => {
+  try {
+    await pool.query("UPDATE questions SET discard=NULL");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error clearing all discards:", err);
+    res.status(500).json({ error: "Failed to clear all discards" });
+  }
+});
+
+// Clear discard for SELECTED questions
+app.patch("/api/questions/clearDiscardSome", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "No IDs provided" });
+    }
+    await pool.query("UPDATE questions SET discard=NULL WHERE id = ANY($1::int[])", [ids]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error clearing selected discards:", err);
+    res.status(500).json({ error: "Failed to clear selected discards" });
+  }
+});
+
+
 // ---------------- Player Join API ----------------
 app.post("/api/player/join", async (req, res) => {
   const { name, roomCode } = req.body;
@@ -539,4 +569,5 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
