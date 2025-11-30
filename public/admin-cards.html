@@ -45,7 +45,10 @@
        - position: sticky keeps header + controls visible while scrolling
        - top: 0 anchors it to the top of viewport
        - z-index: 1000 ensures it stays above table content
-       - background: inherit so it doesn’t overlap with transparent background */
+       - background: inherit so it doesn’t overlap with transparent background
+       NOTE: `top: 0` means the .top-section is pinned at the very top of the viewport.
+       It does NOT mean the .top-section has zero height — it simply starts at the top edge
+       of the screen and keeps its full height visible while scrolling. */
     .top-section {
       position: sticky;
       top: 0;
@@ -82,12 +85,16 @@
   /* ---- Sticky table headers ----
      - position: sticky keeps header row visible while scrolling
      - top: adjust to height of sticky top-section so headers sit just below it
+     - already have a sticky .top-section (logo, buttons, input bar) at the very top of the page.
+   If that section is, say, 100px tall, then setting top: 100px makes the table header stick
+   just below it, without overlapping the top-section. Adjust this value to match the actual
+   height of your .top-section so the header aligns correctly. */
      - z-index: 2 keeps headers above table rows */
   thead th { 
     position: sticky; 
     top: 120px; /* adjust this to match your .top-section height */
-    background: #eee; 
-    z-index: 2; 
+    background: #eee;  /* it prevents the header from blending with rows when sticky */
+    z-index: 2; /* higher priority, appears above box1 */
   }
   
   /* ---- Checkbox column ----
@@ -149,8 +156,15 @@
 
     /* ---- Table wrapper ----
        position: relative ensures absolutely positioned children
-       (like overlays/buttons) are anchored here */
-    .table-wrapper { position: relative; }
+       (like overlays/buttons) are anchored here.
+      For sticky headers to work, the parent must allow scrolling. 
+      Overflow-y: auto.
+      max-height + overflow-y makes table scrollable so sticky headers work */
+  .table-wrapper { 
+    position: relative; 
+    max-height: 500px;   /* set scrollable height */
+    overflow-y: auto;    /* enable vertical scroll */
+  }
 
     /* ---- Scroll-to-top button ----
        fixed positioning keeps visible while scrolling
@@ -424,6 +438,7 @@
 </html>
 
      
+
 
 
 
