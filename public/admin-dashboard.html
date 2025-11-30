@@ -8,21 +8,29 @@
     body { 
       font-family: Arial, sans-serif; 
       background:#f4f6f9; 
+      margin:0; 
+      padding:0; 
+      text-align:center;   /* keeps inline elements like logo centered */
+    }
+    
+    /* Dashboard Card */
+    .dashboard {
       max-width:800px; 
       margin:120px auto; 
-      text-align:center; 
       padding:30px; 
       border-radius:12px; 
       box-shadow:0 4px 12px rgba(0,0,0,0.1); 
+      background:#fff;     /* white card on gray background */
     }
+
 
     /* Logo Styling */
     .logo {
       max-width:120px;   /* restrict logo size */
       width:auto;        /* responsive scaling */
       height:auto;       /* maintain aspect ratio */
-      margin:40px auto 20px; /* top 40px, auto left/right, bottom 20px */
-      display:block;     /* block-level for centering */
+      margin:20px auto 20px; /* top 20x, auto left/right, bottom 20px */
+      display:inline-block;  /* shrink to image size */
       cursor:pointer;    /* pointer cursor on hover */
     }
 
@@ -49,16 +57,19 @@
     }
 
   .settings-btn {
-    position: absolute;       /* take it out of normal flow */
-    top: 10px;                /* adjust vertical placement */
-    right: 20px;              /* align to the right */
+    text-align:right;   /* keeps gear aligned with version number */
+    margin-top:6px;     /* small gap below version */
   }
   
   .settings-btn button {
-    background: none;         /* transparent background */
-    border: none;             /* no border */
-    font-size: 28px;          /* larger gear icon */
-    cursor: pointer;          /* pointer on hover */
+    background:none;
+    border:none;
+    font-size:18px;     /* larger gear icon */
+    cursor:pointer;
+  }
+  
+  .settings-btn button:hover {
+    color:#1976d2;
   }
   
   .settings-btn button:hover {
@@ -68,28 +79,29 @@
 </head>
 <body>
 
-  <!-- Version footer -->
-  <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
-    Admin Dashboard Ver. 1.0.1r
-  </div>
-  <!-- Settings button -->
-  <div class="settings-btn">
-    <button onclick="openSettings()">⚙️</button>
-  </div>
+  <div class="dashboard">
+    <!-- Version footer -->
+    <div class="version-footer">Admin Dashboard Ver. 1.0.1r</div>
 
-  <!-- Logo that links back to index.html -->
-  <a href="/index.html">
-    <img src="udderly-logo-login.png" alt="Udderly the Same Logo" class="logo">
-  </a>
+    <!-- Settings button -->
+    <div class="settings-btn">
+      <button onclick="openSettings()">⚙️</button>
+    </div>
 
-  <!-- Main heading -->
-  <h1>🛠️ Admin Dashboard</h1>
-  <p>Manage the game:</p>
+    <!-- Logo -->
+    <a href="/index.html">
+      <img src="udderly-logo-login.png" alt="Udderly the Same Logo" class="logo">
+    </a>
 
-  <!-- Navigation buttons -->
-  <div>
-    <a class="btn" href="/admin-rooms.html">Room Management</a>
-    <a class="btn" href="/admin-cards.html">Cards</a>
+    <!-- Main heading -->
+    <h1>🛠️ Admin Dashboard</h1>
+    <p>Manage the game:</p>
+
+    <!-- Navigation buttons -->
+    <div>
+      <a class="btn" href="/admin-rooms.html">Room Management</a>
+      <a class="btn" href="/admin-cards.html">Cards</a>
+    </div>
   </div>
 
   <script>
@@ -100,6 +112,7 @@
   </script>
 </body>
 </html>
+
 
 
 
