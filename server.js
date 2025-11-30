@@ -273,6 +273,24 @@ app.patch("/api/questions/clearDiscardSome", async (req, res) => {
   }
 });
 
+// ---------------- Set Discard APIs ----------------
+
+// Set discard date for SELECTED questions (today's date)
+app.patch("/api/questions/setDiscard", async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "No IDs provided" });
+    }
+    await pool.query("UPDATE questions SET discard=CURRENT_DATE WHERE id = ANY($1::int[])", [ids]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error setting discard:", err);
+    res.status(500).json({ error: "Failed to set discard" });
+  }
+});
+
+
 
 // ---------------- Player Join API ----------------
 app.post("/api/player/join", async (req, res) => {
@@ -569,5 +587,6 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
