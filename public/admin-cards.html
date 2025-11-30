@@ -53,7 +53,7 @@
       background: #f9f9f9;
       padding-bottom: 24px; /* small gap below sticky area */
     }
-    
+      
   /* ---- Table styling ----
      includes extra spacing before header */
   table { 
@@ -64,13 +64,20 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
   }
   
+  /* ---- Table cells ----
+     - border for separation
+     - padding for readability
+     - left alignment for text */
   th, td { 
     border: 1px solid #ccc; 
     padding: 8px; 
     text-align: left; 
   }
   
-  th { background: #eee; }
+  /* ---- Table header background ---- */
+  th { 
+    background: #eee; 
+  }
   
   /* ---- Sticky table headers ----
      - position: sticky keeps header row visible while scrolling
@@ -81,6 +88,51 @@
     top: 120px; /* adjust this to match your .top-section height */
     background: #eee; 
     z-index: 2; 
+  }
+  
+  /* ---- Checkbox column ----
+     - centers checkboxes
+     - fixed width for consistency */
+  td:first-child, th:first-child {
+    text-align: center;
+    width: 40px;
+  }
+  
+  /* ---- Modern checkbox styling ----
+     - removes default browser style
+     - adds rounded corners, hover, and checkmark */
+  .modern-checkbox {
+    appearance: none;        /* remove default browser style */
+    width: 18px;
+    height: 18px;
+    border: 2px solid #555;
+    border-radius: 4px;      /* rounded corners */
+    background-color: #fff;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  
+  /* ---- Hover effect ---- */
+  .modern-checkbox:hover {
+    border-color: #0078d4;   /* accent blue */
+  }
+  
+  /* ---- Checked state ---- */
+  .modern-checkbox:checked {
+    background-color: #0078d4;
+    border-color: #0078d4;
+  }
+  
+  /* ---- Checkmark pseudo-element ----
+     - adds a white ✔ symbol inside when checked */
+  .modern-checkbox:checked::after {
+    content: "✔";
+    color: #fff;
+    font-size: 14px;
+    position: absolute;
+    top: -2px;
+    left: 2px;
   }
 
 
@@ -153,12 +205,16 @@
       <button id="addBtn">Add Question</button>
     </div>
   </div>
-  
-  <!-- ---- Table ---- -->
+    
+  <!-- ---- Table section ---- -->
   <div class="table-wrapper">
     <table id="cardsTable">
       <thead>
         <tr>
+          <!-- Checkbox column header (master checkbox to select/deselect all rows) -->
+          <th scope="col">
+            <input type="checkbox" id="selectAll" class="modern-checkbox">
+          </th>
           <th scope="col">ID</th>
           <th scope="col">Question Card</th>
           <th scope="col">Discard</th>
@@ -167,17 +223,18 @@
       </thead>
       <tbody></tbody>
     </table>
+  </div>
 
     <!-- ---- Footer navigation ---- -->
     <div class="bottom-bar">
       <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
     </div>
-
+  
     <!-- ---- Version info ---- -->
     <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
       📇 Card Management Ver. 1.0.1r
     </div>
-
+  
     <!-- ---- Scroll-to-top button ---- -->
     <button id="scrollTopBtn">
       <img src="top.png" alt="Scroll to top">
@@ -203,6 +260,8 @@
 
         document.querySelector('#cardsTable tbody').innerHTML = qs.map(q =>
           `<tr>
+             <!-- row checkbox column -->
+            <td><input type="checkbox" class="row-select modern-checkbox"></td>
             <td>${q.id}</td>
             <td>${escapeHTML(q.prompt)}</td>
             <td>${formatDiscardDate(q.discard)}</td>
@@ -340,11 +399,32 @@
     scrollBtn.addEventListener("click", () => {
       window.scrollTo({ top: 0, behavior: 'smooth' }); // smooth scroll to top
     });
+
+
+  /* Select all checkboxes logic
+     - Placed AFTER scroll-to-top because:
+       1. DOM timing: ensures table rows exist before attaching listeners.
+       2. Organization: keeps table-related logic grouped together, separate from scroll feature. */
+  document.getElementById('selectAll').addEventListener('change', function() {
+    const checked = this.checked;
+    document.querySelectorAll('.row-select').forEach(cb => cb.checked = checked);
+  });
+
+  /* Sync master checkbox with row checkboxes
+     - If any row is unchecked, master unchecks.
+     - If all rows are checked, master checks itself. */
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('row-select')) {
+      const allChecked = [...document.querySelectorAll('.row-select')].every(cb => cb.checked);
+      document.getElementById('selectAll').checked = allChecked;
+    }
+  });
   </script>
 </body>
 </html>
 
      
+
 
 
 
