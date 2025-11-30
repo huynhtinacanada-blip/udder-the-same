@@ -4,40 +4,51 @@
   <meta charset="UTF-8">
   <title>Reset Data</title>
   <style>
+    /* -------------------- Global Layout -------------------- */
     body {
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background: #f4f6f8;
+      font-family: "Segoe UI", Roboto, sans-serif; /* modern, readable font */
+      background: #f4f6f8;                        /* light gray background */
       margin: 0;
       padding: 0;
     }
+
+    /* -------------------- Header -------------------- */
     header {
-      background: #1976d2;
+      background: #1976d2;                        /* blue header bar */
       color: white;
       padding: 20px;
       text-align: center;
       font-size: 1.5em;
       font-weight: bold;
     }
+
+    /* -------------------- Container Card -------------------- */
     .container {
-      max-width: 800px;
-      margin: 40px auto;
+      max-width: 800px;                           /* limit width for readability */
+      margin: 40px auto;                          /* center horizontally */
       background: white;
       padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);     /* subtle shadow */
     }
+
+    /* -------------------- Section Titles -------------------- */
     h2 {
       margin-top: 0;
       color: #333;
     }
+
+    /* -------------------- Warning Box -------------------- */
     .warning {
-      background: #fff3cd;
+      background: #fff3cd;                        /* yellow background */
       border: 1px solid #ffeeba;
       padding: 15px;
       border-radius: 6px;
       margin-bottom: 20px;
-      color: #856404;
+      color: #856404;                             /* dark yellow text */
     }
+
+    /* -------------------- Buttons -------------------- */
     .btn {
       display: inline-block;
       padding: 14px 24px;
@@ -48,45 +59,91 @@
       border: none;
       cursor: pointer;
       transition: background 0.3s ease;
+      text-decoration: none;                      /* remove underline for links */
     }
     .btn-danger {
-      background: #d32f2f;
+      background: #d32f2f;                        /* red button */
       color: white;
     }
     .btn-danger:hover {
-      background: #b71c1c;
+      background: #b71c1c;                        /* darker red on hover */
     }
+    .btn-back {
+      background: #1976d2;                        /* blue back button */
+      color: white;
+    }
+    .btn-back:hover {
+      background: #0d47a1;                        /* darker blue on hover */
+    }
+
+    /* -------------------- Status Message -------------------- */
     #statusMessage {
       margin-top: 20px;
       font-weight: bold;
       text-align: center;
     }
+
+    /* -------------------- Logo -------------------- */
+    .logo-area {
+      text-align: center;                         /* center logo */
+      margin-top: 20px;
+    }
+    .logo-area img {
+      max-width: 120px;
+      height: auto;
+      display: inline-block;                      /* shrink clickable area */
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <!-- Page header -->
   <header>Reset Data</header>
+
+  <!-- Main container card -->
   <div class="container">
+
+    <!-- Back to Admin Dashboard button -->
+    <a class="btn btn-back" href="/admin-dashboard.html">⬅️ Back to Admin Dashboard</a>
+
+    <!-- Section title -->
     <h2>Reset Individual Tables</h2>
+
+    <!-- Warning box -->
     <div class="warning">
       ⚠️ These actions will permanently delete data from the selected table.  
       <strong>The questions table will not be affected.</strong>
     </div>
 
+    <!-- Reset buttons -->
     <button class="btn btn-danger" onclick="resetTable('scores')">Reset Scores</button>
     <button class="btn btn-danger" onclick="resetTable('rooms')">Reset Rooms</button>
     <button class="btn btn-danger" onclick="resetTable('players')">Reset Players</button>
     <button class="btn btn-danger" onclick="resetTable('rounds')">Reset Rounds</button>
     <!-- Add more reset buttons for other tables as needed -->
 
+    <!-- Status message -->
     <div id="statusMessage"></div>
+
+    <!-- Logo under status -->
+    <div class="logo-area">
+      <a href="/index.html">
+        <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo">
+      </a>
+    </div>
   </div>
 
   <script>
+    // Function to reset a specific table
     async function resetTable(tableName) {
+      // Confirm action with user
       if (!confirm(`Are you sure you want to reset ${tableName}? This cannot be undone.`)) return;
+
       try {
+        // Send DELETE request to backend API
         const res = await fetch(`/api/admin/reset/${tableName}`, { method: 'DELETE' });
         const statusBox = document.getElementById('statusMessage');
+
         if (res.ok) {
           statusBox.textContent = `✨ ${tableName} reset successfully!`;
           statusBox.style.color = "green";
@@ -95,6 +152,7 @@
           statusBox.style.color = "red";
         }
       } catch (err) {
+        // Handle network or server errors
         const statusBox = document.getElementById('statusMessage');
         statusBox.textContent = "❌ Error: " + err.message;
         statusBox.style.color = "red";
