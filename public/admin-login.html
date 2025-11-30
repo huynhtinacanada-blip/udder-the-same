@@ -123,50 +123,50 @@
     <!-- Error or success message -->
     <!-- Displays feedback after login attempt -->
     <div id="msg"></div>
-
   </div>
+  
+  <script>
+    // ---- Form Submission Logic ----
+    const form = document.getElementById('adminForm');   // reference to login form
+    const msg = document.getElementById('msg');          // reference to message area
+  
+    // Add event listener for form submission
+    form.addEventListener('submit', async e => {
+      e.preventDefault(); // prevent default page reload
+  
+      // Get trimmed values from inputs
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+  
+      try {
+        // Send login request to backend API
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+  
+        if (res.ok) {
+          const j = await res.json();
+          // Show success message in blue
+          msg.textContent = "Login successful!";
+          msg.className = "success";   // apply success style
+          setTimeout(() => {
+            location.href = j.redirect;  // redirect to dashboard after short delay
+          }, 500);
+        } else {
+          // Handle invalid login response
+          const j = await res.json().catch(() => ({}));
+          msg.textContent = j.error || 'Error logging in';
+          msg.className = "error";     // apply error style
+        }
+      } catch (err) {
+        // Handle network/server errors
+        msg.textContent = "Server unreachable";
+        msg.className = "error";       // apply error style
+      }
+    });
+  </script>
 </body>
 </html>
 
-<script>
-  // ---- Form Submission Logic ----
-  const form = document.getElementById('adminForm');   // reference to login form
-  const msg = document.getElementById('msg');          // reference to message area
-
-  // Add event listener for form submission
-  form.addEventListener('submit', async e => {
-    e.preventDefault(); // prevent default page reload
-
-    // Get trimmed values from inputs
-    const username = document.getElementById('username').value.trim();
-    const password = document.getElementById('password').value.trim();
-
-    try {
-      // Send login request to backend API
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      if (res.ok) {
-        const j = await res.json();
-        // Show success message in blue
-        msg.textContent = "Login successful!";
-        msg.className = "success";   // apply success style
-        setTimeout(() => {
-          location.href = j.redirect;  // redirect to dashboard after short delay
-        }, 500);
-      } else {
-        // Handle invalid login response
-        const j = await res.json().catch(() => ({}));
-        msg.textContent = j.error || 'Error logging in';
-        msg.className = "error";     // apply error style
-      }
-    } catch (err) {
-      // Handle network/server errors
-      msg.textContent = "Server unreachable";
-      msg.className = "error";       // apply error style
-    }
-  });
-</script>
