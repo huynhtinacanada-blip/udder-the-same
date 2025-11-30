@@ -44,11 +44,16 @@
       color: #666;           /* muted text */
       cursor: not-allowed;   /* show disabled cursor */
     }
-    
+
     /* ---- Question input row ---- */
     .question-row { display: flex; align-items: flex-start; gap: 10px; }
     #questionText { flex: 1; min-height: 40px; resize: vertical; }
-    #addBtn { flex-shrink: 0; }
+    #addBtn {
+      flex-shrink: 0;
+      height: 60px;        /* roughly two textarea rows */
+      font-size: 16px;
+      padding: 0 16px;
+    }
 
     /* ---- Sticky top section ----
        - position: sticky keeps header + controls visible while scrolling
@@ -246,7 +251,8 @@
     <!-- ---- Navigation and clear button ---- -->
     <a class="btn" href="/admin-dashboard.html">← Back to Dashboard</a>
     <button id="clearDiscardBtn" class="btn clear-btn" disabled>Clear Discard</button>
-
+    <button id="cancelEditBtn" class="btn">Cancel</button>
+    
     <!-- ---- Question input ---- -->
     <div class="question-row">
       <textarea id="questionText" placeholder="New question text"></textarea>
@@ -557,10 +563,22 @@
       alert('Error: ' + err.message);
     }
   });
+  
+  /* ---- Cancel edit button ----
+     - Clears textarea
+     - Resets editing state
+     - Restores Add Question label */
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+    editingId = null; // reset editing state
+    document.getElementById('questionText').value = ''; // clear text box
+    document.getElementById('addBtn').textContent = 'Add Question'; // reset button label
+  });
 
+    
   </script>
 </body>
 </html>
+
 
 
 
