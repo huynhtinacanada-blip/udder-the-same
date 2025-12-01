@@ -166,6 +166,14 @@
 	  gap: 12px;
 	}
 
+.middleColumn {
+  display: flex;
+  flex-direction: column;  /* vertical stack */
+  gap: 12px;
+  align-items: center;     /* center horizontally */
+}
+
+
 	.rightColumn {
 	  display: flex;
 	  align-items: center;      /* vertical center */
@@ -388,21 +396,32 @@
 	<div class="accordion">
 	  <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
 	  <div id="controlsBox" class="accordion-content">
-		<div class="controlsLayout">
+<div class="controlsLayout">
+  <!-- Left column: switches -->
+  <div class="leftColumn">
+    <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
+    <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
+    <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
+  </div>
+
+  <!-- Middle column: Unicorn control -->
+  <div class="middleColumn">
+    <div class="switch">
+      <label>
+        <input type="checkbox" id="toggleUnicorn">
+        <span class="slider"></span>Enable Unicorn Control
+      </label>
+    </div>
+    <button id="clearUnicornBtn" style="display:none;">Clear Unicorn</button>
+  </div>
+
+  <!-- Right column: sign out button -->
+  <div class="rightColumn">
+    <button id="signOutBtn">Sign Out</button>
+  </div>
+</div>
+
 		  
-		  <!-- Left column: switches -->
-		  <div class="leftColumn">
-			<div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
-			<div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
-			<div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
-		  </div>
-		  
-		  <!-- Right column: sign out button -->
-		  <div class="rightColumn">
-			<button id="signOutBtn">Sign Out</button>
-		  </div>
-		  
-		</div>
 	  </div>
 	</div>
 	
@@ -808,6 +827,7 @@ showQuestionBtn.onclick = () => {
   document.getElementById("roundPopup").style.display = "flex";
 };
 
+// --- Unicorn assignment ---
 document.addEventListener("change", e => {
   if (e.target.classList.contains("unicornRadio")) {
     const player = e.target.dataset.player;
@@ -816,22 +836,42 @@ document.addEventListener("change", e => {
     // Tell server
     socket.emit("assignUnicorn", { roomCode, playerName: player, roundNumber: round });
 
-    // --- NEW: Optimistic update so scoreboard shows 🦄 immediately ---
-    // Clear unicorn from all players locally
+    // Optimistic update: clear all unicorns locally, then set selected
     scoreboard.forEach(p => p.tag = "");
-    // Assign unicorn to the selected player
     const target = scoreboard.find(p => p.player_name === player);
     if (target) target.tag = "🦄";
-    // Re-render scoreboard with updated tag
     renderScoreboard(scoreboard);
   }
 });
 
+// --- Unicorn control toggle + clear button ---
+const toggleUnicorn = document.getElementById("toggleUnicorn");
+const clearUnicornBtn = document.getElementById("clearUnicornBtn");
+
+toggleUnicorn.addEventListener("change", e => {
+  clearUnicornBtn.style.display = e.target.checked ? "inline-block" : "none";
+});
+
+clearUnicornBtn.onclick = () => {
+  if (confirm("Clear unicorn tag for this room?")) {
+    socket.emit("clearUnicorn", { roomCode });
+
+    // Optimistic update: clear all unicorns locally
+    scoreboard.forEach(p => p.tag = "");
+    renderScoreboard(scoreboard);
+
+    // Also clear radios in the answers table
+    document.querySelectorAll(".unicornRadio").forEach(radio => {
+      radio.checked = false;
+    });
+  }
+};
 
 	
   </script>
 </body>
 </html>
+
 
 
 
