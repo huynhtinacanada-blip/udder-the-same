@@ -408,6 +408,15 @@
     // Global flags
     let roomIsClosed = false;
 
+
+// Escape HTML to prevent injection attacks
+function escapeHTML(str) {
+const div = document.createElement("div");
+div.innerText = String(str || "");
+return div.innerHTML;
+}
+
+
     // DOM references: extract room code and player name from URL
     const urlParams=new URLSearchParams(window.location.search);
     const roomCode=(urlParams.get("room")||"").toUpperCase();
@@ -837,3 +846,4 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
