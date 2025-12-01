@@ -314,7 +314,9 @@
 /* Answers Table Toggle Styling */
 #answersTable .switch {
   position: relative;
+	 margin-left: 0;     /* removes any offset */
   display: inline-block;
+	
   width: 80px;
   height: 32px;
 }
@@ -343,6 +345,7 @@
   top: 2px;
   background-color: white;
   border-radius: 50%;
+border: none;              
   transition: transform 0.3s, background-color 0.3s, content 0.3s;
   display: flex;
   align-items: center;
@@ -938,6 +941,7 @@ clearUnicornBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
