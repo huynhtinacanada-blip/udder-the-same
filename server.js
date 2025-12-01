@@ -253,12 +253,14 @@ app.post("/api/admin/login", (req, res) => {
   const ADMIN_PASS = process.env.ADMIN_PASS;
 
 // 👇 Debug logs to console
+  /*
   if (process.env.DEBUG === "true") {
     console.log("Provided username:", username);
     console.log("Provided password:", password);
     console.log("Expected ADMIN_USER:", ADMIN_USER);
     console.log("Expected ADMIN_PASS:", ADMIN_PASS);
   }
+  */
   if (!ADMIN_USER || !ADMIN_PASS) {
     return res.status(500).json({ error: "Admin credentials not configured" });
   }
@@ -762,6 +764,7 @@ socket.on("joinLobby", async ({ roomCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
