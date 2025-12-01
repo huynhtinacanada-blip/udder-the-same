@@ -402,6 +402,44 @@ io.on("connection", (socket) => {
     }
   });
 
+// Clear unicorn assignment for the room
+socket.on("clearUnicorn", async ({ roomCode }) => {
+  try {
+    const rc = roomCode.toUpperCase();
+
+    // Reset unicorn flag in players table
+    await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [rc]);
+
+    // Reset unicorn tag in scores for this room
+    await pool.query("UPDATE scores SET tag=NULL WHERE room_code=$1", [rc]);
+
+    // Broadcast updated scoreboard
+    const scoreboard = await getScoreboard(rc);
+    io.to(rc).emit("scoreboardUpdated", scoreboard);
+
+    // Broadcast updated answers list with cleared tags
+    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
+    if (room.rows.length) {
+      const answers = await pool.query(
+        `SELECT a.player_name AS name, a.answer, s.tag
+         FROM answers a
+         LEFT JOIN scores s
+           ON a.room_code=s.room_code
+          AND a.round_number=s.round_number
+          AND LOWER(a.player_name)=LOWER(s.player_name)
+         WHERE a.room_code=$1 AND a.question_id=$2 AND a.round_number=$3
+         ORDER BY name ASC`,
+        [rc, room.rows[0].active_question_id, room.rows[0].current_round]
+      );
+      io.to(rc).emit("answersRevealed", answers.rows);
+    }
+  } catch (err) {
+    console.error("Error in clearUnicorn:", err);
+  }
+});
+
+
+	
 // Assign unicorn
 socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
   // Reset unicorn flag in players table
@@ -601,6 +639,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // ---------------- Start Server ----------------
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
