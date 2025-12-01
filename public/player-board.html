@@ -277,7 +277,7 @@
   <!-- Contains logo, dashboard title, and End Game button aligned with flexbox. -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.2a)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.5r)</span></h2>
     <button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -408,20 +408,19 @@
     // Global flags
     let roomIsClosed = false;
 
-
-// Escape HTML to prevent injection attacks
-function escapeHTML(str) {
-const div = document.createElement("div");
-div.innerText = String(str || "");
-return div.innerHTML;
-}
-
-
     // DOM references: extract room code and player name from URL
     const urlParams=new URLSearchParams(window.location.search);
     const roomCode=(urlParams.get("room")||"").toUpperCase();
     const myName=urlParams.get("name")||"";
-    document.getElementById("roomLabel").innerText=`Room: ${roomCode} — You: ${myName}`;
+
+    // Guard: if no valid login info, redirect back to login page
+    if (!roomCode || !myName) {
+      window.location.href = "/player-login.html";
+    }
+	  
+    // Safe insertion with escaping
+    document.getElementById("roomLabel").innerText =  
+      `Room: ${escapeHTML(roomCode)} — Hello: ${escapeHTML(myName)}`;
 
     // Connect to server via socket.io
     const socket=io();
@@ -490,21 +489,22 @@ return div.innerHTML;
         .map(name => {
           const player = players.find(p => p.name === name);
           const ghost = player && player.active ? "" : "👻"; // ghost icon if inactive
-          const submitted = player ? (player.submitted ? "📩 Submitted" : "⌛ Waiting") : "";
+          const submitted = player ? (player.submitted ? "🟢 Submitted" : "⌛ Waiting") : "";
           return `<tr><td>${escapeHTML(name)}</td><td>${ghost}</td><td>${submitted}</td></tr>`;
         })
         .join("");
 
       // If QA section is visible, update progress message
       if (document.getElementById("qaSection").style.display === "block") {
-        document.getElementById("progress").innerText = `Submitted: ${submittedCount} / ${activeCount}`;
+        document.getElementById("progress").innerText = `Submitted: ${escapeHTML(submittedCount)} / ${escapeHTML(totalPlayers)}`;
+
       }
     });
 
     // ---- Submission Progress ----
     // Server sends submission counts. Enable Show Answers only when all players submitted.
     socket.on("submissionProgress", ({submittedCount,totalPlayers}) => {
-      document.getElementById("progress").innerText=`Submitted: ${submittedCount} / ${totalPlayers}`;
+      document.getElementById("progress").innerText = `Submitted: ${escapeHTML(submittedCount)} / ${escapeHTML(totalPlayers)}`;
       if (totalPlayers > 0 && submittedCount === totalPlayers) {
         showBtn.disabled = false;
         document.getElementById("toggleShow").checked = true;
@@ -538,13 +538,13 @@ return div.innerHTML;
       openAccordion("questionBox");
       closeAccordion("answersTableWrapper");
       document.getElementById("answersAccordion").style.display="none";
-      document.getElementById("questionPrompt").innerText=`Round ${roundNumber}: ${prompt}`;
-      document.getElementById("progress").innerText=`Submitted: 0 / ${playerCount}`;
+      document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${escapeHTML(prompt)}`;  //Ensure we always use escape any dynamic text inserted into statusMessage or other DOM elements to prevent injection.
+      document.getElementById("progress").innerText = `Submitted: 0 / ${escapeHTML(playerCount)}`;
 
-      // Show popup with question
-      const promptText = document.getElementById("questionPrompt").innerText;
-      document.getElementById("popupQuestion").innerText = promptText;
-      document.getElementById("roundPopup").style.display = "flex";
+// Show popup with question
+const promptText = document.getElementById("questionPrompt").innerText;
+document.getElementById("popupQuestion").innerText = escapeHTML(promptText);
+document.getElementById("roundPopup").style.display = "flex";
 
       // Keep local Show Question toggle enabled
       showQuestionBtn.disabled = false;
@@ -795,9 +795,9 @@ document.addEventListener("change", e => {
     // Show Question button opens popup with current question
     const showQuestionBtn = document.getElementById("showQuestionBtn");
     showQuestionBtn.onclick = () => {
-      const promptText = document.getElementById("questionPrompt").innerText;
-      document.getElementById("popupQuestion").innerText = promptText;
-      document.getElementById("roundPopup").style.display = "flex";
+		const promptText = document.getElementById("questionPrompt").innerText;
+		document.getElementById("popupQuestion").innerText = escapeHTML(promptText);
+      	document.getElementById("roundPopup").style.display = "flex";
     };
 
 
@@ -846,4 +846,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
+
+
 
