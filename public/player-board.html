@@ -808,18 +808,31 @@ showQuestionBtn.onclick = () => {
   document.getElementById("roundPopup").style.display = "flex";
 };
 
-  document.addEventListener("change", e => {
+document.addEventListener("change", e => {
   if (e.target.classList.contains("unicornRadio")) {
     const player = e.target.dataset.player;
     const round = parseInt(e.target.dataset.round, 10);
+
+    // Tell server
     socket.emit("assignUnicorn", { roomCode, playerName: player, roundNumber: round });
+
+    // --- NEW: Optimistic update so scoreboard shows 🦄 immediately ---
+    // Clear unicorn from all players locally
+    scoreboard.forEach(p => p.tag = "");
+    // Assign unicorn to the selected player
+    const target = scoreboard.find(p => p.player_name === player);
+    if (target) target.tag = "🦄";
+    // Re-render scoreboard with updated tag
+    renderScoreboard(scoreboard);
   }
 });
+
 
 	
   </script>
 </body>
 </html>
+
 
 
 
