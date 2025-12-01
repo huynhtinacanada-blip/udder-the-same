@@ -173,7 +173,7 @@
   height: 24px;
   left: 2px;                   /* start near the left edge */
   top: 2px;                    /* centered vertically */
-  background-color: white;     /* knob color */
+  background-color: blue;     /* knob color */
   border-radius: 50%;          /* make it a circle */
   transition: transform 0.3s;  /* smooth sliding animation */
 }
@@ -264,7 +264,7 @@
 /* Freeze first column (TAG) */
 #scoreTable th:first-child,
 #scoreTable td:first-child {
-  text-align: center;
+  text-align: left;
   width: 40px;
   position: sticky;
   left: 0;
@@ -320,7 +320,7 @@
       transition:background-color 0.3s, border-color 0.3s;
     }
     #answersTable .slider::before {
-      content:"";
+      content:"Y";
       position:absolute;
       width:28px; height:28px;
       left:2px; top:2px;
@@ -909,6 +909,7 @@ clearUnicornBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
