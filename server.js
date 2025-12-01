@@ -7,6 +7,24 @@
 //  - try/catch around DB calls to prevent crashes
 
 /* Things to do:
+
+  Configure Helmet with Options:
+   Helmet adds security headers to Express apps.
+  - Default: basic headers only.
+  - Fix: configure CSP, HSTS, frameguard, etc.
+  - This reduces "low severity" warnings from scanners.
+
+  
+  Password hashing:
+    - Never store plain text passwords in code or env vars.
+    - Always hash with bcrypt or similar.
+    - Add rate limiting to login routes to prevent brute force.
+    - Validate inputs before comparing.
+
+
+
+
+
   ============================
   SECURITY NOTE: ESCAPING TEXT
   ============================
@@ -231,6 +249,7 @@ function isPlayerActive(roomCode, playerName) {
 // REST endpoints for admin, rooms, questions, players
 
 // Admin login
+/* Unsecure:
 app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
   const ADMIN_USER = process.env.ADMIN_USER;
@@ -243,6 +262,45 @@ app.post("/api/admin/login", (req, res) => {
   }
   res.status(401).json({ error: "Invalid credentials" });
 });
+*/
+
+
+const rateLimit = require("express-rate-limit");
+const bcrypt = require("bcrypt");
+
+// Apply rate limiting to login route
+const loginLimiter = rateLimit({
+  windowMs: 2 * 60 * 1000, // 2 minutes
+  max: 10,                  // limit each IP to 10 login attempts per window
+  message: { error: "Too many login attempts. Please try again later." }
+});
+
+app.post("/api/admin/login", loginLimiter, async (req, res) => {
+  const { username, password } = req.body;
+  const ADMIN_USER = process.env.ADMIN_USER;
+  const ADMIN_HASH = process.env.ADMIN_HASH; // store a bcrypt hash, not plain text
+
+  if (!ADMIN_USER || !ADMIN_HASH) {
+    return res.status(500).json({ error: "Admin credentials not configured" });
+  }
+
+  // Validate username first
+  if (username !== ADMIN_USER) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  // Compare password securely
+  const match = await bcrypt.compare(password, ADMIN_HASH);
+  if (!match) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
+  // Success
+  res.json({ success: true, redirect: "/admin-dashboard.html" });
+});
+
+
+
 
 // Room management
 app.get("/api/rooms", async (_req, res) => {
@@ -342,13 +400,35 @@ app.delete("/api/admin/reset/:table", async (req, res) => {
   }
 
   try {
-    await pool.query(`DELETE FROM ${table}`);
+    // Use a switch or map instead of string interpolation
+    // A vulnerability here is the use of string interpolation in your SQL (DELETE FROM ${table})
+    // No dynamic SQL: You’re no longer interpolating user input into the query string.
+    // Whitelisted tables only: Each case is explicitly defined, so only those tables can be reset.
+    // Scanner‑friendly: Tools like Snyk or npm audit will stop flagging this as a potential injection risk.
+    switch (table) {
+      case "scores":
+        await pool.query("DELETE FROM scores");
+        break;
+      case "rooms":
+        await pool.query("DELETE FROM rooms");
+        break;
+      case "players":
+        await pool.query("DELETE FROM players");
+        break;
+      case "rounds":
+        await pool.query("DELETE FROM rounds");
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid table" });
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(`Error resetting table ${table}:`, err);
     res.status(500).json({ error: `Failed to reset ${table}` });
   }
 });
+
 
 // ---------------- Player Join API ----------------
 // Called when a player joins a room via HTTP
@@ -396,76 +476,74 @@ app.post("/api/player/join", async (req, res) => {
 // Real-time game logic via Socket.IO
 // Each "socket.on" handler responds to events sent by clients (players/admins).
 
-io.on("connection", (socket) => {
-  
-  // Only log if DEBUG environment variable is set to "true"
-  if (process.env.DEBUG === "true") {
-    console.log("New client connected");
+io.use((socket, next) => {
+  // Middleware: validate token before any events
+  const token = socket.handshake.auth.token;
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    socket.session = { loggedIn: true, user: payload };
+    next();
+  } catch (err) {
+    next(new Error("Not logged in"));
   }
-  
-  socket.on("joinLobby", ({ roomCode, name }) => {
-  if (!socket.session || !socket.session.loggedIn) {
-    socket.emit("joinError", { reason: "Not logged in" });
-    return;
-  }
-  // proceed with join
 });
 
-  // When a player joins the lobby
-  socket.on("joinLobby", async ({ roomCode, name }) => {
-    try {
-      const rc = roomCode.toUpperCase();
-      socket.data.name = name;       // Save player name on socket
-      socket.data.roomCode = rc;     // Save room code on socket
-      socket.join(rc);               // Add socket to room group
+io.on("connection", (socket) => {
+  
+// When a player joins the lobby
+socket.on("joinLobby", async ({ roomCode }) => {
+  try {
+    const rc = roomCode.toUpperCase();
+    const name = socket.session.user.name; //  trusted from token/session
 
-      // Ensure player exists in DB
-      await pool.query(
-        "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-        [name, rc]
+    socket.data.name = name;
+    socket.data.roomCode = rc;
+    socket.join(rc);
+
+    // Ensure player exists in DB
+    await pool.query(
+      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+      [name, rc]
+    );
+
+    // Broadcast updated player list and scoreboard
+    await emitPlayerList(rc);
+    await emitScoreboard(rc);
+
+    // If a round is already active, send current question to this player
+    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
+    if (room.rows.length && room.rows[0].active_question_id) {
+      const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [room.rows[0].active_question_id]);
+
+      const ans = await pool.query(
+        "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
+        [rc, name, room.rows[0].active_question_id, room.rows[0].current_round]
       );
 
-      // Broadcast updated player list and scoreboard
-      await emitPlayerList(rc);
-      await emitScoreboard(rc);
+      const { activeCount, submittedActiveCount } = await getActiveStats(rc);
 
-      // If a round is already active, send current question to this player
-      const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-      if (room.rows.length && room.rows[0].active_question_id) {
-        const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [room.rows[0].active_question_id]);
+      socket.emit("roundStarted", {
+        questionId: room.rows[0].active_question_id,
+        prompt: q.rows[0].prompt,
+        playerCount: activeCount,
+        roundNumber: room.rows[0].current_round,
+        myAnswer: ans.rows.length ? ans.rows[0].answer : null
+      });
 
-        // Check if player already submitted an answer
-        const ans = await pool.query(
-          "SELECT answer FROM answers WHERE room_code=$1 AND LOWER(player_name)=LOWER($2) AND question_id=$3 AND round_number=$4",
-          [rc, name, room.rows[0].active_question_id, room.rows[0].current_round]
-        );
+      io.to(rc).emit("submissionProgress", {
+        submittedCount: submittedActiveCount,
+        totalPlayers: activeCount
+      });
 
-        const { activeCount, submittedActiveCount } = await getActiveStats(rc);
-
-        // Send round info to this player
-        socket.emit("roundStarted", {
-          questionId: room.rows[0].active_question_id,
-          prompt: q.rows[0].prompt,
-          playerCount: activeCount,
-          roundNumber: room.rows[0].current_round,
-          myAnswer: ans.rows.length ? ans.rows[0].answer : null
-        });
-
-        // Update submission progress for everyone
-        io.to(rc).emit("submissionProgress", {
-          submittedCount: submittedActiveCount,
-          totalPlayers: activeCount
-        });
-
-        // If all active players submitted, notify everyone
-        if (activeCount > 0 && submittedActiveCount === activeCount) {
-          io.to(rc).emit("allSubmitted");
-        }
+      if (activeCount > 0 && submittedActiveCount === activeCount) {
+        io.to(rc).emit("allSubmitted");
       }
-    } catch (err) {
-      console.error("Error in joinLobby:", err);
     }
-  });
+  } catch (err) {
+    console.error("Error in joinLobby:", err);
+  }
+});
+
 
   // Clear unicorn assignment for the room
   socket.on("clearUnicorn", async ({ roomCode }) => {
@@ -680,6 +758,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
