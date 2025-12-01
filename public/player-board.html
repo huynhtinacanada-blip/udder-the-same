@@ -133,30 +133,64 @@
       border:1px solid #ccc; margin-bottom:10px; font-size:16px;
     }
 
-    /* Pill-style switch (default for override controls) */
-	.switch { display:block; margin-bottom:12px; }
-	.switch label { display:flex; align-items:center; gap:10px; cursor:pointer; }
-	.switch input { display:none; }
-	.slider {
-	  position: relative;
-	  width: 60px; height: 28px;
-	  background-color: #ccc;
-	  border-radius: 28px;
-	  transition: background-color 0.3s;
-	}
-	.slider::before {
-	  content: "";
-	  position: absolute;
-	  width: 24px; height: 24px;
-	  left: 2px; top: 2px;
-	  background-color: white;
-	  border-radius: 50%;
-	  transition: transform 0.3s;
-	}
-	.switch input:checked + .slider { background-color: #2e7d32; }
-	.switch input:checked + .slider::before { transform: translateX(32px); }
 
-	/* Two-Column Layout */
+/* Pill-style switch (default for override controls) */
+
+/* The outer wrapper for the switch */
+.switch { 
+  display: block;              /* make each switch take up its own line */
+  margin-bottom: 12px;         /* add space below each switch */
+}
+
+/* The label wraps the hidden checkbox and the visual slider */
+.switch label { 
+  display: flex;               /* use flexbox so items line up horizontally */
+  align-items: center;         /* vertically center the slider and text */
+  gap: 10px;                   /* space between slider and text */
+  cursor: pointer;             /* show pointer cursor when hovering */
+}
+
+/* Hide the actual checkbox input (we'll style the slider instead) */
+.switch input { 
+  display: none; 
+}
+
+/* The pill background (the track of the switch) */
+.slider {
+  position: relative;          /* allows the knob (::before) to be positioned inside */
+  width: 60px;                 /* pill width */
+  height: 28px;                /* pill height */
+  background-color: #ccc;      /* default gray background when OFF */
+  border-radius: 28px;         /* fully rounded ends (pill shape) */
+  transition: background-color 0.3s; /* smooth color change when toggled */
+}
+
+/* The knob (white circle) that slides left/right */
+.slider::before {
+  content: "";                 /* empty content, just a shape */
+  position: absolute;          /* position inside the pill */
+  width: 24px;                 /* knob size */
+  height: 24px;
+  left: 2px;                   /* start near the left edge */
+  top: 2px;                    /* centered vertically */
+  background-color: white;     /* knob color */
+  border-radius: 50%;          /* make it a circle */
+  transition: transform 0.3s;  /* smooth sliding animation */
+}
+
+/* When the hidden checkbox is checked, change pill background to green */
+.switch input:checked + .slider { 
+  background-color: #2e7d32;   /* green background when ON */
+}
+
+/* When checked, slide the knob to the right */
+.switch input:checked + .slider::before { 
+  transform: translateX(32px); /* move knob 32px to the right */
+}
+
+
+	
+	/* 3-Column Layout */
 	.controlsLayout {
 	  display: flex;
 	  justify-content: space-between;
@@ -875,6 +909,7 @@ clearUnicornBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
