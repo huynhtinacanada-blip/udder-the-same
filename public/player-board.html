@@ -625,21 +625,34 @@
 
     // ---- Persist Point Toggles ----
     // When host toggles a score checkbox, send update to server and update label text.
-    document.addEventListener("change", e => {
-      if (e.target.classList.contains("scoreToggle")) {
-        const player = e.target.dataset.player;
-        const round = parseInt(e.target.dataset.round, 10);
-        const points = e.target.checked ? 1 : 0;
-        socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
-
-        // Update label text and color immediately (optimistic UI update)
-        const labelSpan = e.target.closest("label").querySelector(".pointLabel");
-        if (labelSpan) {
-          labelSpan.textContent = points === 1 ? "+1" : "0";
-          labelSpan.className = points === 1 ? "pointLabel green" : "pointLabel blue";
-        }
-      }
-    });
+	document.addEventListener("change", e => {
+	  if (e.target.classList.contains("scoreToggle")) {
+	    const player = e.target.dataset.player;
+	    const round = parseInt(e.target.dataset.round, 10);
+	    const points = e.target.checked ? 1 : 0;
+	
+	     // Update label text and color immediately (optimistic UI update)
+	    const labelSpan = e.target.closest("label").querySelector(".pointLabel");
+	    if (labelSpan) {
+	      labelSpan.textContent = points === 1 ? "+1" : "0";
+	      labelSpan.className = points === 1 ? "pointLabel green" : "pointLabel blue";
+	    }
+	
+	    // emit with acknowledgement
+	    socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points }, (ack) => {
+	      if (!ack.success) {
+	        // revert if server failed
+	        e.target.checked = !e.target.checked;
+	        if (labelSpan) {
+	          labelSpan.textContent = e.target.checked ? "+1" : "0";
+	          labelSpan.className = e.target.checked ? "pointLabel green" : "pointLabel blue";
+	        }
+	        alert("Failed to update score. Please try again.");
+	      }
+	    });
+	  }
+	});
+	  
 
     // ---- Server Event: scoreboardUpdated ----
     // Server sends updated scoreboard. Re-render table and sync toggles.
@@ -761,7 +774,15 @@ document.addEventListener("change", e => {
         document.getElementById("roundPopup").style.display = "none";
       }
     });
+	
+	// Escape key closes popup
+	document.addEventListener("keydown", e => {
+	  if (e.key === "Escape") {
+	    document.getElementById("roundPopup").style.display = "none";
+	  }
+	});
 
+	  
     // Show Question button opens popup with current question
     const showQuestionBtn = document.getElementById("showQuestionBtn");
     showQuestionBtn.onclick = () => {
@@ -816,5 +837,6 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
