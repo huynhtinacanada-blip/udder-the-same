@@ -225,9 +225,13 @@ socket.on("disconnect", (reason) => {
     console.log("Emitting joinLobby with:", { roomCode, name: myName });
     socket.emit("joinLobby", { roomCode, name: myName });
 
-    // 👇 Debug: listen for errors from server
+  
     socket.on("joinError", (data) => {
+	  // 👇 Debug: listen for errors from server
       console.error("Join error from server:", data);
+	 
+		alert(data.message || "Login failed");
+	  window.location.href = "/player-login.html";		
     });
 
     // Cache DOM references
@@ -651,4 +655,5 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
