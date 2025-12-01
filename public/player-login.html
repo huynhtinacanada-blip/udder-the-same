@@ -7,86 +7,86 @@
   <style>
     /* ---- Page-level styles ---- */
     body { 
-      font-family: Arial, sans-serif; // Use a clean, widely available font
-      background:#e8f5e9;             // Light green background for friendly feel
-      display:flex;                   // Flexbox centers the card horizontally
-      justify-content:center;         // Center horizontally
-      align-items:center;             // Center vertically
-      min-height:100vh;               // Full viewport height ensures vertical centering
-      margin:0;                       // Remove default browser margins
+      font-family: Arial, sans-serif;   /* Use a common, readable font */
+      background:#e8f5e9;               /* Light green background for friendly feel */
+      display:flex;                     /* Flexbox centers the card horizontally */
+      justify-content:center;           /* Center horizontally */
+      align-items:center;               /* Center vertically */
+      min-height:100vh;                 /* Full viewport height ensures vertical centering */
+      margin:0;                         /* Remove default browser margins */
     }
 
     /* ---- Card container ---- */
     .card { 
-      background:#fff;                // White background for contrast
-      padding:60px;                   // Generous padding for breathing room
-      border-radius:16px;             // Rounded corners for modern look
-      box-shadow:0 8px 24px rgba(0,0,0,0.12); // Subtle shadow for depth
+      background:#fff;                  /* White background for contrast */
+      padding:60px;                     /* Space inside card */
+      border-radius:16px;               /* Rounded corners for modern look */
+      box-shadow:0 8px 24px rgba(0,0,0,0.12); /* Subtle shadow for depth */
       width:100%; 
-      max-width:480px;                // Prevent card from stretching too wide
-      text-align:center;              // Center text inside card
+      max-width:480px;                  /* Prevent card from stretching too wide */
+      text-align:center;                /* Center text inside card */
     }
 
     /* ---- Logo ---- */
     .logo {
-      max-width:160px;                // Restrict logo size
-      width:100%;                     // Scale responsively
-      height:auto;                     // Maintain aspect ratio
-      margin:0 auto 20px;              // Center horizontally with auto margins
-      display:inline-block;            // Inline-block ensures only the logo area is clickable
-      cursor:pointer;                  // Pointer cursor indicates interactivity
+      max-width:160px;                  /* Restrict logo size */
+      width:100%;                       /* Scale responsively */
+      height:auto;                      /* Maintain aspect ratio */
+      margin:0 auto 20px;               /* Center horizontally and add bottom spacing */
+      display:inline-block;             /* Inline-block ensures only the logo area is clickable */
+      cursor:pointer;                   /* Pointer cursor indicates interactivity */
     }
 
     /* ---- Heading ---- */
     h1 { 
-      font-size:28px;                 // Large, clear title
-      margin-bottom:24px;             // Space below heading
-      text-align:center;              // Centered for symmetry
+      font-size:28px;                   /* Large, clear title */
+      margin-bottom:24px;               /* Space below heading */
+      text-align:center;                /* Centered for symmetry */
     }
 
     /* ---- Form container ---- */
     form { 
-      display:flex;                   // Flexbox for vertical stacking
-      flex-direction:column;          // Stack inputs top-to-bottom
-      gap:18px;                       // Even spacing between inputs
-      text-align:left;                // Align labels/inputs to left for readability
+      display:flex;                     /* Flexbox for vertical stacking */
+      flex-direction:column;            /* Stack inputs top-to-bottom */
+      gap:18px;                         /* Even spacing between inputs */
+      text-align:left;                  /* Align labels/inputs to left for readability */
     }
 
     /* ---- Form labels ---- */
     label { 
-      font-size:16px;                 // Readable label size
+      font-size:16px;                   /* Readable label size */
     }
 
     /* ---- Input fields ---- */
     input { 
-      font-size:18px;                 // Slightly larger for clarity
-      padding:12px;                   // Comfortable click/tap area
-      border:1px solid #ccc;          // Light border for definition
-      border-radius:8px;              // Rounded corners match card style
+      font-size:18px;                   /* Slightly larger for clarity */
+      padding:12px;                     /* Comfortable click/tap area */
+      border:1px solid #ccc;            /* Light border for definition */
+      border-radius:8px;                /* Rounded corners match card style */
     }
 
     /* ---- Buttons ---- */
     button { 
-      font-size:20px;                 // Prominent button text
-      padding:16px;                   // Large click/tap target
-      background:#2e7d32;             // Green background (matches theme)
-      color:#fff;                     // White text for contrast
-      border:none;                    // Remove default border
-      border-radius:8px;              // Rounded corners for consistency
-      cursor:pointer;                 // Pointer cursor indicates interactivity
+      font-size:20px;                   /* Prominent button text */
+      padding:16px;                     /* Large click/tap target */
+      background:#2e7d32;               /* Green background (matches theme) */
+      color:#fff;                       /* White text for contrast */
+      border:none;                      /* Remove default border */
+      border-radius:8px;                /* Rounded corners for consistency */
+      cursor:pointer;                   /* Pointer cursor indicates interactivity */
     }
 
     button:hover { 
-      background:#F76ACF;             // Fun hover color for feedback
+      background:#F76ACF;               /* Fun hover color for feedback */
     }
 
     /* ---- Error / status message ---- */
     #msg { 
-      margin-top:12px;                // Space above message
-      font-size:15px;                 // Slightly smaller than inputs
-      color:red;                      // Red indicates error
-      text-align:center;              // Centered under form
-      min-height:20px;                // Reserve space so layout doesn’t jump
+      margin-top:12px;                  /* Space above message */
+      font-size:15px;                   /* Slightly smaller than inputs */
+      color:red;                        /* Red indicates error */
+      text-align:center;                /* Centered under form */
+      min-height:20px;                  /* Reserve space so layout doesn’t jump */
     }
   </style>
 </head>
@@ -94,7 +94,7 @@
   <div class="card">
     <!-- Version info: helps track form version during updates -->
     <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
-      Form Ver. 1.0.1r
+      Form Ver. 1.0.0r
     </div>
 
     <!-- Logo: clickable link back to homepage -->
