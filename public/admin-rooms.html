@@ -104,7 +104,7 @@
   <!-- ---- Table of rooms ---- -->
   <table id="roomsTable">
     <thead>
-      <tr><th>Code</th><th>Status</th><th>Created</th><th>Update</th></tr>
+      <tr><th>Code</th><th>Status</th><th>Created</th><th>Current Round</th><th>Update</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -117,72 +117,83 @@
   <!-- ---- Version info ---- -->
   <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
    🚪Room Management Ver. 1.0.0
-  </div>  
-
+  </div>
   <script>
-    /* ---- Load Rooms Function ----
-       - Fetches room data from API
-       - Populates table with rows
-       - Adds update button handlers */
-    async function loadRooms(){
-      const res = await fetch('/api/rooms');
-      const rooms = await res.json();
-      const tbody = document.querySelector('#roomsTable tbody');
+  /* ---- Load Rooms Function ----
+     - Fetches room data from API
+     - Populates table with rows
+     - Adds update button handlers */
+  async function loadRooms(){
+    // Call backend API to get all rooms
+    const res = await fetch('/api/rooms');
+    const rooms = await res.json();
 
-      // Build table rows dynamically
-      tbody.innerHTML = rooms.map(r =>
-        `<tr>
-          <td>${r.code}</td>
-          <td>${r.status}</td>
-          <td>${new Date(r.created_at).toLocaleString()}</td>
-          <td>
-            <select data-code="${r.code}" class="statusSel">
-              <option value="open"${r.status==='open'?' selected':''}>Open</option>
-              <option value="closed"${r.status==='closed'?' selected':''}>Closed</option>
-            </select>
-            <button class="updateBtn" data-code="${r.code}">Update</button>
-          </td>
-        </tr>`
-      ).join('');
+    // Find the table body element
+    const tbody = document.querySelector('#roomsTable tbody');
 
-      // Attach update button handlers
-      document.querySelectorAll('.updateBtn').forEach(btn => {
-        btn.onclick = async () => {
-          const code = btn.dataset.code;
-          const sel = document.querySelector(`.statusSel[data-code="${code}"]`);
-          await fetch(`/api/rooms/${code}`, {
-            method:'PATCH',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({status:sel.value})
-          });
-          loadRooms(); // reload table after update
-        };
-      });
-    }
+    // Build table rows dynamically from room data
+    tbody.innerHTML = rooms.map(r =>
+      `<tr>
+        <td>${r.code}</td>
+        <td>${r.status}</td>
+        <td>${new Date(r.created_at).toLocaleString()}</td>
+        <td>${r.current_round}</td> <!-- NEW: show current round -->
+        <td>
+          <!-- Dropdown to change room status -->
+          <select data-code="${r.code}" class="statusSel">
+            <option value="open"${r.status==='open'?' selected':''}>Open</option>
+            <option value="closed"${r.status==='closed'?' selected':''}>Closed</option>
+          </select>
+          <!-- Button to apply update -->
+          <button class="updateBtn" data-code="${r.code}">Update</button>
+        </td>
+      </tr>`
+    ).join('');
 
-    /* ---- Create Room Button ----
-       - Reads input values
-       - Sends POST request to API
-       - Clears input and reloads table */
-    document.getElementById('createBtn').onclick = async () => {
-      const code = document.getElementById('roomCode').value.trim().toUpperCase();
-      const status = document.getElementById('roomStatus').value;
-      if (!code) return alert('Enter code');
-      await fetch('/api/rooms', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({code,status})
-      });
-      document.getElementById('roomCode').value='';
-      loadRooms();
-    };
+    // Attach update button handlers
+    document.querySelectorAll('.updateBtn').forEach(btn => {
+      btn.onclick = async () => {
+        const code = btn.dataset.code;
+        const sel = document.querySelector(`.statusSel[data-code="${code}"]`);
+        // PATCH request updates existing room status (open/closed)
+        await fetch(`/api/rooms/${code}`, {
+          method:'PATCH',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({status:sel.value})
+        });
+        loadRooms(); // reload table after update
+      };
+    });
+  }
 
-    /* ---- Refresh Button ----
-       - Reloads table data from API */
-    document.getElementById('refreshBtn').onclick = loadRooms;
+  /* ---- Create Room Button ----
+     - Reads input values
+     - Sends POST request to API
+     - Clears input and reloads table */
+  document.getElementById('createBtn').onclick = async () => {
+    const code = document.getElementById('roomCode').value.trim().toUpperCase();
+    const status = document.getElementById('roomStatus').value;
+    if (!code) return alert('Enter code');
 
-    // Initial load when page opens
+    // POST request creates a brand new room
+    await fetch('/api/rooms', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code,status})
+    });
+
+    // Clear input field and reload table
+    document.getElementById('roomCode').value='';
     loadRooms();
-  </script>
+  };
+
+  /* ---- Refresh Button ----
+     - Reloads table data from API */
+  document.getElementById('refreshBtn').onclick = loadRooms;
+
+  // Initial load when page opens
+  loadRooms();
+</script>
 </body>
 </html>
+
