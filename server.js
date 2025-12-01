@@ -223,12 +223,56 @@ app.patch("/api/rooms/:code", async (req, res) => {
 });
 
 // Question management (CRUD + discard)
-app.get("/api/questions", async (_req, res) => { ... });
-app.post("/api/questions", async (req, res) => { ... });
-app.put("/api/questions/:id", async (req, res) => { ... });
-app.delete("/api/questions/:id", async (req, res) => { ... });
-app.patch("/api/questions/clearDiscardAll", async (_req, res) => { ... });
-app.patch("/api/questions/clearDiscardSome", async (req, res) => { ... });
+app.get("/api/questions", async (_req, res) => {
+  try {
+    const r = await pool.query("SELECT id, prompt, discard FROM questions ORDER BY id DESC");
+    res.json(r.rows);
+  } catch (err) {
+    console.error("Error fetching questions:", err);
+    res.status(500).json({ error: "Failed to fetch questions" });
+  }
+});
+
+app.post("/api/questions", async (req, res) => {
+  try {
+    const { text } = req.body;
+    const r = await pool.query(
+      "INSERT INTO questions (prompt) VALUES ($1) RETURNING id, prompt",
+      [text.trim()]
+    );
+    res.json(r.rows[0]);
+  } catch (err) {
+    console.error("Error creating question:", err);
+    res.status(500).json({ error: "Failed to create question" });
+  }
+});
+
+app.put("/api/questions/:id", async (req, res) => {
+  try {
+    const { text } = req.body;
+    const id = parseInt(req.params.id, 10);
+    const r = await pool.query(
+      "UPDATE questions SET prompt=$1 WHERE id=$2 RETURNING id, prompt, discard",
+      [text.trim(), id]
+    );
+    res.json(r.rows[0]);
+  } catch (err) {
+    console.error("Error updating question:", err);
+    res.status(500).json({ error: "Failed to update question" });
+  }
+});
+
+app.delete("/api/questions/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    await pool.query("DELETE FROM questions WHERE id=$1", [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error deleting question:", err);
+    res.status(500).json({ error: "Failed to delete question" });
+  }
+});
+
 // Set discard date for SELECTED questions (today's date)
 app.patch("/api/questions/setDiscard", async (req, res) => {
   try {
@@ -581,3 +625,4 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
