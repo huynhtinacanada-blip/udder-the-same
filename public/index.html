@@ -4,179 +4,164 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Udderly the Same</title>
-	<style>
-	  /* Base page styling */
-	  body {
-		font-family: 'Segoe UI', Arial, sans-serif;
-		background: linear-gradient(135deg, #fdfcfb, #e2d1c3); /* soft gradient background */
-		max-width: 800px; /* limit content width */
-		margin: 60px auto; /* center page with top spacing */
-		text-align: center; /* center text */
-		padding: 30px; /* inner spacing */
-		border-radius: 12px; /* rounded corners */
-		box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
-		position: relative;
-	  }
-	  h1 { font-size: 36px; margin-bottom: 10px; }
-	  h3 { margin-top: 0; font-weight: normal; }
+  <style>
+    /* ---- Base page styling ---- */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif; /* modern readable font */
+      background: linear-gradient(135deg, #fdfcfb, #e2d1c3); /* soft gradient background */
+      max-width: 800px;       /* limit content width */
+      margin: 60px auto;      /* center page with top spacing */
+      text-align: center;     /* center text */
+      padding: 30px;          /* inner spacing */
+      border-radius: 12px;    /* rounded corners */
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* subtle shadow */
+      position: relative;     /* allows absolute positioning for help button */
+    }
 
-	  /* Logo container */
-	  .logo-container {
-		position: relative; /* allows overlap */
-		width: 250px; height: 250px;
-		margin: 20px auto 10px;
-	  }
-	  .logo {
-		position: absolute; top: 0; left: 0; /* stack logos */
-		width: 100%; height: 100%;
-		object-fit: contain; /* keep aspect ratio */
-		opacity: 0; /* hidden by default */
-		transition: opacity 1.5s ease; /* fade effect */
-	  }
-	  .logo.show { opacity: 1; /* visible when "show" class applied */ }
+    /* ---- Headings ---- */
+    h1 { font-size: 36px; margin-bottom: 10px; }
+    h3 { margin-top: 0; font-weight: normal; }
 
-		/* Container for the loading bar */
-		.loading-bar {
-		  position: relative;             /* allow text to sit on top */
-		  width: 250px;                  /* total width of the bar */
-		  height: 24px;                  /* thickness of the bar */
-		  background: #ddd;              /* light gray background track */
-		  border-radius: 6px;            /* rounded corners */
-		  overflow: hidden;              /* hide anything that overflows the container */
-		  margin: 20px auto;             /* center horizontally with margin above/below */
-		}
-		.loading-text {
-		  position: absolute;
-		  top: 50%;                       
-		  left: 50%;                      
-		  transform: translate(-50%, -50%);
-		  font-size: 14px;
-		  font-weight: bold;
-		  color: black;
-		  z-index: 2;
-		  animation: fadeOut 1s ease forwards;
-		  animation-delay: 2s;   /* wait 2 seconds before fading out */
-		}
+    /* ---- Logo container ---- */
+    .logo-container {
+      position: relative; /* allows logos to overlap */
+      width: 250px; height: 250px;
+      margin: 20px auto 10px; /* center horizontally */
+    }
+    .logo {
+      position: absolute; top: 0; left: 0; /* stack logos */
+      width: 100%; height: 100%;
+      object-fit: contain; /* keep aspect ratio */
+      opacity: 0;          /* hidden by default */
+      transition: opacity 1.5s ease; /* fade effect */
+    }
+    .logo.show { opacity: 1; } /* visible when "show" class applied */
 
-		@keyframes fadeOut {
-		  to { opacity: 0; }
-		}
+    /* ---- Loading bar container ---- */
+    .loading-bar {
+      position: relative;   /* allow text overlay */
+      width: 250px;         /* total width of bar */
+      height: 24px;         /* thickness of bar */
+      background: #ddd;     /* light gray background track */
+      border-radius: 6px;   /* rounded corners */
+      overflow: hidden;     /* hide overflow */
+      margin: 20px auto;    /* center horizontally */
+    }
+    .loading-text {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%); /* center text */
+      font-size: 14px; font-weight: bold;
+      color: black;
+      z-index: 2;
+      animation: fadeOut 1s ease forwards;
+      animation-delay: 2s; /* wait 2s before fading out */
+    }
+    @keyframes fadeOut { to { opacity: 0; } }
 
-		.progress {
-		  width: 0;                      /* start with no fill */
-		  height: 100%;                  /* same height as the container */
-		  background: linear-gradient(    /* rainbow gradient background */
-		    90deg,
-		    red,
-		    orange,
-		    yellow,
-		    green,
-		    blue,
-		    indigo,
-		    violet
-		  );
-		  background-size: 300% 100%;    /* make gradient wider so it can animate across */
-		  animation: 
-		    load 3s linear forwards,     /* animate width from 0 → 100% over 3 seconds */
-		    rainbow 2s linear infinite;  /* continuously animate gradient colors sliding */
-		}
-		
-		/* Keyframes for the fill animation (bar grows) */
-		@keyframes load {
-		  to { width: 100%; }            /* final state: bar fully filled */
-		}
-		
-		/* Keyframes for the gradient animation (colors move sideways) */
-		@keyframes rainbow {
-		  0%   { background-position: 0% 50%; }   /* start gradient at left */
-		  100% { background-position: 100% 50%; } /* shift gradient fully to right */
-		}
+    .progress {
+      width: 0; height: 100%;
+      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+      background-size: 300% 100%; /* wide gradient for animation */
+      animation: 
+        load 3s linear forwards,     /* bar grows from 0 → 100% */
+        rainbow 2s linear infinite;  /* gradient slides continuously */
+    }
+    @keyframes load { to { width: 100%; } }
+    @keyframes rainbow {
+      0%   { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
+    }
 
-	
-	  /* Buttons layout */
-	  section {
-		display: flex; justify-content: center; flex-wrap: wrap; /* responsive row */
-		margin-top: 10px;
-	  }
-	  .btn {
-		flex: 1; min-width: 200px; /* flexible sizing */
-		padding: 14px 24px; margin: 8px;
-		font-size: 18px;
-		background: #333; color: #fff; /* dark button */
-		text-decoration: none; border-radius: 8px;
-		cursor: pointer; text-align: center;
-		transition: background 0.3s ease, transform 0.2s ease; /* hover effects */
-	  }
-	  .btn:hover { background: #fbc53e; transform: scale(1.05); /* highlight + zoom */ }
-	  .btn:disabled { background: #999; cursor: not-allowed; transform: none; /* inactive */ }
+    /* ---- Buttons layout ---- */
+    section {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .btn {
+      flex: 1; min-width: 200px;
+      padding: 14px 24px; margin: 8px;
+      font-size: 18px;
+      background: #333; color: #fff;
+      text-decoration: none; border-radius: 8px;
+      cursor: pointer; text-align: center;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .btn:hover { background: #fbc53e; transform: scale(1.05); }
+    .btn:disabled { background: #999; cursor: not-allowed; transform: none; }
 
-	  /* Responsive buttons */
-	  @media (max-width: 600px) {
-		section { flex-direction: column; align-items: center; }
-		.btn { width: 80%; /* full width on small screens */ }
-	  }
+    /* ---- Responsive buttons ---- */
+    @media (max-width: 600px) {
+      section { flex-direction: column; align-items: center; }
+      .btn { width: 80%; }
+    }
 
-	  /* Paragraphs */
-	  p { margin-top: 16px; font-size: 15px; color: #444; }
-	  p:first-of-type { margin-top: 10px; }
+    /* ---- Paragraphs ---- */
+    p { margin-top: 16px; font-size: 15px; color: #444; }
+    p:first-of-type { margin-top: 10px; }
 
-	  /* Help button */
-	  .help-btn {
-		position: absolute; top: 15px; right: 15px; /* top-right corner */
-		background: #007BFF; color: #fff; /* blue circle */
-		border: none; border-radius: 50%;
-		width: 36px; height: 36px; /* small round button */
-		font-size: 20px; cursor: pointer;
-	  }
+    /* ---- Help button ---- */
+    .help-btn {
+      position: absolute; top: 15px; right: 15px;
+      background: #007BFF; color: #fff;
+      border: none; border-radius: 50%;
+      width: 36px; height: 36px;
+      font-size: 20px; cursor: pointer;
+    }
 
-	  /* Modal overlay */
-	  .modal {
-		display: none; /* hidden by default */
-		position: fixed; z-index: 1000; /* above all content */
-		left: 0; top: 0; width: 100%; height: 100%;
-		background: rgba(0,0,0,0.5); /* semi-transparent backdrop */
-	  }
-	  .modal-content {
-		background: #fff; margin: 10% auto; /* centered box */
-		padding: 10px; border-radius: 8px;
-		max-width: 600px; text-align: left;
-	  }
-	  .close { float: right; font-size: 24px; cursor: pointer; /* close button */ }
-	</style>
-
+    /* ---- Modal overlay ---- */
+    .modal {
+      display: none; /* hidden by default */
+      position: fixed; z-index: 1000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); /* semi-transparent backdrop */
+    }
+    .modal-content {
+      background: #fff; margin: 10% auto;
+      padding: 10px; border-radius: 8px;
+      max-width: 600px; text-align: left;
+    }
+    .close { float: right; font-size: 24px; cursor: pointer; }
+  </style>
 </head>
 <body>
+  <!-- ---- Help button ---- -->
   <button class="help-btn" id="helpBtn">?</button>
 
+  <!-- ---- Headings ---- -->
   <h1>Udderly the Same</h1>
   <h3>🐮 Inspired by Herd Mentality, created by Big Potato Games.</h3>
 
-  <!-- Logos stacked in same spot -->
+  <!-- ---- Logos stacked in same spot ---- -->
   <div class="logo-container">
     <img src="udderly-logo-main-b.png" alt="Home Page Logo" class="logo" id="logoB">
     <img src="udderly-logo-main-a.png" alt="Home Page Logo" class="logo" id="logoA">
   </div>
 
-	<!-- Loading bar -->
-<div class="loading-bar">
-  <span class="loading-text">Loading...</span>
-  <div class="progress"></div>
-</div>
-	
-<p>A Kernal Neo Quest</p>
+  <!-- ---- Loading bar ---- -->
+  <div class="loading-bar">
+    <span class="loading-text">Loading...</span>
+    <div class="progress"></div>
+  </div>
+    
+  <!-- ---- Intro paragraphs ---- -->
+  <p>A Kernal Neo Quest</p>
   <p><strong>Welcome! Choose your path:</strong></p>
-	<section>
-	  <button class="btn" id="adminBtn" disabled onclick="location.href='/admin-login.html'">Admin Login</button>
-	  <button class="btn" id="playerBtn" disabled onclick="location.href='/player-login.html'">Join as Player</button>
-	</section>
+
+  <!-- ---- Navigation buttons ---- -->
+  <section>
+    <button class="btn" id="adminBtn" disabled onclick="location.href='/admin-login.html'">Admin Login</button>
+    <button class="btn" id="playerBtn" disabled onclick="location.href='/player-login.html'">Join as Player</button>
+  </section>
+
   <p>
     Players: Click on <em>Join as Player</em> and enter your name and room code.<br>
     Admins: Click on <em>Admin Login</em> to create rooms and manage questions.
   </p>
    
-  <!-- Version footer -->
+  <!-- ---- Version footer ---- -->
   <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-    Game Ver. 1.1.3r
+    Game Ver. 1.1.2r
     <br>
     <span style="font-size:0.75em; color:#666;">
       This online game is inspired by Herd Mentality, created by Big Potato Games. 
@@ -184,15 +169,14 @@
     </span>
   </div>
 
-<label>
-<br>
-  <input type="checkbox" id="skipAnimation">
-  Skip logo animation next time
-</label>
+  <!-- ---- Skip animation checkbox ---- -->
+  <label>
+    <br>
+    <input type="checkbox" id="skipAnimation">
+    Skip logo animation next time
+  </label>
 
-
-
-  <!-- How to Play Modal -->
+  <!-- ---- How to Play Modal ---- -->
   <div id="howToPlayModal" class="modal">
     <div class="modal-content">
       <span class="close" id="closeModal">&times;</span>
@@ -207,96 +191,96 @@
     </div>
   </div>
 
+  <!-- ---- Script: logo animation + modal logic ---- -->
+  <script>
+    // References to DOM elements
+    const logoB = document.getElementById('logoB');
+    const logoA = document.getElementById('logoA');
+    const adminBtn = document.getElementById('adminBtn');
+    const playerBtn = document.getElementById('playerBtn');
+    const skipAnimationCheckbox = document.getElementById('skipAnimation');
+    const loadingBar = document.querySelector('.loading-bar');
+    const loadingText = document.querySelector('.loading-text');
 
-	<script>
-  const logoB = document.getElementById('logoB');
-  const logoA = document.getElementById('logoA');
-  const adminBtn = document.getElementById('adminBtn');
-  const playerBtn = document.getElementById('playerBtn');
-  const skipAnimationCheckbox = document.getElementById('skipAnimation');
-  const loadingBar = document.querySelector('.loading-bar');
-  const loadingText = document.querySelector('.loading-text');
+    /* ---- Initialize checkbox state ----
+       If localStorage has 'seenLogoAnimation', mark checkbox as checked */
+    skipAnimationCheckbox.checked = !!localStorage.getItem('seenLogoAnimation');
 
-  // Initialize checkbox state based on localStorage
-  skipAnimationCheckbox.checked = !!localStorage.getItem('seenLogoAnimation');
-
-  skipAnimationCheckbox.addEventListener('change', () => {
-    if (skipAnimationCheckbox.checked) {
-      localStorage.setItem('seenLogoAnimation', 'true');
-    } else {
-      localStorage.removeItem('seenLogoAnimation');
-    }
-  });
-
-  const FADE_DURATION = 2000;
-  const DELAY_TO_LOGO_B = 2000;
-  const DELAY_TO_LOGO_A = 3000;
-
-  const skipAnimation = localStorage.getItem('seenLogoAnimation');
-
-  if (!skipAnimation) {
-    // Show loading bar + text
-    loadingBar.style.display = 'block';
-    loadingText.style.display = 'block';
-
-    // Fade out text after 2s (CSS handles opacity)
-    setTimeout(() => {
-      loadingText.style.opacity = 0;
-    }, 2000);
-
-    // Show logo B after delay
-    setTimeout(() => {
-      logoB.classList.add('show');
-    }, DELAY_TO_LOGO_B);
-
-    // Swap logos after next delay
-    setTimeout(() => {
-      logoB.classList.remove('show');
-      logoA.classList.add('show');
-
-      // After fade duration, enable buttons and hide loader
-      setTimeout(() => {
-        adminBtn.removeAttribute('disabled');
-        playerBtn.removeAttribute('disabled');
-        loadingBar.style.display = 'none'; // hide bar completely
-
+    // Update localStorage when checkbox changes
+    skipAnimationCheckbox.addEventListener('change', () => {
+      if (skipAnimationCheckbox.checked) {
         localStorage.setItem('seenLogoAnimation', 'true');
-        skipAnimationCheckbox.checked = true;
-      }, FADE_DURATION);
-    }, DELAY_TO_LOGO_A);
+      } else {
+        localStorage.removeItem('seenLogoAnimation');
+      }
+    });
 
-  } else {
-    // Skip animation: hide bar/text, show logo A immediately
-    loadingBar.style.display = 'none';
-    logoA.classList.add('show');
-    adminBtn.removeAttribute('disabled');
-    playerBtn.removeAttribute('disabled');
-  }
+    // Animation timing constants
+    const FADE_DURATION = 2000;     // fade length in ms
+    const DELAY_TO_LOGO_B = 2000;   // delay before showing logo B
+    const DELAY_TO_LOGO_A = 3000;   // delay before swapping to logo A
 
-  // Modal logic
-  const helpBtn = document.getElementById('helpBtn');
-  const modal = document.getElementById('howToPlayModal');
-  const closeModal = document.getElementById('closeModal');
+    const skipAnimation = localStorage.getItem('seenLogoAnimation');
 
-  helpBtn.onclick = () => modal.style.display = 'block';
-  closeModal.onclick = () => modal.style.display = 'none';
-  window.onclick = (event) => {
-    if (event.target === modal) modal.style.display = 'none';
-  };
-</script>
+    if (!skipAnimation) {
+      // Show loading bar + text
+      loadingBar.style.display = 'block';
+      loadingText.style.display = 'block';
 
+      // Fade out text after 2s
+      setTimeout(() => {
+        loadingText.style.opacity = 0;
+      }, 2000);
+
+      // Show logo B after delay
+      setTimeout(() => {
+        logoB.classList.add('show');
+      }, DELAY_TO_LOGO_B);
+
+      // Swap logos after next delay
+      setTimeout(() => {
+        logoB.classList.remove('show');   // hide logo B
+        logoA.classList.add('show');      // show logo A
+
+        // After fade duration, enable buttons and hide loader
+        setTimeout(() => {
+          adminBtn.removeAttribute('disabled');
+          playerBtn.removeAttribute('disabled');
+          loadingBar.style.display = 'none'; // hide bar completely
+
+          // Remember animation has been seen
+          localStorage.setItem('seenLogoAnimation', 'true');
+          skipAnimationCheckbox.checked = true;
+        }, FADE_DURATION);
+      }, DELAY_TO_LOGO_A);
+
+    } else {
+      // Skip animation: hide bar/text, show logo A immediately
+      loadingBar.style.display = 'none';
+      logoA.classList.add('show');
+      adminBtn.removeAttribute('disabled');
+      playerBtn.removeAttribute('disabled');
+    }
+
+    /* ---- Modal logic ----
+       Handles the "How to Play" popup:
+       - Opens when ? button clicked
+       - Closes when X clicked
+       - Closes when clicking outside modal content */
+    const helpBtn = document.getElementById('helpBtn');
+    const modal = document.getElementById('howToPlayModal');
+    const closeModal = document.getElementById('closeModal');
+
+    // Show modal when help button clicked
+    helpBtn.onclick = () => modal.style.display = 'block';
+
+    // Hide modal when close button clicked
+    closeModal.onclick = () => modal.style.display = 'none';
+
+    // Hide modal when clicking outside modal content
+    window.onclick = (event) => {
+      if (event.target === modal) modal.style.display = 'none';
+    };
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
