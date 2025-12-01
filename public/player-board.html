@@ -89,7 +89,7 @@
 
 	/* Explicit column widths for Answers table: toggle, player, answer */
 	#answersTable th:first-child, #answersTable td:first-child {
-	  width: 120px; text-align: center;
+	  width: 120px; text-align: left;
 	}
 	#answersTable th:nth-child(2), #answersTable td:nth-child(2) {
 	  width: 200px;
@@ -107,6 +107,54 @@
 	  border:1px solid #ccc; margin-bottom:10px; font-size:16px;
 	}
 
+	/* ---- Answers Table Toggle Styling ---- */
+	/* Special pill switch inside answers table, with emoji knob that changes when toggled. */
+	#answersTable .switch {
+	  position: relative; margin-left: 0; display: inline-block; width: 80px; height: 32px;
+	}
+	#answersTable .switch input { display: none; }
+	#answersTable .slider {
+	  position: relative;
+	  width: 100%;
+	  height: 100%;
+	  background-color: #ddd;          /* gray pill background when OFF */
+	  border: 2px solid #aaa;          /* subtle border around pill */
+	  border-radius: 32px;             /* rounded ends for pill shape */
+	  transition: background-color 0.3s, border-color 0.3s;
+	  cursor: pointer;                 /* pointer cursor on hover */
+	}
+
+	#answersTable .slider::before {
+	  content: "🏅";                   /* initial emoji shown inside knob */
+	  position: absolute;
+	  width: 28px;
+	  height: 28px;
+	  left: 2px;                       /* start position (left side of pill) */
+	  top: 2px;
+	  background-color: white;         /* knob circle background */
+	    /* border-radius: 50%;  */            /* makes knob circular */
+	  border: none;                    /* no border around knob */
+	  transition: transform 0.3s, background-color 0.3s, content 0.3s;
+	  display: flex;                   /* flex centers emoji inside knob */
+	  align-items: center;
+	  justify-content: center;
+	  font-size: 18px;
+	}
+
+	#answersTable .switch input:checked + .slider {
+	  background-color: #66bb6a;       /* green pill background when ON */
+	  border-color: #66bb6a;           /* border matches green background */
+	}
+
+	#answersTable .switch input:checked + .slider::before {
+	  transform: translateX(48px);     /* slide knob to the right */
+	  content: "🏃‍♀️";                /* emoji changes when ON */
+	}
+
+	#answersTable .slider:hover {
+	  background-color: #bbb;          /* darker gray pill on hover */
+	}
+	
 	/* ---- Custom Unicorn Radio Buttons ---- */
 	/* Hide default radio input, replace with styled circle that shows 🦄 when checked. */
 	.unicornRadio { display: none; }
@@ -168,54 +216,6 @@
 	}
 	#scoreTable th:nth-child(n+4), #scoreTable td.roundCell { text-align: center; width: 55px; }
 	.scoreSelect { width: 100%; text-align: center; }
-
-	/* ---- Answers Table Toggle Styling ---- */
-	/* Special pill switch inside answers table, with emoji knob that changes when toggled. */
-	#answersTable .switch {
-	  position: relative; margin-left: 0; display: inline-block; width: 80px; height: 32px;
-	}
-	#answersTable .switch input { display: none; }
-	#answersTable .slider {
-	  position: relative;
-	  width: 100%;
-	  height: 100%;
-	  background-color: #ddd;          /* gray pill background when OFF */
-	  border: 2px solid #aaa;          /* subtle border around pill */
-	  border-radius: 32px;             /* rounded ends for pill shape */
-	  transition: background-color 0.3s, border-color 0.3s;
-	  cursor: pointer;                 /* pointer cursor on hover */
-	}
-
-	#answersTable .slider::before {
-	  content: "🏅";                   /* initial emoji shown inside knob */
-	  position: absolute;
-	  width: 28px;
-	  height: 28px;
-	  left: 2px;                       /* start position (left side of pill) */
-	  top: 2px;
-	  background-color: white;         /* knob circle background */
-	  border-radius: 50%;              /* makes knob circular */
-	  border: none;                    /* no border around knob */
-	  transition: transform 0.3s, background-color 0.3s, content 0.3s;
-	  display: flex;                   /* flex centers emoji inside knob */
-	  align-items: center;
-	  justify-content: center;
-	  font-size: 18px;
-	}
-
-	#answersTable .switch input:checked + .slider {
-	  background-color: #66bb6a;       /* green pill background when ON */
-	  border-color: #66bb6a;           /* border matches green background */
-	}
-
-	#answersTable .switch input:checked + .slider::before {
-	  transform: translateX(48px);     /* slide knob to the right */
-	  content: "🏃‍♀️";                /* emoji changes when ON */
-	}
-
-	#answersTable .slider:hover {
-	  background-color: #bbb;          /* darker gray pill on hover */
-	}
 
 	/* ---- Popup Modal ---- */
 	/* Full-screen overlay with blurred background, centered content box. */
@@ -791,6 +791,7 @@ clearUnicornBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
