@@ -246,7 +246,7 @@ function isPlayerActive(roomCode, playerName) {
 // REST endpoints for admin, rooms, questions, players
 
 // Admin login
-/* Unsecure:
+
 app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
   const ADMIN_USER = process.env.ADMIN_USER;
@@ -259,15 +259,16 @@ app.post("/api/admin/login", (req, res) => {
   }
   res.status(401).json({ error: "Invalid credentials" });
 });
-*/
 
+//express-rate-limit and bcrypt module not installed so can't user rate-limit attempts and hash password.
 
+/*
 const rateLimit = require("express-rate-limit");
 const bcrypt = require("bcrypt");
 
 // Apply rate limiting to login route
 const loginLimiter = rateLimit({
-  windowMs: 2 * 60 * 1000, // 2 minutes
+  windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10,                  // limit each IP to 10 login attempts per window
   message: { error: "Too many login attempts. Please try again later." }
 });
@@ -275,37 +276,29 @@ const loginLimiter = rateLimit({
 app.post("/api/admin/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const ADMIN_USER = process.env.ADMIN_USER;
-  const ADMIN_PASS = process.env.ADMIN_PASS;
+  const ADMIN_HASH = process.env.ADMIN_HASH; // store a bcrypt hash, not plain text
 
-  if (!ADMIN_USER || !ADMIN_PASS) {
+  if (!ADMIN_USER || !ADMIN_HASH) {
     return res.status(500).json({ error: "Admin credentials not configured" });
   }
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    return res.json({ success: true, redirect: "/admin-dashboard.html" });
-  }
-  res.status(401).json({ error: "Invalid credentials" });
-
-
-  
-  // store a bcrypt hash, not plain text
-  //const ADMIN_HASH = process.env.ADMIN_HASH;  
-  //if (!ADMIN_USER || !ADMIN_HASH) {
-  //  return res.status(500).json({ error: "Admin credentials not configured" });
-  //}
 
   // Validate username first
- // if (username !== ADMIN_USER) {
- //   return res.status(401).json({ error: "Invalid credentials" });
- // }
+  if (username !== ADMIN_USER) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
 
   // Compare password securely
-  //const match = await bcrypt.compare(password, ADMIN_HASH);
-  //if (!match) {
-  //  return res.status(401).json({ error: "Invalid credentials" });
- // }
+  const match = await bcrypt.compare(password, ADMIN_HASH);
+  if (!match) {
+    return res.status(401).json({ error: "Invalid credentials" });
+  }
+
   // Success
- // res.json({ success: true, redirect: "/admin-dashboard.html" });
+  res.json({ success: true, redirect: "/admin-dashboard.html" });
 });
+*/
+
+
 
 
 
@@ -766,6 +759,7 @@ socket.on("joinLobby", async ({ roomCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
