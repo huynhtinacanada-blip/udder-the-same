@@ -413,10 +413,17 @@
     const roomCode=(urlParams.get("room")||"").toUpperCase();
     const myName=urlParams.get("name")||"";
 
-    // Guard: if no valid login info, redirect back to login page
-    if (!roomCode || !myName) {
-      window.location.href = "/player-login.html";
-    }
+// 👇 Debug: print values to console
+console.log("URL params:", window.location.search);
+console.log("Extracted roomCode:", roomCode);
+console.log("Extracted myName:", myName);
+
+	// Guard: if no valid login info, redirect back to login page
+	if (!roomCode || !myName) {
+// 👇 Debug: print values to console
+console.warn("Missing roomCode or myName, redirecting to login page");
+	  window.location.href = "/player-login.html";
+	}
 	  
     // Safe insertion with escaping
     document.getElementById("roomLabel").innerText =  
@@ -424,8 +431,22 @@
 
     // Connect to server via socket.io
     const socket=io();
+
+// 👇 Debug: confirm socket connection
+socket.on("connect", () => {
+console.log("Socket connected with ID:", socket.id);
+});
+
+
+// 👇 Debug: log what you’re emitting
+console.log("Emitting joinLobby with:", { roomCode, name: myName });	  
     socket.emit("joinLobby",{roomCode,name:myName});
 
+// 👇 Debug: listen for errors from server
+socket.on("joinError", (data) => {
+  console.error("Join error from server:", data);
+});
+	  
     // Cache references to key buttons and inputs
     const startBtn=document.getElementById("startBtn");
     const showBtn=document.getElementById("showAnswersBtn");
@@ -846,6 +867,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
