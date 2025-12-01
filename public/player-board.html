@@ -528,7 +528,7 @@
         .map(name => {
           const player = players.find(p => p.name === name);
           const ghost = player && player.active ? "" : "👻";
-          const submitted = player ? (player.submitted ? "✅ Submitted" : "⌛ Waiting") : "";
+          const submitted = player ? (player.submitted ? "📩 Submitted" : "⌛ Waiting") : "";
           return `<tr><td>${escapeHTML(name)}</td><td>${ghost}</td><td>${submitted}</td></tr>`;
         })
         .join("");
@@ -820,6 +820,7 @@ showQuestionBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
