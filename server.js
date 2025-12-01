@@ -251,6 +251,14 @@ app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
   const ADMIN_USER = process.env.ADMIN_USER;
   const ADMIN_PASS = process.env.ADMIN_PASS;
+
+// 👇 Debug logs to console
+  if (process.env.DEBUG === "true") {
+    console.log("Provided username:", username);
+    console.log("Provided password:", password);
+    console.log("Expected ADMIN_USER:", ADMIN_USER);
+    console.log("Expected ADMIN_PASS:", ADMIN_PASS);
+  }
   if (!ADMIN_USER || !ADMIN_PASS) {
     return res.status(500).json({ error: "Admin credentials not configured" });
   }
@@ -297,11 +305,6 @@ app.post("/api/admin/login", loginLimiter, async (req, res) => {
   res.json({ success: true, redirect: "/admin-dashboard.html" });
 });
 */
-
-
-
-
-
 
 // Room management
 app.get("/api/rooms", async (_req, res) => {
@@ -759,6 +762,7 @@ socket.on("joinLobby", async ({ roomCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
