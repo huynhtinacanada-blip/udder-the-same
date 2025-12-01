@@ -5,7 +5,48 @@
 //  - Unique index on answers to enforce one answer per player per round
 //  - Consistent LOWER(name) normalization
 //  - try/catch around DB calls to prevent crashes
-//  - did not code for check by access direcltly from URL 
+
+/* Things to do:
+  ============================
+  SECURITY NOTE: ESCAPING TEXT
+  ============================
+
+  What it is:
+  - "Escaping" means converting special characters in dynamic text (like <, >, &) 
+    into safe representations before inserting them into the page.
+  - Example: "<script>" becomes "&lt;script&gt;" so the browser shows it as text 
+    instead of running it as code.
+
+  Why it matters:
+  - Any text coming from users, URLs, or the server could be malicious.
+  - Without escaping, attackers could inject HTML or JavaScript into your page 
+    (called Cross-Site Scripting, or XSS).
+  - Escaping ensures that dynamic values are displayed safely as text, not executed.
+
+  Rule of thumb:
+  - Always wrap dynamic values with escapeHTML() before inserting into the DOM.
+  - Safe: hardcoded strings you write yourself.
+  - Needs escaping: anything from user input, server responses, or URL parameters.
+
+  In this code:
+  - We escape room codes, player names, prompts, progress counts, and any other 
+    dynamic values before showing them in the UI.
+  - This keeps the game secure and prevents injection attacks.
+*/
+
+/*
+  ACCESS CONTROL NOTE:
+  --------------------
+  - Never trust the browser alone to enforce access rules.
+  - Users can type a direct URL and skip your login page.
+  - Always validate room codes and player names on the server.
+  - Add client-side guards (redirect if missing params), but 
+    remember: server-side checks are the real protection.
+*/
+
+
+
+//  -
 
 /* setup → helpers → APIs → socket events → start */
 
@@ -625,4 +666,5 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
