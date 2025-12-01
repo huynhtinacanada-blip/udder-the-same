@@ -397,6 +397,20 @@ app.post("/api/player/join", async (req, res) => {
 // Each "socket.on" handler responds to events sent by clients (players/admins).
 
 io.on("connection", (socket) => {
+  
+  // Only log if DEBUG environment variable is set to "true"
+  if (process.env.DEBUG === "true") {
+    console.log("New client connected");
+  }
+  
+  socket.on("joinLobby", ({ roomCode, name }) => {
+  if (!socket.session || !socket.session.loggedIn) {
+    socket.emit("joinError", { reason: "Not logged in" });
+    return;
+  }
+  // proceed with join
+});
+
   // When a player joins the lobby
   socket.on("joinLobby", async ({ roomCode, name }) => {
     try {
@@ -666,5 +680,6 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
