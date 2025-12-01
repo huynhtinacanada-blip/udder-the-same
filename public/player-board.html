@@ -643,22 +643,32 @@
 
     // ---- Server Event: scoreboardUpdated ----
     // Server sends updated scoreboard. Re-render table and sync toggles.
-    socket.on("scoreboardUpdated", data => {
-      scoreboard = data || [];
-      renderScoreboard(scoreboard);
-      if (document.getElementById("answersAccordion").style.display === "block") {
-        const roundMap = toRoundMap(scoreboard, currentRound);
-        document.querySelectorAll(".scoreToggle").forEach(cb => {
-          const player = cb.dataset.player;
-          cb.checked = roundMap[player] === 1;
-          const labelSpan = cb.closest("label").querySelector(".pointLabel");
-          if (labelSpan) {
-            labelSpan.textContent = cb.checked ? "+1" : "0";
-            labelSpan.className = cb.checked ? "pointLabel green" : "pointLabel blue";
-          }
-        });
-      }
-    });
+	/* if (document.getElementById("answersAccordion").style.display === "block") {
+  		// sync toggles
+		} //} That means if the accordion isn’t open, you skip syncing. Remove that condition so toggles always sync.
+	*/
+
+	// ---- Server Event: scoreboardUpdated ----
+	// Server sends updated scoreboard. Re-render table and sync toggles.
+	socket.on("scoreboardUpdated", data => {
+	  scoreboard = data || [];
+	  renderScoreboard(scoreboard);
+	
+	  // Always sync toggles, regardless of accordion state
+	  const roundMap = toRoundMap(scoreboard, currentRound);
+	  document.querySelectorAll(".scoreToggle").forEach(cb => {
+	    const player = cb.dataset.player;
+	    cb.checked = roundMap[player] === 1;
+	    const labelSpan = cb.closest("label").querySelector(".pointLabel");
+	    if (labelSpan) {
+	      labelSpan.textContent = cb.checked ? "+1" : "0";
+	      labelSpan.className = cb.checked ? "pointLabel green" : "pointLabel blue";
+	    }
+	  });
+	});
+		
+
+		
 
     // ---- Render Scoreboard ----
     // Builds scoreboard table dynamically based on server data.
@@ -805,3 +815,4 @@
   </script>
 </body>
 </html>
+
