@@ -6,222 +6,55 @@
   <script src="/socket.io/socket.io.js"></script>
 
 <style>
-    body {
-      font-family:'Segoe UI',Arial,sans-serif;
-      max-width:900px;
-      margin:30px auto;
-      background:linear-gradient(135deg,#fdfcfb,#e2d1c3);
-      padding:20px;
-      border-radius:12px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.1);
-    }
-    .header { display:flex; align-items:center; gap:12px; margin-bottom:20px;}
-    .logo { max-width:100px; height:auto; display:block;}
-    h2 { margin:0;}
-    #statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444;}
- 
-    /* Buttons */
-    button {
-      padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
-      cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
-    }
-    button:disabled { background:#999; cursor:not-allowed;}
-	
-	/* Default hover (orange) */
-	button:hover:enabled {
-	  background:#F7AC4D; /* orange hover for most buttons */
+	/* ---- Page Body ---- */
+	/* The body sets the overall look: font, max width, centered layout, background gradient, padding, rounded corners, and a subtle shadow. */
+	body {
+	  font-family:'Segoe UI',Arial,sans-serif;
+	  max-width:900px;
+	  margin:30px auto;
+	  background:linear-gradient(135deg,#fdfcfb,#e2d1c3);
+	  padding:20px;
+	  border-radius:12px;
+	  box-shadow:0 4px 12px rgba(0,0,0,0.1);
 	}
 
-	/* Special End Game button hover */
+	/* ---- Header Section (Logo + Title) ---- */
+	/* Flexbox header aligns logo and title horizontally with spacing. */
+	.header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+	.logo { max-width:100px; height:auto; display:block; }
+	h2 { margin:0; }
+
+	/* ---- Status Message (below header) ---- */
+	/* Bold text, centered, used to show game status messages. */
+	#statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444; }
+
+	/* ---- Buttons (general styling) ---- */
+	/* All buttons share padding, rounded corners, dark background, white text, and hover transitions. */
+	button {
+	  padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
+	  cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
+	}
+	button:disabled { background:#999; cursor:not-allowed; }
+
+	/* Default hover (orange) for most buttons */
+	button:hover:enabled { background:#F7AC4D; }
+
+	/* Special End Game button hover: red to emphasize danger */
 	.danger-btn:hover:enabled {
-	  background:#d32f2f;   /* red hover */
-	  color:#fff;           /* keep text white */
-	  font-weight:bold;     /* optional: bold text */
+	  background:#d32f2f;
+	  color:#fff;
+	  font-weight:bold;
 	}
 
+	/* Show Question button hover: blue */
+	#showQuestionBtn:hover:enabled { background:#1976d2; }
 
+	/* Show Answers button hover: green */
+	#showAnswersBtn:hover:enabled { background:#2e7d32; }
 
-/* Hide the default radio */
-.unicornRadio {
-  display: none;
-}
-
-/* Custom circle */
-.unicornLabel {
-  width: 24px;
-  height: 24px;
-  border: 2px solid #afc;
-  border-radius: 50%;
-  display: inline-block;
-  position: relative;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-/* Hover effect */
-.unicornLabel:hover {
-  border-color: #888;
-  box-shadow: 0 0 6px rgba(0,0,0,0.5);
-}
-
-/* Checked state: show unicorn emoji */
-.unicornRadio:checked + .unicornLabel::after {
-  content: "🦄";
-  font-size: 18px;
-  position: absolute;
-  top: -2px;
-  left: -2px;
-}
-
-
-/* Wrapper for horizontal scroll */
-.table-wrapper {
-  overflow-x: auto;
-  width: 100%;
-}
-	
-	/* Show Question button hover */
-	#showQuestionBtn:hover:enabled {
-	  background:#1976d2;   /* blue hover */
-	}
-
-	/* Show Answers button hover */
-	#showAnswersBtn:hover:enabled {
-	  background:#2e7d32;   /* green hover */
-	}
-	
-	
-    /* Accordion Sections */	
-    .accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-    .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold;}
-    .accordion-header:hover { background:#F7AC4D;}
-    .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px;}
-    .accordion-content.open { padding:15px; max-height:1000px;}
-	
-	/* Answer Row Layout */	
-    #answersTable, #playersTable, #scoreTable {
-      font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
-    }
-    #answersTable th, #answersTable td,
-    #playersTable th, #playersTable td,
-    #scoreTable th, #scoreTable td {
-      border-bottom:1px solid #ccc; padding:8px;
-    }
-    #answersTable th, #answersTable td { text-align:left; }
-
-    /* Explicit column widths for Answers table */
-    #answersTable th:first-child,
-    #answersTable td:first-child {
-      width: 120px;       /* toggle column */
-      text-align: center;
-    }
-    #answersTable th:nth-child(2),
-    #answersTable td:nth-child(2) {
-      width: 200px;       /* player name column */
-    }
-    #answersTable th:nth-child(3),
-    #answersTable td:nth-child(3) {
-      width: auto;        /* answer column fills remaining space */
-    }
-/* Force all header text in answers table to left */
-#answersTable th {
-  text-align: left !important;
-}
-	
-    textarea {
-      width:100%; max-width:800px; padding:10px; border-radius:6px;
-      border:1px solid #ccc; margin-bottom:10px; font-size:16px;
-    }
-
-
-/* Pill-style switch (default for override controls) */
-
-/* The outer wrapper for the switch */
-.switch { 
-  display: block;              /* make each switch take up its own line */
-  margin-bottom: 12px;         /* add space below each switch */
-}
-
-/* The label wraps the hidden checkbox and the visual slider */
-.switch label { 
-  display: flex;               /* use flexbox so items line up horizontally */
-  align-items: center;         /* vertically center the slider and text */
-  gap: 10px;                   /* space between slider and text */
-  cursor: pointer;             /* show pointer cursor when hovering */
-}
-
-/* Hide the actual checkbox input (we'll style the slider instead) */
-.switch input { 
-  display: none; 
-}
-
-/* The pill background (the track of the switch) */
-.slider {
-  position: relative;          /* allows the knob (::before) to be positioned inside */
-  width: 60px;                 /* pill width */
-  height: 28px;                /* pill height */
-  background-color: #ccc;      /* default gray background when OFF */
-  border-radius: 28px;         /* fully rounded ends (pill shape) */
-  transition: background-color 0.3s; /* smooth color change when toggled */
-}
-
-/* The knob (white circle) that slides left/right - curreenly used for the contro switch section */
-.slider::before {
-  content: "";                 /* empty content, just a shape */
-  position: absolute;          /* position inside the pill */
-  width: 24px;                 /* knob size */
-  height: 24px;
-  left: 2px;                   /* start near the left edge */
-  top: 2px;                    /* centered vertically */
-  background-color: black;     /* knob color */
-  border-radius: 50%;          /* make it a circle */
-  transition: transform 0.3s;  /* smooth sliding animation */
-}
-
-/* When the hidden checkbox is checked, change pill background to green */
-.switch input:checked + .slider { 
-  background-color: #2e7d32;   /* green background when ON */
-}
-
-/* When checked, slide the knob to the right */
-.switch input:checked + .slider::before { 
-  transform: translateX(32px); /* move knob 32px to the right */
-}
-
-
-	
-	/* 3-Column Layout */
-	.controlsLayout {
-	  display: flex;
-	  justify-content: space-between;
-	  align-items: flex-start;
-	  gap: 20px;
-	}
-
-	.leftColumn {
-	  display: flex;
-	  flex-direction: column;
-	  gap: 12px;
-	}
-
-.middleColumn {
-  display: flex;
-  flex-direction: column;  /* vertical stack */
-  gap: 12px;
-  align-items: center;     /* center horizontally */
-}
-
-
-	.rightColumn {
-	  display: flex;
-	  align-items: center;      /* vertical center */
-	  align-self: stretch;      /* ensure it stretches to row height */
-	}
-
-
-	/* Sign Out button styling */
+	/* Sign Out button styling: red by default, orange on hover */
 	#signOutBtn {
-	  background-color: #d32f2f;   /* red tone */
+	  background-color: #d32f2f;
 	  color: white;
 	  border: none;
 	  padding: 10px 18px;
@@ -230,195 +63,213 @@
 	  font-weight: bold;
 	  transition: background-color 0.3s;
 	}
+	#signOutBtn:hover { background-color: #ffa600; }
 
-	#signOutBtn:hover {
-	  background-color: #ffa600;   /* darker red on hover */
+	/* ---- Accordion Sections ---- */
+	/* Accordion headers toggle content visibility. Content expands/collapses with max-height animation. */
+	.accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+	.accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
+	.accordion-header:hover { background:#F7AC4D; }
+	.accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
+	.accordion-content.open { padding:15px; max-height:1000px; }
+
+	/* ---- Tables (Answers, Players, Score) ---- */
+	/* Shared table styling: font size, collapsed borders, full width. */
+	#answersTable, #playersTable, #scoreTable {
+	  font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
+	}
+	#answersTable th, #answersTable td,
+	#playersTable th, #playersTable td,
+	#scoreTable th, #scoreTable td {
+	  border-bottom:1px solid #ccc; padding:8px;
 	}
 
+	/* Answers table: default left alignment */
+	#answersTable th, #answersTable td { text-align:left; }
 
-    /* Top status styling */
-	  /* Room Header */
-    #topStatus { font-weight:bold; color:#444; margin-left:auto; }
-    .roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .small { font-size: 12px; color: #666; }
+	/* Explicit column widths for Answers table: toggle, player, answer */
+	#answersTable th:first-child, #answersTable td:first-child {
+	  width: 120px; text-align: center;
+	}
+	#answersTable th:nth-child(2), #answersTable td:nth-child(2) {
+	  width: 200px;
+	}
+	#answersTable th:nth-child(3), #answersTable td:nth-child(3) {
+	  width: auto;
+	}
 
+	/* Force all header text left-aligned */
+	#answersTable th { text-align: left !important; }
 
+	/* ---- Textarea (for input fields) ---- */
+	textarea {
+	  width:100%; max-width:800px; padding:10px; border-radius:6px;
+	  border:1px solid #ccc; margin-bottom:10px; font-size:16px;
+	}
 
-	/* Score Table formatting */
-/* Score Table formatting */
-#scoreTable {
-  table-layout: fixed;
-  border-collapse: collapse;   /* collapse borders into single lines */
-  width: 100%;
-	  /* min-width will be set dynamically in JS */
-}
+	/* ---- Custom Unicorn Radio Buttons ---- */
+	/* Hide default radio input, replace with styled circle that shows 🦄 when checked. */
+	.unicornRadio { display: none; }
+	.unicornLabel {
+	  width: 24px; height: 24px; border: 2px solid #afc; border-radius: 50%;
+	  display: inline-block; position: relative; cursor: pointer; transition: all 0.3s ease;
+	}
+	.unicornLabel:hover { border-color: #888; box-shadow: 0 0 6px rgba(0,0,0,0.5); }
+	.unicornRadio:checked + .unicornLabel::after {
+	  content: "🦄"; font-size: 18px; position: absolute; top: -2px; left: -2px;
+	}
 
-/* General cell padding + border */
-#scoreTable th,
-#scoreTable td {
-  padding: 6px;
-  white-space: nowrap;         /* prevent wrapping that changes widths */
-  border: 1px solid #ccc;      /* consistent border for collapsed layout */
-}
+	/* Wrapper for horizontal scroll (useful for wide tables) */
+	.table-wrapper { overflow-x: auto; width: 100%; }
 
-/* Freeze first column (TAG) */
-#scoreTable th:first-child,
-#scoreTable td:first-child {
-  text-align: left;
-  width: 40px;
-  position: sticky;
-  left: 0;
-  background: #fff;
-  z-index: 3;
-}
+	/* ---- Control Switches (pill-style toggle) ---- */
+	/* Generic pill switch used for override controls. */
+	.switch { display: block; margin-bottom: 12px; }
+	.switch label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+	.switch input { display: none; }
+	.slider {
+	  position: relative; width: 60px; height: 28px; background-color: #ccc;
+	  border-radius: 28px; transition: background-color 0.3s;
+	}
+	.slider::before {
+	  content: ""; position: absolute; width: 24px; height: 24px; left: 2px; top: 2px;
+	  background-color: black; border-radius: 50%; transition: transform 0.3s;
+	}
+	.switch input:checked + .slider { background-color: #2e7d32; }
+	.switch input:checked + .slider::before { transform: translateX(32px); }
 
-/* Freeze second column (Player) */
-#scoreTable th:nth-child(2),
-#scoreTable td:nth-child(2) {
-  text-align: left;
-  padding-left: 10px;
-  width: 150px;
-  position: sticky;
-  left: 40px; /* width of TAG */
-  background: #fff;
-  z-index: 3;
-}
+	/* ---- Controls Layout (3-column arrangement) ---- */
+	/* Flexbox layout splits controls into left, middle, right columns. */
+	.controlsLayout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+	.leftColumn { display: flex; flex-direction: column; gap: 12px; }
+	.middleColumn { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+	.rightColumn { display: flex; align-items: center; align-self: stretch; }
 
-/* Freeze third column (Total) */
-#scoreTable th:nth-child(3),
-#scoreTable td:nth-child(3) {
-  text-align: center;
-  width: 80px;
-  position: sticky;
-  left: 190px; /* 40 + 150 */
-  background: #fff;
-	  border-right: 2px solid #999; /* force visible line */
-  box-shadow: 1px 0 0 #999;     /* optional shadow for clarity */
-  z-index: 3;
-}
+	/* ---- Room Header (top status bar) ---- */
+	#topStatus { font-weight:bold; color:#444; margin-left:auto; }
+	.roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+	.small { font-size: 12px; color: #666; }
 
-/* Remaining round cells scroll normally */
-#scoreTable th:nth-child(n+4),
-#scoreTable td.roundCell {
-  text-align: center;
-  width: 55px;              /* consistent dropdown width */
-}
+	/* ---- Score Table ---- */
+	/* Fixed layout with sticky first three columns for clarity when scrolling horizontally. */
+	#scoreTable { table-layout: fixed; border-collapse: collapse; width: 100%; }
+	#scoreTable th, #scoreTable td {
+	  padding: 6px; white-space: nowrap; border: 1px solid #ccc;
+	}
+	#scoreTable th:first-child, #scoreTable td:first-child {
+	  text-align: left; width: 40px; position: sticky; left: 0; background: #fff; z-index: 3;
+	}
+	#scoreTable th:nth-child(2), #scoreTable td:nth-child(2) {
+	  text-align: left; padding-left: 10px; width: 150px; position: sticky; left: 40px; background: #fff; z-index: 3;
+	}
+	#scoreTable th:nth-child(3), #scoreTable td:nth-child(3) {
+	  text-align: center; width: 80px; position: sticky; left: 190px; background: #fff;
+	  border-right: 2px solid #999; box-shadow: 1px 0 0 #999; z-index: 3;
+	}
+	#scoreTable th:nth-child(n+4), #scoreTable td.roundCell { text-align: center; width: 55px; }
+	.scoreSelect { width: 100%; text-align: center; }
 
-/* Dropdown styling */
-.scoreSelect {
-  width: 100%;
-  text-align: center;
-}
+	/* ---- Answers Table Toggle Styling ---- */
+	/* Special pill switch inside answers table, with emoji knob that changes when toggled. */
+	#answersTable .switch {
+	  position: relative; margin-left: 0; display: inline-block; width: 80px; height: 32px;
+	}
+	#answersTable .switch input { display: none; }
+	#answersTable .slider {
+	  position: relative;
+	  width: 100%;
+	  height: 100%;
+	  background-color: #ddd;          /* gray pill background when OFF */
+	  border: 2px solid #aaa;          /* subtle border around pill */
+	  border-radius: 32px;             /* rounded ends for pill shape */
+	  transition: background-color 0.3s, border-color 0.3s;
+	  cursor: pointer;                 /* pointer cursor on hover */
+	}
 
+	#answersTable .slider::before {
+	  content: "🏅";                   /* initial emoji shown inside knob */
+	  position: absolute;
+	  width: 28px;
+	  height: 28px;
+	  left: 2px;                       /* start position (left side of pill) */
+	  top: 2px;
+	  background-color: white;         /* knob circle background */
+	  border-radius: 50%;              /* makes knob circular */
+	  border: none;                    /* no border around knob */
+	  transition: transform 0.3s, background-color 0.3s, content 0.3s;
+	  display: flex;                   /* flex centers emoji inside knob */
+	  align-items: center;
+	  justify-content: center;
+	  font-size: 18px;
+	}
 
-/* Answers Table Toggle Styling */
-#answersTable .switch {
-  position: relative;
-	 margin-left: 0;     /* removes any offset */
-  display: inline-block;
-	
-  width: 80px;
-  height: 32px;
-}
+	#answersTable .switch input:checked + .slider {
+	  background-color: #66bb6a;       /* green pill background when ON */
+	  border-color: #66bb6a;           /* border matches green background */
+	}
 
-#answersTable .switch input {
-  display: none; /* hide the checkbox */
-}
+	#answersTable .switch input:checked + .slider::before {
+	  transform: translateX(48px);     /* slide knob to the right */
+	  content: "🏃‍♀️";                /* emoji changes when ON */
+	}
 
-#answersTable .slider {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  background-color: #ddd;
-  border: 2px solid #aaa;
-  border-radius: 32px;
-  transition: background-color 0.3s, border-color 0.3s;
-  cursor: pointer;
-}
+	#answersTable .slider:hover {
+	  background-color: #bbb;          /* darker gray pill on hover */
+	}
 
-#answersTable .slider::before {
-  content: "🏅"; /* initial emoji */
-  position: absolute;
-  width: 28px;
-  height: 28px;
-  left: 2px;
-  top: 2px;
-  background-color: white;
-  border-radius: 50%;
-border: none;              
-  transition: transform 0.3s, background-color 0.3s, content 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
+	/* ---- Popup Modal ---- */
+	/* Full-screen overlay with blurred background, centered content box. */
+	.popup {
+	  display:none;
+	  position:fixed;
+	  z-index:1000;
+	  left:0; top:0;
+	  width:100%; height:100%;
+	  background:rgba(0,0,0,0.6);      /* semi-transparent dark overlay */
+	  backdrop-filter:blur(4px);       /* blur background for focus effect */
+	  justify-content:center;
+	  align-items:center;
+	}
+	.popup-content {
+	  background:#fff;
+	  border-radius:16px;
+	  padding:40px;
+	  width:80%; max-width:700px;
+	  text-align:center;
+	  box-shadow:0 8px 24px rgba(0,0,0,0.3);
+	  animation:fadeIn 0.4s ease;      /* smooth pop-in animation */
+	  position:relative;
+	}
+	.popup-content h1 { font-size:2rem; color:#333; margin:0; }
+	.close-btn {
+	  position:absolute; top:20px; right:30px;
+	  font-size:32px; font-weight:bold;
+	  color:#333; cursor:pointer;
+	  transition:color 0.3s;
+	}
+	.close-btn:hover { color:#F7AC4D; }
+	@keyframes fadeIn {
+	  from { transform:scale(0.9); opacity:0; }
+	  to   { transform:scale(1); opacity:1; }
+	}
 
-#answersTable .switch input:checked + .slider {
-  background-color: #66bb6a;
-  border-color: #66bb6a;
-}
+	/* ---- Game Over Banner ---- */
+	/* Bold red banner shown when game ends. */
+	#gameOverBanner {
+	  background-color: #d32f2f; color: white; font-weight: bold;
+	  text-align: center; padding: 25px; font-size: 22px;
+	  margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+	}
+	.hidden { display: none; }
 
-#answersTable .switch input:checked + .slider::before {
-  transform: translateX(48px);
-  content: "🏃‍♀️"; /* emoji after toggle */
-}
-
-#answersTable .slider:hover {
-  background-color: #bbb;
-}
-
-    /* Popup Modal */
-    .popup {
-      display:none;
-      position:fixed;
-      z-index:1000;
-      left:0; top:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.6);
-      backdrop-filter:blur(4px);
-      justify-content:center;
-      align-items:center;
-    }
-    .popup-content {
-      background:#fff;
-      border-radius:16px;
-      padding:40px;
-      width:80%; max-width:700px;
-      text-align:center;
-      box-shadow:0 8px 24px rgba(0,0,0,0.3);
-      animation:fadeIn 0.4s ease;
-      position:relative;
-    }
-    .popup-content h1 { font-size:2rem; color:#333; margin:0; }
-    .close-btn {
-      position:absolute; top:20px; right:30px;
-      font-size:32px; font-weight:bold;
-      color:#333; cursor:pointer;
-      transition:color 0.3s;
-    }
-    .close-btn:hover { color:#F7AC4D; }
-    @keyframes fadeIn {
-      from { transform:scale(0.9); opacity:0; }
-      to   { transform:scale(1); opacity:1; }
-    }
-
-
-    /* --- Game Over Banner --- */
-    #gameOverBanner {
-      background-color: #d32f2f; color: white; font-weight: bold;
-      text-align: center; padding: 25px; font-size: 22px;
-      margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .hidden { display: none; }
-
-    /* Disclaimer Footer */
-    .disclaimer {
-      text-align:center;
-      font-size:0.75em;
-      color:#666;
-      margin-top:50px;
-    }
-
+	/* ---- Disclaimer Footer ---- */
+	/* Small, muted text at bottom of page. */
+	.disclaimer {
+	  text-align:center;
+	  font-size:0.75em;
+	  color:#666;
+	  margin-top:50px;
+	}
 </style>
 
 
@@ -431,9 +282,8 @@ border: none;
 	<button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
-
-	<!-- --- Banner --- -->
-	<div id="gameOverBanner" class="hidden">🎮 Game Over</div>
+  <!-- --- Banner --- -->
+  <div id="gameOverBanner" class="hidden">🎮 Game Over</div>
 		
   <!-- Game Room Info -->
   <div class="accordion">
@@ -466,13 +316,13 @@ border: none;
 	<div class="accordion">
 	  <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
 	  <div id="controlsBox" class="accordion-content">
-<div class="controlsLayout">
-  <!-- Left column: switches -->
-  <div class="leftColumn">
-    <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
-    <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
-    <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
-  </div>
+	<div class="controlsLayout">
+	  <!-- Left column: switches -->
+	  <div class="leftColumn">
+	    <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
+	    <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
+	    <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
+	  </div>
 
   <!-- Middle column: Unicorn control -->
   <div class="middleColumn">
@@ -941,6 +791,7 @@ clearUnicornBtn.onclick = () => {
   </script>
 </body>
 </html>
+
 
 
 
