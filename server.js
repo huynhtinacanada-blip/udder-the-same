@@ -22,9 +22,6 @@
     - Validate inputs before comparing.
 
 
-
-
-
   ============================
   SECURITY NOTE: ESCAPING TEXT
   ============================
@@ -278,25 +275,36 @@ const loginLimiter = rateLimit({
 app.post("/api/admin/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const ADMIN_USER = process.env.ADMIN_USER;
-  const ADMIN_HASH = process.env.ADMIN_HASH; // store a bcrypt hash, not plain text
+  const ADMIN_PASS = process.env.ADMIN_PASS;
 
-  if (!ADMIN_USER || !ADMIN_HASH) {
+  if (!ADMIN_USER || !ADMIN_PASS) {
     return res.status(500).json({ error: "Admin credentials not configured" });
   }
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    return res.json({ success: true, redirect: "/admin-dashboard.html" });
+  }
+  res.status(401).json({ error: "Invalid credentials" });
+
+
+  
+  // store a bcrypt hash, not plain text
+  //const ADMIN_HASH = process.env.ADMIN_HASH;  
+  //if (!ADMIN_USER || !ADMIN_HASH) {
+  //  return res.status(500).json({ error: "Admin credentials not configured" });
+  //}
 
   // Validate username first
-  if (username !== ADMIN_USER) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
+ // if (username !== ADMIN_USER) {
+ //   return res.status(401).json({ error: "Invalid credentials" });
+ // }
 
   // Compare password securely
-  const match = await bcrypt.compare(password, ADMIN_HASH);
-  if (!match) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-
+  //const match = await bcrypt.compare(password, ADMIN_HASH);
+  //if (!match) {
+  //  return res.status(401).json({ error: "Invalid credentials" });
+ // }
   // Success
-  res.json({ success: true, redirect: "/admin-dashboard.html" });
+ // res.json({ success: true, redirect: "/admin-dashboard.html" });
 });
 
 
@@ -758,6 +766,7 @@ socket.on("joinLobby", async ({ roomCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
