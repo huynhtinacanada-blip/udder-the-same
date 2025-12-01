@@ -161,8 +161,29 @@
        - Utility functions were defined inline when needed,
        - As a result, related blocks are scattered instead of grouped. -->
   <script>
-    console.log("Player dashboard script loaded");
+// Connect to server via socket.io
+const socket = io("https://udder-the-same.onrender.com");
 
+// 👇 Debug: confirm socket connection
+socket.on("connect", () => {
+  console.log("Socket connected with ID:", socket.id);
+});
+
+// 👇 Debug: listen for connection errors
+socket.on("connect_error", (err) => {
+  console.error("Socket connection error:", err);
+  // Redirect to a custom error page
+  window.location.href = "/error.html";
+});
+
+// 👇 Debug: listen for disconnection
+socket.on("disconnect", (reason) => {
+  console.warn("Socket disconnected:", reason);
+  // Redirect if disconnected unexpectedly
+  if (reason !== "io client disconnect") {
+    window.location.href = "/error.html";
+  }
+});
     // ---- Helpers ----
     // Escape HTML to prevent injection attacks
     function escapeHTML(str){
@@ -630,3 +651,4 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
