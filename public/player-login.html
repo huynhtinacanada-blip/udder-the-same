@@ -3,115 +3,154 @@
 <head>
   <meta charset="utf-8" />
   <title>Player Login — Udderly the Same</title>
+
   <style>
+    /* ---- Page-level styles ---- */
     body { 
-      font-family: Arial, sans-serif; 
-      background:#e8f5e9; 
-      display:flex; 
-      justify-content:center; 
-      align-items:center; 
-      min-height:100vh; 
-      margin:0; 
+      font-family: Arial, sans-serif; // Use a clean, widely available font
+      background:#e8f5e9;             // Light green background for friendly feel
+      display:flex;                   // Flexbox centers the card horizontally
+      justify-content:center;         // Center horizontally
+      align-items:center;             // Center vertically
+      min-height:100vh;               // Full viewport height ensures vertical centering
+      margin:0;                       // Remove default browser margins
     }
+
+    /* ---- Card container ---- */
     .card { 
-      background:#fff; 
-      padding:60px; 
-      border-radius:16px; 
-      box-shadow:0 8px 24px rgba(0,0,0,0.12); 
+      background:#fff;                // White background for contrast
+      padding:60px;                   // Generous padding for breathing room
+      border-radius:16px;             // Rounded corners for modern look
+      box-shadow:0 8px 24px rgba(0,0,0,0.12); // Subtle shadow for depth
       width:100%; 
-      max-width:480px; 
-      text-align:center;
+      max-width:480px;                // Prevent card from stretching too wide
+      text-align:center;              // Center text inside card
     }
+
+    /* ---- Logo ---- */
     .logo {
-      max-width:160px;
-      width:100%;
-      height:auto;
-      margin:0 auto 20px;
-      display:block;
-      cursor:pointer;
+      max-width:160px;                // Restrict logo size
+      width:100%;                     // Scale responsively
+      height:auto;                     // Maintain aspect ratio
+      margin:0 auto 20px;              // Center horizontally with auto margins
+      display:inline-block;            // Inline-block ensures only the logo area is clickable
+      cursor:pointer;                  // Pointer cursor indicates interactivity
     }
+
+    /* ---- Heading ---- */
     h1 { 
-      font-size:28px; 
-      margin-bottom:24px; 
-      text-align:center; 
+      font-size:28px;                 // Large, clear title
+      margin-bottom:24px;             // Space below heading
+      text-align:center;              // Centered for symmetry
     }
+
+    /* ---- Form container ---- */
     form { 
-      display:flex; 
-      flex-direction:column; 
-      gap:18px; 
-      text-align:left;
+      display:flex;                   // Flexbox for vertical stacking
+      flex-direction:column;          // Stack inputs top-to-bottom
+      gap:18px;                       // Even spacing between inputs
+      text-align:left;                // Align labels/inputs to left for readability
     }
-    label { font-size:16px; }
+
+    /* ---- Form labels ---- */
+    label { 
+      font-size:16px;                 // Readable label size
+    }
+
+    /* ---- Input fields ---- */
     input { 
-      font-size:18px; 
-      padding:12px; 
-      border:1px solid #ccc; 
-      border-radius:8px; 
+      font-size:18px;                 // Slightly larger for clarity
+      padding:12px;                   // Comfortable click/tap area
+      border:1px solid #ccc;          // Light border for definition
+      border-radius:8px;              // Rounded corners match card style
     }
+
+    /* ---- Buttons ---- */
     button { 
-      font-size:20px; 
-      padding:16px; 
-      background:#2e7d32; 
-      color:#fff; 
-      border:none; 
-      border-radius:8px; 
-      cursor:pointer; 
+      font-size:20px;                 // Prominent button text
+      padding:16px;                   // Large click/tap target
+      background:#2e7d32;             // Green background (matches theme)
+      color:#fff;                     // White text for contrast
+      border:none;                    // Remove default border
+      border-radius:8px;              // Rounded corners for consistency
+      cursor:pointer;                 // Pointer cursor indicates interactivity
     }
-    button:hover { background:#F76ACF; }
+
+    button:hover { 
+      background:#F76ACF;             // Fun hover color for feedback
+    }
+
+    /* ---- Error / status message ---- */
     #msg { 
-      margin-top:12px; 
-      font-size:15px; 
-      color:red; 
-      text-align:center; 
-      min-height:20px; 
+      margin-top:12px;                // Space above message
+      font-size:15px;                 // Slightly smaller than inputs
+      color:red;                      // Red indicates error
+      text-align:center;              // Centered under form
+      min-height:20px;                // Reserve space so layout doesn’t jump
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <!-- Version info -->
+    <!-- Version info: helps track form version during updates -->
     <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
       Form Ver. 1.0.1r
     </div>
 
-    
-    <!-- Logo that links back to index.html -->
+    <!-- Logo: clickable link back to homepage -->
     <a href="/index.html">
       <img src="udderly-logo-login.png" alt="Udderly the Same Logo" class="logo">
     </a>
 
+    <!-- Main heading -->
     <h1>🐮 Player Login</h1>
+
+    <!-- Login form -->
     <form id="joinForm">
       <label>Your Name</label>
-      <input id="name" name="name" required />
+      <input id="name" name="name" required /> <!-- required ensures user must fill -->
+
       <label>Room Code</label>
-      <input id="roomCode" name="roomCode" required />
+      <input id="roomCode" name="roomCode" required /> <!-- required ensures user must fill -->
+
       <button type="submit">Join Game Room</button>
     </form>
+
+    <!-- Placeholder for error or success messages -->
     <div id="msg"></div>
   </div>
 
   <script>
-    const form = document.getElementById('joinForm');
+    /* ---- JavaScript: handles form submission ---- */
+
+    const form = document.getElementById('joinForm'); // Get form element by ID
+
+    // Add event listener for form submission
     form.addEventListener('submit', async e => {
-      e.preventDefault();
-      const name = document.getElementById('name').value.trim();
-      const roomCode = document.getElementById('roomCode').value.trim().toUpperCase();
+      e.preventDefault(); // Prevent default page reload
+
+      // Get and clean user inputs
+      const name = document.getElementById('name').value.trim(); // trim removes extra spaces
+      const roomCode = document.getElementById('roomCode').value.trim().toUpperCase(); 
+      // Convert room code to uppercase for consistency
+
+      // Send data to server using Fetch API
       const res = await fetch('/api/player/join', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name, roomCode})
+        method:'POST', // POST because we’re sending data
+        headers:{'Content-Type':'application/json'}, // Tell server we’re sending JSON
+        body:JSON.stringify({name, roomCode}) // Convert JS object to JSON string
       });
+
+      // Handle server response
       if(res.ok){
-        const j = await res.json();
-        location.href = j.redirect;
+        const j = await res.json(); // Parse JSON response
+        location.href = j.redirect; // Redirect user to game room
       } else {
-        const j = await res.json().catch(()=>({}));
-        document.getElementById('msg').textContent = j.error || 'Error joining room';
+        const j = await res.json().catch(()=>({})); // Try to parse error, fallback empty
+        document.getElementById('msg').textContent = j.error || 'Error joining room'; 
+        // Show error message to user
       }
     });
   </script>
 </body>
 </html>
-
-
