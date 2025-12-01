@@ -514,7 +514,7 @@
     // ---- Round Started ----
     // Server signals a new round has begun. Update UI accordingly.
     socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
-      currentRound = roundNumber;
+      currentRound = roundNumber;  // this is the only place to update the round number
       answersShown = false;
 
       // Disable Start and Show buttons until round progresses
@@ -666,66 +666,67 @@
 	    }
 	  });
 	});
-		
 
-		
+// ---- Render Scoreboard ----
+// Builds scoreboard table dynamically based on server data.
+function renderScoreboard(data) {
+  // Find maximum round number across all players
+  const allRounds = data.flatMap(d =>
+    Object.keys(d.rounds || {}).map(n => parseInt(n, 10))
+  );
+  const maxRound = Math.max(0, ...allRounds);
 
-    // ---- Render Scoreboard ----
-    // Builds scoreboard table dynamically based on server data.
-    function renderScoreboard(data) {
-      // Find maximum round number across all players
-      const allRounds = data.flatMap(d =>
-        Object.keys(d.rounds || {}).map(n => parseInt(n, 10))
-      );
-      const maxRound = Math.max(0, ...allRounds);
+  // Build header row with TAG, Player, Total, and round numbers
+  const header =
+    "<tr><th>TAG</th><th>Player</th><th>Total</th>" +
+    Array.from({ length: maxRound }, (_, i) => `<th>#${i + 1}</th>`).join("") +
+    "</tr>";
+  document.querySelector("#scoreTable thead").innerHTML = header;
 
-      // Build header row with TAG, Player, Total, and round numbers
-      const header =
-        "<tr><th>TAG</th><th>Player</th><th>Total</th>" +
-        Array.from({ length: maxRound }, (_, i) => `<th>#${i + 1}</th>`).join("") +
-        "</tr>";
-      document.querySelector("#scoreTable thead").innerHTML = header;
+  // Build each player row
+  const rows = data
+    .map(d => {
+      const total = d.total || 0;
+      const roundCells = Array.from({ length: maxRound }, (_, i) => {
+        const rnum = i + 1;
+        const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
+        return `
+          <td class="roundCell">
+            <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect">
+              <option value="0" ${val == 0 ? "selected" : ""}>0</option>
+              <option value="1" ${val == 1 ? "selected" : ""}>1</option>
+            </select>
+          </td>
+        `;
+      }).join("");
 
-      // Build each player row
-      const rows = data
-        .map(d => {
-          const total = d.total || 0;
-          const roundCells = Array.from({ length: maxRound }, (_, i) => {
-            const rnum = i + 1;
-            const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
-            return `
-              <td class="roundCell">
-                <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect">
-                  <option value="0" ${val == 0 ? "selected" : ""}>0</option>
-                  <option value="1" ${val == 1 ? "selected" : ""}>1</option>
-                </select>
-              </td>
-            `;
-          }).join("");
+      // TAG column shows 🦄 if player has unicorn tag
+      return `<tr><td>${d.tag ? d.tag : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+    })
+    .join("");
 
-          // TAG column shows 🦄 if player has unicorn tag
-          return `<tr><td>${d.tag ? d.tag : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
-        })
-        .join("");
+  document.querySelector("#scoreTable tbody").innerHTML = rows;
 
-      document.querySelector("#scoreTable tbody").innerHTML = rows;
 
-      // Auto-persist dropdown changes by sending awardPoint to server
-      document.querySelectorAll(".scoreSelect").forEach(select => {
-        select.addEventListener("change", e => {
-          const player = e.target.dataset.player;
-          const round = parseInt(e.target.dataset.round, 10);
-          const points = parseInt(e.target.value, 10);
-          socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
-        });
-      });
+  // Dynamic min-width so table scrolls horizontally if many rounds
+  const baseWidth = 270; // Tag (40) + Player (150) + Total (80)
+  const roundWidth = 55; // width for each round column
+  const minWidth = baseWidth + (maxRound - 1) * roundWidth;
+  document.querySelector("#scoreTable").style.minWidth = minWidth + "px";
+}
 
-      // Dynamic min-width so table scrolls horizontally if many rounds
-      const baseWidth = 270; // Tag (40) + Player (150) + Total (80)
-      const roundWidth = 55; // width for each round column
-      const minWidth = baseWidth + (maxRound - 1) * roundWidth;
-      document.querySelector("#scoreTable").style.minWidth = minWidth + "px";
-    }
+// ---- Global delegated listener ----
+// Attach once, outside renderScoreboard
+document.addEventListener("change", e => {
+  if (e.target.classList.contains("scoreSelect")) {
+    const player = e.target.dataset.player;
+    const round = parseInt(e.target.dataset.round, 10);
+    const points = parseInt(e.target.value, 10);
+    socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
+  }
+});
+
+
 
     // ---- Utility Functions ----
     // Map scoreboard data to round points for quick lookup
@@ -797,7 +798,7 @@
       clearUnicornBtn.style.display = e.target.checked ? "inline-block" : "none";
     });
 
-    // Clear unicorn assignment for all players
+    // Clear unicorn assignment for all players when button clicked
     clearUnicornBtn.onclick = () => {
       if (confirm("Clear unicorn tag for this room?")) {
         socket.emit("clearUnicorn", { roomCode });
@@ -815,4 +816,5 @@
   </script>
 </body>
 </html>
+
 
