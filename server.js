@@ -1,4 +1,4 @@
-// v1.1.0 release — Game Server
+// v1.1.2 release — Game Server
 // -----------------------------------
 // This file sets up the Express server, PostgreSQL tables, and Socket.IO game logic.
 //  - Proper filtering of questions with discard IS NULL
@@ -190,24 +190,31 @@ async function getActiveStats(roomCode) {
   return { merged, activeCount, submittedActiveCount };
 }
 
+// Helper to build scoreboard data
+// We want to show only the *latest round* where a player was assigned unicorn.
+// This subquery finds the most recent '🦄' tag per player.
 async function getScoreboard(roomCode) {
-  // Builds scoreboard: totals, per-round points, unicorn tag
-  const r = await pool.query(
-    `SELECT p.name AS player_name,
-            COALESCE(SUM(s.points),0) AS total,
-            COALESCE(json_object_agg(s.round_number, s.points) FILTER (WHERE s.points IS NOT NULL), '{}') AS rounds,
-            MAX(s.tag) AS tag
-     FROM players p
-     LEFT JOIN scores s
-       ON p.room_code = s.room_code
-      AND LOWER(p.name) = LOWER(s.player_name)
-     WHERE p.room_code=$1
-     GROUP BY p.name
-     ORDER BY p.name`,
+  const { rows } = await pool.query(
+    `SELECT s.player_name,
+            SUM(s.points) AS total,
+            json_object_agg(s.round_number, s.points) AS rounds,
+            (
+              SELECT tag
+              FROM scores
+              WHERE room_code = $1
+                AND LOWER(player_name)=LOWER(s.player_name)
+                AND tag='🦄'
+              ORDER BY round_number DESC
+              LIMIT 1
+            ) AS tag
+     FROM scores s
+     WHERE s.room_code = $1
+     GROUP BY s.player_name`,
     [roomCode]
   );
-  return r.rows;
+  return rows;
 }
+
 
 async function emitPlayerList(roomCode) {
   // Broadcasts player list and submission progress to all clients
@@ -516,7 +523,27 @@ io.on("connection", (socket) => {
     await emitScoreboard(roomCode);
 
     // Broadcast updated answers list with tag
-    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [roomCode]);
+  socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
+    const rc = roomCode.toUpperCase();
+  
+    // We only want ONE unicorn per round.
+    // So clear unicorn tags for THIS round only, not the whole room.
+    await pool.query(
+      "UPDATE scores SET tag=NULL WHERE room_code=$1 AND round_number=$2",
+      [rc, roundNumber]
+    );
+  
+    // Assign unicorn tag to the selected player for this round
+    await pool.query(
+      "UPDATE scores SET tag='🦄', updated_at=NOW() WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
+      [rc, roundNumber, playerName]
+    );
+  
+    // Broadcast updated scoreboard
+    await emitScoreboard(rc);
+  
+    // Broadcast updated answers list with tag for this round
+    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
     if (room.rows.length) {
       const answers = await pool.query(
         `SELECT a.player_name AS name, a.answer, s.tag
@@ -527,11 +554,12 @@ io.on("connection", (socket) => {
           AND LOWER(a.player_name)=LOWER(s.player_name)
          WHERE a.room_code=$1 AND a.question_id=$2 AND a.round_number=$3
          ORDER BY name ASC`,
-        [roomCode, room.rows[0].active_question_id, room.rows[0].current_round]
+        [rc, room.rows[0].active_question_id, room.rows[0].current_round]
       );
-      io.to(roomCode).emit("answersRevealed", answers.rows);
+      io.to(rc).emit("answersRevealed", answers.rows);
     }
   });
+
 
   // Start a new round
   socket.on("startRound", async ({ roomCode }) => {
@@ -680,3 +708,4 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
