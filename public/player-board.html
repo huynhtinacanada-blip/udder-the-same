@@ -687,6 +687,11 @@ document.getElementById("roundPopup").style.display = "flex";
 	      labelSpan.className = cb.checked ? "pointLabel green" : "pointLabel blue";
 	    }
 	  });
+	  // 🔧 also refresh unicorn radios and labels in answers table
+  document.querySelectorAll(".unicornRadio").forEach(radio => {
+    const player = radio.dataset.player;
+    radio.checked = scoreboard.find(p => p.player_name === player)?.tag === "🦄";
+  });
 	});
 
 // ---- Render Scoreboard ----
@@ -846,6 +851,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
