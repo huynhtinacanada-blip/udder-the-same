@@ -611,10 +611,11 @@ document.getElementById("roundPopup").style.display = "flex";
 	            </label>
 	          </td>
 	          <td>
-	            <input type="radio" name="unicornTag" class="unicornRadio"
-	                   data-player="${name}" data-round="${currentRound}" id="unicorn-${name}" ${isUnicorn ? "checked" : ""}>
-	            <label for="unicorn-${name}" class="unicornLabel"></label>
-	          </td>
+				<td>
+				  <input type="radio" name="unicornTag" class="unicornRadio"
+				         data-player="${name}" data-round="${currentRound}" id="unicorn-${name}" ${isUnicorn ? "checked" : ""}>
+				  <label for="unicorn-${name}" class="unicornLabel"></label>
+				</td>
 	          <td>${name}</td>
 	          <td>${ans}</td>
 	        </tr>
@@ -731,7 +732,7 @@ function renderScoreboard(data) {
       }).join("");
 
       // TAG column shows 🦄 if player has unicorn tag
-      return `<tr><td>${d.tag ? d.tag : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+		return `<tr><td>${d.tag === "🦄" ? "🦄" : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
     })
     .join("");
 
@@ -854,6 +855,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
