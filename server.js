@@ -631,8 +631,11 @@ io.on("connection", (socket) => {
         [rc, room.rows[0].active_question_id, room.rows[0].current_round]
       );
 
+      // Step 1: Broadcast answers
       io.to(rc).emit("answersRevealed", rr.rows);
-      await emitScoreboard(rc);
+  
+      // Step 2: Immediately broadcast scoreboard so all clients update
+    await emitScoreboard(rc);
     } catch (err) {
       console.error("Error in showAnswers:", err);
     }
@@ -742,6 +745,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
