@@ -288,7 +288,7 @@ With this change, the unicorn tag will stick correctly for the first player as w
   <!-- Contains logo, dashboard title, and End Game button aligned with flexbox. -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.5r)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.3r)</span></h2>
     <button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -604,9 +604,11 @@ document.getElementById("roundPopup").style.display = "flex";
 
     // ---- Server Event: answersRevealed ----
     // Server sends all answers for the round. Build table rows dynamically.
-	socket.on("answersRevealed", rows => {
-
-	
+	socket.on("answersRevealed", ({ rows, round, questionPrompt }) => {
+	  // Update Round + Question header
+	  document.getElementById("roundNumber").textContent = round;
+	  document.getElementById("questionText").textContent = questionPrompt;
+		
 	  const roundMap = toRoundMap(scoreboard, currentRound);
 	  document.querySelector("#answersTable tbody").innerHTML = rows
 	    .map(r => {
@@ -883,6 +885,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
