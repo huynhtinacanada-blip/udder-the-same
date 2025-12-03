@@ -817,21 +817,31 @@ document.addEventListener("change", e => {
 
     // ---- Unicorn Assignment ----
     // When a unicorn radio is selected, notify server and update scoreboard.
-    document.addEventListener("change", e => {
-      if (e.target.classList.contains("unicornRadio")) {
-        const player = e.target.dataset.player;
-        const round = parseInt(e.target.dataset.round, 10);
+// Listen for any "change" events on the document
+document.addEventListener("change", e => {
+  // Check if the changed element has the class "unicornRadio"
+  if (e.target.classList.contains("unicornRadio")) {
+    // Extract the player name from the element's data attribute
+    const player = e.target.dataset.player;
 
-        // Tell server which player is unicorn
-        socket.emit("assignUnicorn", { roomCode, playerName: player, roundNumber: round });
+    // Notify the server: clear all unicorn assignments in the room,
+    // then set the unicorn tag for this specific player atomically
+    socket.emit("setUnicorn", { roomCode, playerName: player });
 
-        // Optimistic update: clear all unicorns locally, then set selected
-        scoreboard.forEach(p => p.tag = "");
-        const target = scoreboard.find(p => p.player_name === player);
-        if (target) target.tag = "🦄";
-        renderScoreboard(scoreboard);
-      }
-    });
+    // Perform an optimistic UI update:
+    // 1. Clear all unicorn tags locally
+    scoreboard.forEach(p => p.tag = "");
+    // 2. Find the selected player in the scoreboard
+    const target = scoreboard.find(p => p.player_name === player);
+    // 3. Assign the unicorn emoji to that player
+    if (target) target.tag = "🦄";
+
+    // Re-render the scoreboard so the UI reflects the change immediately
+    renderScoreboard(scoreboard);
+  }
+});
+
+
 
     // ---- Unicorn Control Toggle + Clear Button ----
     const toggleUnicorn = document.getElementById("toggleUnicorn");
@@ -860,6 +870,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
