@@ -1,7 +1,7 @@
-/* The “first player not saving” bug is caused by a race between separate clear/set calls.
+<!-- The “first player not saving” bug is caused by a race between separate clear/set calls.
 Fix by making the backend route atomic and sending only one request per radio click.
 With this change, the unicorn tag will stick correctly for the first player as well as others.
-*/
+ -->
 
 <!DOCTYPE html>
 <html>
@@ -870,6 +870,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
