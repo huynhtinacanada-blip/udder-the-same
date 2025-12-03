@@ -194,36 +194,31 @@ async function getActiveStats(roomCode) {
 // We want to show only the *latest round* where a player was assigned unicorn.
 // This subquery finds the most recent '🦄' tag per player.
 // Normalizes names
-/*
 async function getScoreboard(roomCode) {
   const { rows } = await pool.query(
-    `SELECT MIN(player_name) AS player_name,
-            SUM(points) AS total,
-            json_object_agg(round_number, points) AS rounds,
+    `SELECT MIN(s.player_name) AS player_name,   -- pick one spelling
+            SUM(s.points) AS total,
+            json_object_agg(s.round_number, s.points) AS rounds,
             (
               SELECT tag
               FROM scores s2
               WHERE s2.room_code = $1
-                AND LOWER(s2.player_name) = LOWER(t.player_name)
+                AND LOWER(s2.player_name) = LOWER(s.player_name)
                 AND tag='🦄'
               ORDER BY round_number DESC
               LIMIT 1
             ) AS tag
-     FROM (
-       SELECT player_name, points, round_number
-       FROM scores
-       WHERE room_code = $1
-     ) t
-     GROUP BY LOWER(t.player_name)
-     ORDER BY MIN(player_name) ASC`,
+     FROM scores s
+     WHERE s.room_code = $1
+     GROUP BY LOWER(s.player_name)
+     ORDER BY MIN(s.player_name) ASC`,
     [roomCode]
   );
   return rows;
 }
-*/
 
 
-// Helper to build scoreboard data
+/* Helper to build scoreboard data - old code
 async function getScoreboard(roomCode) {
   const { rows } = await pool.query(
     `SELECT s.player_name,
@@ -245,7 +240,7 @@ async function getScoreboard(roomCode) {
   );
   return rows;
 }
-
+*/
 
 
 
@@ -415,16 +410,26 @@ app.patch("/api/questions/clearDiscardSome", async (req, res) => {
 
 // ---------------- Reset Data route ----------------
 // ⚠️ Dangerous: clears entire tables. Only for admin use.
+/* Instead of interpolating the table name directly, you can map table names to prewritten queries. 
+ This avoids dynamic SQL and makes your intent clearer:*/
 app.delete("/api/admin/reset/:table", async (req, res) => {
   const { table } = req.params;
-  const allowedTables = ["scores", "rooms", "players", "rounds"]; // whitelist
 
-  if (!allowedTables.includes(table)) {
+  // Map of allowed tables to their queries
+  const resetQueries = {
+    scores: "DELETE FROM scores",
+    rooms: "DELETE FROM rooms",
+    players: "DELETE FROM players",
+    answers: "DELETE FROM answers",
+  };
+
+  const query = resetQueries[table];
+  if (!query) {
     return res.status(400).json({ error: "Invalid table" });
   }
 
   try {
-    await pool.query(`DELETE FROM ${table}`);
+    await pool.query(query);
     res.json({ success: true });
   } catch (err) {
     console.error(`Error resetting table ${table}:`, err);
@@ -734,6 +739,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
