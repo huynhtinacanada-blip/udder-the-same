@@ -192,26 +192,30 @@ async function getActiveStats(roomCode) {
 
 // Helper to build scoreboard data
 // We want to show only the *latest round* where a player was assigned unicorn.
-// This subquery finds the most recent '🦄' tag per player.
 // Normalizes names
+// Aggregates scores per player and joins to latest unicorn tag
 async function getScoreboard(roomCode) {
   const { rows } = await pool.query(
-    `SELECT MIN(s.player_name) AS player_name,   -- pick one spelling
-            SUM(s.points) AS total,
-            json_object_agg(s.round_number, s.points) AS rounds,
-            (
-              SELECT tag
-              FROM scores s2
-              WHERE s2.room_code = $1
-                AND LOWER(s2.player_name) = LOWER(s.player_name)
-                AND tag='🦄'
-              ORDER BY round_number DESC
-              LIMIT 1
-            ) AS tag
-     FROM scores s
-     WHERE s.room_code = $1
-     GROUP BY LOWER(s.player_name)
-     ORDER BY MIN(s.player_name) ASC`,
+    `SELECT MIN(p.player_name) AS player_name,   -- canonical spelling
+            SUM(p.points) AS total,
+            json_object_agg(p.round_number, p.points) AS rounds,
+            COALESCE(u.tag, '') AS tag
+     FROM scores p
+     LEFT JOIN (
+         -- Find the most recent unicorn tag per player (case-insensitive)
+         SELECT s2.room_code,
+                LOWER(s2.player_name) AS player_key,
+                MAX(s2.round_number) AS latest_round,
+                '🦄' AS tag
+         FROM scores s2
+         WHERE s2.tag = '🦄'
+         GROUP BY s2.room_code, LOWER(s2.player_name)
+     ) u
+       ON u.room_code = p.room_code
+      AND u.player_key = LOWER(p.player_name)
+     WHERE p.room_code = $1
+     GROUP BY LOWER(p.player_name), u.tag
+     ORDER BY MIN(p.player_name) ASC`,
     [roomCode]
   );
   return rows;
@@ -739,6 +743,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
