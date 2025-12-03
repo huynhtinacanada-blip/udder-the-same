@@ -223,6 +223,7 @@ async function getScoreboard(roomCode) {
 */
 
 
+// Helper to build scoreboard data
 async function getScoreboard(roomCode) {
   const { rows } = await pool.query(
     `SELECT s.player_name,
@@ -232,19 +233,19 @@ async function getScoreboard(roomCode) {
               SELECT tag
               FROM scores
               WHERE room_code = $1
-                AND player_name = s.player_name
+                AND LOWER(player_name)=LOWER(s.player_name)
                 AND tag='🦄'
               ORDER BY round_number DESC
               LIMIT 1
             ) AS tag
      FROM scores s
      WHERE s.room_code = $1
-     GROUP BY s.player_name
-     ORDER BY s.player_name ASC`,
+     GROUP BY s.player_name`, 
     [roomCode]
   );
   return rows;
 }
+
 
 
 
@@ -733,6 +734,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
