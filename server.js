@@ -713,10 +713,6 @@ io.on("connection", (socket) => {
       client.release();
     }
   });
-});
-
-
-
   
   // Close room (mark as closed but keep round state intact)
   socket.on("closeRoom", async ({ roomCode }) => {
@@ -746,6 +742,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
