@@ -194,30 +194,51 @@ async function getActiveStats(roomCode) {
 // We want to show only the *latest round* where a player was assigned unicorn.
 // Normalizes names
 // Aggregates scores per player and joins to latest unicorn tag
+// Helper to build scoreboard data
+// Aggregates scores per player, ensures latest round column exists with 0s if untouched
 async function getScoreboard(roomCode) {
+  // First, get the current round for the room
+  const { rows: roomRows } = await pool.query(
+    `SELECT current_round FROM rooms WHERE code=$1`,
+    [roomCode]
+  );
+  const currentRound = roomRows[0]?.current_round || 1;
+
+  // Query all scores
   const { rows } = await pool.query(
     `SELECT MIN(p.player_name) AS player_name,   -- canonical spelling
             SUM(p.points) AS total,
-            json_object_agg(p.round_number, p.points) AS rounds,
+            json_object_agg(p.round_number, p.points)::json AS rounds,
             COALESCE(u.tag, '') AS tag
      FROM scores p
      LEFT JOIN (
          -- Find the most recent unicorn tag per player (case-insensitive)
          SELECT s2.room_code,
                 LOWER(s2.player_name) AS player_key,
-                MAX(s2.round_number) AS latest_round,
-                '🦄' AS tag
+                MAX(s2.round_number) AS latest_round
          FROM scores s2
          WHERE s2.tag = '🦄'
          GROUP BY s2.room_code, LOWER(s2.player_name)
-     ) u
-       ON u.room_code = p.room_code
-      AND u.player_key = LOWER(p.player_name)
+     ) latest
+       ON latest.room_code = p.room_code
+      AND latest.player_key = LOWER(p.player_name)
+     LEFT JOIN scores u
+       ON u.room_code = latest.room_code
+      AND LOWER(u.player_name) = latest.player_key
+      AND u.round_number = latest.latest_round
      WHERE p.room_code = $1
      GROUP BY LOWER(p.player_name), u.tag
      ORDER BY MIN(p.player_name) ASC`,
     [roomCode]
   );
+
+  // Ensure each player has an entry for the current round
+  rows.forEach(r => {
+    if (!r.rounds[currentRound]) {
+      r.rounds[currentRound] = 0;
+    }
+  });
+
   return rows;
 }
 
@@ -758,6 +779,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
