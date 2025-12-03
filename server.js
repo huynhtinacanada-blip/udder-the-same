@@ -544,58 +544,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Clear unicorn assignment for the room
-  socket.on("clearUnicorn", async ({ roomCode }) => {
-    try {
-      const rc = roomCode.toUpperCase();
-      await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [rc]);
-      await pool.query("UPDATE scores SET tag=NULL WHERE room_code=$1", [rc]);
-
-      // Broadcast updated scoreboard
-      await emitScoreboard(rc);
-
-      // Broadcast updated answers list with cleared tags
-      const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-      if (room.rows.length) {
-        const answers = await pool.query(
-          `SELECT a.player_name AS name, a.answer, s.tag
-           FROM answers a
-           LEFT JOIN scores s
-             ON a.room_code=s.room_code
-            AND a.round_number=s.round_number
-            AND LOWER(a.player_name)=LOWER(s.player_name)
-           WHERE a.room_code=$1 AND a.question_id=$2 AND a.round_number=$3
-           ORDER BY name ASC`,
-          [rc, room.rows[0].active_question_id, room.rows[0].current_round]
-        );
-        io.to(rc).emit("answersRevealed", answers.rows);
-      }
-    } catch (err) {
-      console.error("Error in clearUnicorn:", err);
-    }
-  });
-
-// Assign unicorn to a player
-socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
-  await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [roomCode]);
-  await pool.query("UPDATE players SET has_unicorn=true WHERE room_code=$1 AND name=$2", [roomCode, playerName]);
-
-  // Reset unicorn tag for this round in scores
-  await pool.query("UPDATE scores SET tag=NULL WHERE room_code=$1 AND round_number=$2", [roomCode, roundNumber]);
-
-  // Assign unicorn tag to selected player
-  await pool.query(
-    "UPDATE scores SET tag='🦄' WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
-    [roomCode, roundNumber, playerName]
-  );
-
-  // Broadcast updated scoreboard
-  await emitScoreboard(roomCode);
-}); // <-- this closes the socket.on handler
-
-
   
-
   // Start a new round
   socket.on("startRound", async ({ roomCode }) => {
     try {
@@ -715,6 +664,60 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
     }
   });
 
+
+  // ---- Unicorn assignment event ----
+  // When the client emits "setUnicorn", we atomically clear all unicorns
+  // in the room and then assign the unicorn tag to the selected player.
+  socket.on("setUnicorn", async ({ roomCode, playerName }) => {
+    const client = await pool.connect(); // get a DB connection from the pool
+    try {
+      await client.query("BEGIN"); // start transaction
+
+      // Step 1: Clear any existing unicorn tags in this room
+      await client.query(
+        `UPDATE scores
+         SET tag = NULL
+         WHERE room_code = $1 AND tag = '🦄'`,
+        [roomCode]
+      );
+
+      // Step 2: Assign unicorn tag to the selected player
+      // We find the latest round for that player (MAX(round_number))
+      // and set its tag to 🦄. Case-insensitive match on player_name.
+      await client.query(
+        `UPDATE scores
+         SET tag = '🦄'
+         WHERE room_code = $1
+           AND LOWER(player_name) = LOWER($2)
+           AND round_number = (
+             SELECT MAX(round_number)
+             FROM scores
+             WHERE room_code = $1
+               AND LOWER(player_name) = LOWER($2)
+           )`,
+        [roomCode, playerName]
+      );
+
+      await client.query("COMMIT"); // commit transaction
+
+      // Step 3: Broadcast updated scoreboard to all clients in the room
+      const scoreboard = await getScoreboard(roomCode);
+      io.to(roomCode).emit("scoreboardUpdated", scoreboard);
+
+    } catch (err) {
+      // If anything fails, rollback transaction to keep DB consistent
+      await client.query("ROLLBACK");
+      console.error("Error setting unicorn:", err);
+    } finally {
+      // Always release DB connection back to pool
+      client.release();
+    }
+  });
+});
+
+
+
+  
   // Close room (mark as closed but keep round state intact)
   socket.on("closeRoom", async ({ roomCode }) => {
     try {
@@ -743,6 +746,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
