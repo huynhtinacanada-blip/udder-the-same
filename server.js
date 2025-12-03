@@ -613,29 +613,42 @@ io.on("connection", (socket) => {
   socket.on("showAnswers", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
-      const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-
-      const rr = await pool.query(
-        `SELECT a.player_name AS name,
-                a.answer,
-                s.tag
-         FROM answers a
-         LEFT JOIN scores s
-           ON a.room_code = s.room_code
-          AND a.round_number = s.round_number
-          AND LOWER(a.player_name) = LOWER(s.player_name)
-         WHERE a.room_code=$1
-           AND a.question_id=$2
-           AND a.round_number=$3
-         ORDER BY name ASC`,
-        [rc, room.rows[0].active_question_id, room.rows[0].current_round]
-      );
-
-      // Step 1: Broadcast answers
-      io.to(rc).emit("answersRevealed", rr.rows);
+    // Get round + active question + prompt by joining questions
+    const room = await pool.query(
+      `SELECT r.current_round,
+              r.active_question_id,
+              q.prompt AS question_prompt
+       FROM rooms r
+       JOIN questions q
+         ON r.active_question_id = q.id
+       WHERE r.code = $1`,
+      [rc]
+    );
+    
+    const rr = await pool.query(
+      `SELECT a.player_name AS name,
+              a.answer,
+              s.tag
+       FROM answers a
+       LEFT JOIN scores s
+         ON a.room_code = s.room_code
+        AND a.round_number = s.round_number
+        AND LOWER(a.player_name) = LOWER(s.player_name)
+       WHERE a.room_code=$1
+         AND a.question_id=$2
+         AND a.round_number=$3
+       ORDER BY name ASC`,
+      [rc, room.rows[0].active_question_id, room.rows[0].current_round]
+    );
+      // Step 1: Broadcast Emit answers + round + question prompt
+      io.to(rc).emit("answersRevealed", {
+        rows: rr.rows,
+        round: room.rows[0].current_round,
+        questionPrompt: room.rows[0].question_prompt
+      });
   
       // Step 2: Immediately broadcast scoreboard so all clients update
-    await emitScoreboard(rc);
+      await emitScoreboard(rc);
     } catch (err) {
       console.error("Error in showAnswers:", err);
     }
@@ -745,6 +758,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
