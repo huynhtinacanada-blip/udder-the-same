@@ -605,6 +605,13 @@ document.getElementById("roundPopup").style.display = "flex";
     // ---- Server Event: answersRevealed ----
     // Server sends all answers for the round. Build table rows dynamically.
 	socket.on("answersRevealed", rows => {
+	  // Grab round and question info from Game Room state
+	  document.getElementById("roundNumber").textContent = currentRound;
+	
+	  // If you store the active question text in Game Room Info, use it here
+	  document.getElementById("questionText").textContent = currentQuestionText;
+
+		
 	  const roundMap = toRoundMap(scoreboard, currentRound);
 	  document.querySelector("#answersTable tbody").innerHTML = rows
 	    .map(r => {
@@ -881,6 +888,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
