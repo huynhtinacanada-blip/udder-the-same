@@ -505,61 +505,26 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Assign unicorn to a player
-  socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
-    await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [roomCode]);
-    await pool.query("UPDATE players SET has_unicorn=true WHERE room_code=$1 AND name=$2", [roomCode, playerName]);
+// Assign unicorn to a player
+socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
+  await pool.query("UPDATE players SET has_unicorn=false WHERE room_code=$1", [roomCode]);
+  await pool.query("UPDATE players SET has_unicorn=true WHERE room_code=$1 AND name=$2", [roomCode, playerName]);
 
-    // Reset unicorn tag for this round in scores
-    await pool.query("UPDATE scores SET tag=NULL WHERE room_code=$1 AND round_number=$2", [roomCode, roundNumber]);
+  // Reset unicorn tag for this round in scores
+  await pool.query("UPDATE scores SET tag=NULL WHERE room_code=$1 AND round_number=$2", [roomCode, roundNumber]);
 
-    // Assign unicorn tag to selected player
-    await pool.query(
-      "UPDATE scores SET tag='🦄' WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
-      [roomCode, roundNumber, playerName]
-    );
+  // Assign unicorn tag to selected player
+  await pool.query(
+    "UPDATE scores SET tag='🦄' WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
+    [roomCode, roundNumber, playerName]
+  );
 
-    // Broadcast updated scoreboard
-    await emitScoreboard(roomCode);
+  // Broadcast updated scoreboard
+  await emitScoreboard(roomCode);
+}); // <-- this closes the socket.on handler
 
-    // Broadcast updated answers list with tag
-  socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
-    const rc = roomCode.toUpperCase();
+
   
-    // We only want ONE unicorn per round.
-    // So clear unicorn tags for THIS round only, not the whole room.
-    await pool.query(
-      "UPDATE scores SET tag=NULL WHERE room_code=$1 AND round_number=$2",
-      [rc, roundNumber]
-    );
-  
-    // Assign unicorn tag to the selected player for this round
-    await pool.query(
-      "UPDATE scores SET tag='🦄', updated_at=NOW() WHERE room_code=$1 AND round_number=$2 AND LOWER(player_name)=LOWER($3)",
-      [rc, roundNumber, playerName]
-    );
-  
-    // Broadcast updated scoreboard
-    await emitScoreboard(rc);
-  
-    // Broadcast updated answers list with tag for this round
-    const room = await pool.query("SELECT current_round, active_question_id FROM rooms WHERE code=$1", [rc]);
-    if (room.rows.length) {
-      const answers = await pool.query(
-        `SELECT a.player_name AS name, a.answer, s.tag
-         FROM answers a
-         LEFT JOIN scores s
-           ON a.room_code=s.room_code
-          AND a.round_number=s.round_number
-          AND LOWER(a.player_name)=LOWER(s.player_name)
-         WHERE a.room_code=$1 AND a.question_id=$2 AND a.round_number=$3
-         ORDER BY name ASC`,
-        [rc, room.rows[0].active_question_id, room.rows[0].current_round]
-      );
-      io.to(rc).emit("answersRevealed", answers.rows);
-    }
-  });
-
 
   // Start a new round
   socket.on("startRound", async ({ roomCode }) => {
@@ -708,4 +673,5 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
