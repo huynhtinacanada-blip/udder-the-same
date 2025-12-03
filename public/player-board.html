@@ -351,7 +351,9 @@ With this change, the unicorn tag will stick correctly for the first player as w
     <div class="accordion-header" onclick="toggleAccordion('scoreboardBox')">Scoreboard</div>
     <div id="scoreboardBox" class="accordion-content">
       <div class="table-wrapper">
-        <table id="scoreTable">
+		<button id="editScoreboardBtn">Edit Scores</button>
+
+		  <table id="scoreTable">
           <thead></thead>   <!-- JS will build header dynamically -->
           <tbody></tbody>   <!-- JS will build rows dynamically -->
         </table>
@@ -746,7 +748,7 @@ function renderScoreboard(data) {
         const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
         return `
           <td class="roundCell">
-            <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect">
+            <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect" disabled>
               <option value="0" ${val == 0 ? "selected" : ""}>0</option>
               <option value="1" ${val == 1 ? "selected" : ""}>1</option>
             </select>
@@ -859,6 +861,20 @@ document.addEventListener("change", e => {
   }
 });
 
+	  // Edit Scores enables logic
+document.getElementById("editScoreboardBtn").addEventListener("click", () => {
+  const selects = document.querySelectorAll(".scoreSelect");
+  const isDisabled = selects[0]?.disabled; // check current state
+
+  selects.forEach(sel => {
+    sel.disabled = !isDisabled; // toggle all
+  });
+
+  // Update button text
+  document.getElementById("editScoreboardBtn").textContent = isDisabled 
+    ? "Lock Scores" 
+    : "Edit Scores";
+});
 
 
     // ---- Unicorn Control Toggle + Clear Button ----
@@ -888,6 +904,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
