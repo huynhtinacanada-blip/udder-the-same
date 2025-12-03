@@ -209,7 +209,9 @@ async function getScoreboard(roomCode) {
             ) AS tag
      FROM scores s
      WHERE s.room_code = $1
-    GROUP BY LOWER(s.player_name)`,   //  groups by lowercase name
+     GROUP BY s.player_name`,
+    //GROUP BY LOWER(s.player_name)`,   
+    
     [roomCode]
   );
   return rows;
@@ -701,6 +703,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
