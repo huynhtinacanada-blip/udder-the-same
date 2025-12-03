@@ -193,29 +193,33 @@ async function getActiveStats(roomCode) {
 // Helper to build scoreboard data
 // We want to show only the *latest round* where a player was assigned unicorn.
 // This subquery finds the most recent '🦄' tag per player.
+// Normalizes names,
 async function getScoreboard(roomCode) {
   const { rows } = await pool.query(
-    `SELECT s.player_name,
-            SUM(s.points) AS total,
-            json_object_agg(s.round_number, s.points) AS rounds,
+    `SELECT MIN(player_name) AS player_name,
+            SUM(points) AS total,
+            json_object_agg(round_number, points) AS rounds,
             (
               SELECT tag
-              FROM scores
-              WHERE room_code = $1
-                AND LOWER(player_name)=LOWER(s.player_name)
+              FROM scores s2
+              WHERE s2.room_code = $1
+                AND LOWER(s2.player_name) = LOWER(t.player_name)
                 AND tag='🦄'
               ORDER BY round_number DESC
               LIMIT 1
             ) AS tag
-     FROM scores s
-     WHERE s.room_code = $1
-     GROUP BY s.player_name`,
-    //GROUP BY LOWER(s.player_name)`,   
-    
+     FROM (
+       SELECT player_name, points, round_number
+       FROM scores
+       WHERE room_code = $1
+     ) t
+     GROUP BY LOWER(t.player_name)
+     ORDER BY MIN(player_name) ASC`,
     [roomCode]
   );
   return rows;
 }
+
 
 
 async function emitPlayerList(roomCode) {
@@ -703,6 +707,7 @@ socket.on("assignUnicorn", async ({ roomCode, playerName, roundNumber }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
