@@ -288,7 +288,7 @@ With this change, the unicorn tag will stick correctly for the first player as w
   <!-- Contains logo, dashboard title, and End Game button aligned with flexbox. -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
-    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.5r)</span></h2>
+    <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.3r)</span></h2>
     <button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
@@ -364,7 +364,12 @@ With this change, the unicorn tag will stick correctly for the first player as w
   <div id="answersAccordion" class="accordion" style="display:none;">
     <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
     <div id="answersTableWrapper" class="accordion-content">
-      <table id="answersTable">
+      <!--  Round + Question header -->
+      <div id="answersHeader" class="mb-2">
+        <strong>Round <span id="roundNumber"></span>:</strong>
+        <span id="questionText"></span>
+      </div>
+		<table id="answersTable">
         <thead><tr><th>Point</th><th>TAG</th><th>Name</th><th>Answer</th></tr></thead>
         <tbody></tbody>
       </table>
@@ -876,6 +881,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
