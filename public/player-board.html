@@ -327,37 +327,6 @@ With this change, the unicorn tag will stick correctly for the first player as w
     </div>
   </div>
 
-  <!-- ---- Accordion: Control Switches ---- -->
-  <!-- Switches let any payler enable/disable specific controls dynamically. -->
-  <div class="accordion">
-    <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
-    <div id="controlsBox" class="accordion-content">
-      <div class="controlsLayout">
-        <!-- Left column: switches for Start, Show Answers, Submit Answer -->
-        <div class="leftColumn">
-          <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
-          <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
-          <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
-        </div>
-
-        <!-- Middle column: Unicorn control (fun extra toggle) -->
-        <div class="middleColumn">
-          <div class="switch">
-            <label>
-              <input type="checkbox" id="toggleUnicorn">
-              <span class="slider"></span>Enable Unicorn Control
-            </label>
-          </div>
-          <button id="clearUnicornBtn" style="display:none;">Clear Unicorn</button>
-        </div>
-
-        <!-- Right column: Sign Out button -->
-        <div class="rightColumn">
-          <button id="signOutBtn">Sign Out</button>
-        </div>
-      </div>
-    </div>
-  </div>
     
   <!-- ---- Accordion: Answers ---- -->
   <!-- Hidden until answers are revealed. Shows table of points, tags, names, answers. -->
@@ -390,6 +359,40 @@ With this change, the unicorn tag will stick correctly for the first player as w
     </div>
   </div>
 
+
+
+  <!-- ---- Accordion: Control Switches ---- -->
+  <!-- Switches let any payler enable/disable specific controls dynamically. -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
+    <div id="controlsBox" class="accordion-content">
+      <div class="controlsLayout">
+        <!-- Left column: switches for Start, Show Answers, Submit Answer -->
+        <div class="leftColumn">
+          <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
+          <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
+          <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
+        </div>
+
+        <!-- Middle column: Unicorn control (fun extra toggle) -->
+        <div class="middleColumn">
+          <div class="switch">
+            <label>
+              <input type="checkbox" id="toggleUnicorn">
+              <span class="slider"></span>Enable Unicorn Control
+            </label>
+          </div>
+          <button id="clearUnicornBtn" style="display:none;">Clear Unicorn</button>
+        </div>
+
+        <!-- Right column: Sign Out button -->
+        <div class="rightColumn">
+          <button id="signOutBtn">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+	
   <!-- ---- Popup Modal ---- -->
   <!-- Used to show the current round’s question in a focused overlay. -->
   <div id="roundPopup" class="popup">
@@ -885,6 +888,7 @@ document.addEventListener("change", e => {
   </script>
 </body>
 </html>
+
 
 
 
