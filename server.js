@@ -341,7 +341,7 @@ app.patch("/api/rooms/:code", async (req, res) => {
 // Question management (CRUD + discard)
 app.get("/api/questions", async (_req, res) => {
   try {
-    const r = await pool.query("SELECT id, prompt, discard FROM questions ORDER BY id DESC");
+    const r = await pool.query("SELECT id, prompt, room, discard FROM questions ORDER BY id DESC");
     res.json(r.rows);
   } catch (err) {
     console.error("Error fetching questions:", err);
@@ -571,8 +571,21 @@ io.on("connection", (socket) => {
   socket.on("startRound", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
-      const qr = await pool.query("SELECT id FROM questions WHERE discard IS NULL ORDER BY id ASC");
-      if (qr.rows.length === 0) return;
+
+      // First try to get questions tied to this room
+      let qr = await pool.query(
+        "SELECT id FROM questions WHERE discard IS NULL AND room=$1 ORDER BY id ASC",
+        [rc]
+      );
+  
+      // If none found, fall back to global questions (room IS NULL)
+      if (qr.rows.length === 0) {
+        qr = await pool.query(
+          "SELECT id FROM questions WHERE discard IS NULL AND room IS NULL ORDER BY id ASC"
+        );
+      }
+
+    if (qr.rows.length === 0) return; // no available questions at all
 
       // Pick random question
       const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
@@ -780,6 +793,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
