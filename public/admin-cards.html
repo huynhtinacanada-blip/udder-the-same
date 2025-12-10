@@ -306,6 +306,7 @@
               </th>
               <th scope="col">ID</th>
               <th scope="col">Question Card</th>
+              <th scope="col">Room</th>
               <th scope="col">Discard</th>
               <th scope="col">Actions</th>
             </tr>
@@ -354,6 +355,7 @@
             <td><input type="checkbox" class="row-select modern-checkbox"></td>
             <td>${q.id}</td>
             <td>${escapeHTML(q.prompt)}</td>
+            <td>${q.room ? escapeHTML(q.room) : ''}</td>
             <td>${formatDiscardDate(q.discard)}</td>
             <td>
               <div class="actions">
@@ -650,6 +652,7 @@
   </script>
 </body>
 </html>
+
 
 
 
