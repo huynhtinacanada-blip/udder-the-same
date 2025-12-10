@@ -7,9 +7,9 @@
   <style>
     /* ---- Page-level styles ---- */
     body { 
-      font-family: Arial, sans-serif;   /* Use a common, readable font */
+      font-family: Arial, sans-serif;   /* Default font for readability */
       background:#e8f5e9;               /* Light green background for friendly feel */
-      display:flex;                     /* Flexbox centers the card horizontally */
+      display:flex;                     /* Use flexbox to center card horizontally */
       justify-content:center;           /* Center horizontally */
       align-items:center;               /* Center vertically */
       min-height:100vh;                 /* Full viewport height ensures vertical centering */
@@ -19,7 +19,7 @@
     /* ---- Card container ---- */
     .card { 
       background:#fff;                  /* White background for contrast */
-      padding:60px;                     /* Space inside card */
+      padding:60px;                     /* Inner spacing around content */
       border-radius:16px;               /* Rounded corners for modern look */
       box-shadow:0 8px 24px rgba(0,0,0,0.12); /* Subtle shadow for depth */
       width:100%; 
@@ -33,8 +33,8 @@
       width:100%;                       /* Scale responsively */
       height:auto;                      /* Maintain aspect ratio */
       margin:0 auto 20px;               /* Center horizontally and add bottom spacing */
-      display:inline-block;             /* Inline-block ensures only the logo area is clickable */
-      cursor:pointer;                   /* Pointer cursor indicates interactivity */
+      display:inline-block;             /* Inline-block ensures only logo area is clickable */
+      cursor:pointer;                   /* Pointer cursor shows it's clickable */
     }
 
     /* ---- Heading ---- */
@@ -63,13 +63,24 @@
       padding:12px;                     /* Comfortable click/tap area */
       border:1px solid #ccc;            /* Light border for definition */
       border-radius:8px;                /* Rounded corners match card style */
+      width:100%;                       /* Inputs fill available space */
+      box-sizing:border-box;            /* Include padding in width calculation */
+    }
+
+    /* ---- Flex row for room+theme inputs ---- */
+    .code-row {
+      display:flex;                     /* Place inputs side by side */
+      gap:12px;                         /* Space between the two inputs */
+    }
+    .code-row input {
+      flex:1;                           /* Each input takes half width */
     }
 
     /* ---- Buttons ---- */
     button { 
       font-size:20px;                   /* Prominent button text */
       padding:16px;                     /* Large click/tap target */
-      background:#2e7d32;               /* Green background (matches theme) */
+      background:#2e7d32;               /* Default button color (green) */
       color:#fff;                       /* White text for contrast */
       border:none;                      /* Remove default border */
       border-radius:8px;                /* Rounded corners for consistency */
@@ -77,7 +88,7 @@
     }
 
     button:hover { 
-      background:#F76ACF;               /* Fun hover color for feedback */
+      background:#F76ACF;               /* Default hover (pink) */
     }
 
     /* ---- Error / status message ---- */
@@ -94,7 +105,7 @@
   <div class="card">
     <!-- Version info: helps track form version during updates -->
     <div style="text-align:right; font-size:0.8em; color:gray; margin-top:10px;">
-      Form Ver. 1.0.0r
+      Form Ver. 1.1.0r
     </div>
 
     <!-- Logo: clickable link back to homepage -->
@@ -108,12 +119,15 @@
     <!-- Login form -->
     <form id="joinForm">
       <label>Your Name</label>
-      <input id="name" name="name" required /> <!-- required ensures user must fill -->
+      <input id="name" name="name" required /> <!-- Required: user must fill -->
 
-      <label>Room Code</label>
-      <input id="roomCode" name="roomCode" required /> <!-- required ensures user must fill -->
+      <label>Theme Code is optional</label>
+      <div class="code-row">
+        <input id="roomCode" name="roomCode" placeholder="Room Code" required /> <!-- Room code input -->
+        <input id="themeCode" name="themeCode" placeholder="Theme Code" required /> <!-- Theme code input -->
+      </div>
 
-      <button type="submit">Join Game Room</button>
+      <button type="submit">Join Game Room</button> <!-- Submit button -->
     </form>
 
     <!-- Placeholder for error or success messages -->
@@ -127,18 +141,18 @@
 
     // Add event listener for form submission
     form.addEventListener('submit', async e => {
-      e.preventDefault(); // Prevent default page reload
+      e.preventDefault(); // Stop default page reload
 
       // Get and clean user inputs
-      const name = document.getElementById('name').value.trim(); // trim removes extra spaces
-      const roomCode = document.getElementById('roomCode').value.trim().toUpperCase(); 
-      // Convert room code to uppercase for consistency
+      const name = document.getElementById('name').value.trim(); // Trim removes extra spaces
+      const roomCode = document.getElementById('roomCode').value.trim().toUpperCase(); // Uppercase for consistency
+      const themeCode = document.getElementById('themeCode').value.trim().toUpperCase(); // Uppercase for consistency
 
       // Send data to server using Fetch API
       const res = await fetch('/api/player/join', {
         method:'POST', // POST because we’re sending data
         headers:{'Content-Type':'application/json'}, // Tell server we’re sending JSON
-        body:JSON.stringify({name, roomCode}) // Convert JS object to JSON string
+        body:JSON.stringify({name, roomCode, themeCode}) // Convert JS object to JSON string
       });
 
       // Handle server response
