@@ -123,10 +123,10 @@ const pool = new Pool({
     await pool.query(`CREATE TABLE IF NOT EXISTS questions (
       id SERIAL PRIMARY KEY,
       prompt TEXT NOT NULL,               -- Question text
+      room TEXT DEFAULT NULL,        -- Room code
       discard DATE DEFAULT NULL,          -- When discarded
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW(),
-      room TEXT DEFAULT NULL         -- Room code
+      updated_at TIMESTAMP DEFAULT NOW()
     );`);
 
     await pool.query(`CREATE TABLE IF NOT EXISTS answers (
@@ -780,6 +780,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
