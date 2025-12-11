@@ -582,14 +582,14 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
     let q;
     let effectiveTheme = theme;
 
-    if (process.env.DEBUG === 'true') {
-      console.log('[startRound] payload=', { roomCode, themeCode });
-       console.log('[startRound] payload=', { roomCode: rc, themeCode: theme });
+   //   if (process.env.DEBUG === 'true') {
+    //    console.log('[startRound] payload=', { roomCode, themeCode });
+     //    console.log('[startRound] payload=', { roomCode: rc, themeCode: theme });
 
-      const sql = "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND UPPER(theme)=$1";
-      const params = [theme];
-      console.log('[SQL]', sql.replace('$1', `'${params[0]}'`));      
-    }
+      //  const sql = "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND UPPER(theme)=$1";
+      //  const params = [theme];
+       // console.log('[SQL]', sql.replace('$1', `'${params[0]}'`));      
+     // }
       
     if (theme) {
       // Try theme-specific questions
@@ -835,6 +835,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
