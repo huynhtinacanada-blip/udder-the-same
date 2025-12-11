@@ -575,28 +575,27 @@ io.on("connection", (socket) => {
       const rc = roomCode.toUpperCase();
       const theme = themeCode ? themeCode.toUpperCase() : null;
       
-      // First try to get questions tied to this theme
-      let qr;
+      // Try to get a random question tied to this theme
+      let q;
       if (theme) {
-        qr = await pool.query(
-        "SELECT id FROM questions WHERE discard IS NULL AND theme=$1 ORDER BY id ASC",
-        [theme]
+        q = await pool.query(
+          "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme=$1 ORDER BY RANDOM() LIMIT 1",
+          [theme]
         );
       }
       
-      // If none found or no theme provided, fall back to global questions (theme IS NULL)
-      if (!qr || qr.rows.length === 0) {
-        qr = await pool.query(
-        "SELECT id FROM questions WHERE discard IS NULL AND theme IS NULL ORDER BY id ASC"
+      // If none found or no theme provided, fall back to global questions
+      if (!q || q.rows.length === 0) {
+        q = await pool.query(
+          "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme IS NULL ORDER BY RANDOM() LIMIT 1"
         );
       }
       
-      if (qr.rows.length === 0) return; // no available questions at all
-
-      // Pick random question
-      const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
-      const q = await pool.query("SELECT prompt FROM questions WHERE id=$1", [qid]);
-
+      if (q.rows.length === 0) return; // no available questions at all
+      
+      // Use the random question directly
+      const { id: qid, prompt } = q.rows[0];
+      
       // Mark question as discarded
       await pool.query("UPDATE questions SET discard = CURRENT_DATE WHERE id=$1", [qid]);
 
@@ -799,6 +798,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
