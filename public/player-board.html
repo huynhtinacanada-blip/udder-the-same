@@ -435,6 +435,11 @@ With this change, the unicorn tag will stick correctly for the first player as w
     const myName=urlParams.get("name")||"";
     const themeCode = (urlParams.get("theme") || "").toUpperCase();
 
+	        // Debug log with actual values
+      if (process.env.DEBUG === 'true') {
+		  console.log('[PLAYER BOARD] URL params:', { room, name, themeCode });
+	  }
+
     // Guard: if no valid login info, redirect back to login page
     if (!roomCode || !myName) {
       window.location.href = "/player-login.html";
@@ -905,6 +910,7 @@ document.getElementById("editScoreboardBtn").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
