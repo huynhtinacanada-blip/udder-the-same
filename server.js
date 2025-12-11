@@ -464,46 +464,46 @@ app.delete("/api/admin/reset/:table", async (req, res) => {
 });
 
 // ---------------- Player Join API ----------------
+
 // Called when a player joins a room via HTTP
 app.post("/api/player/join", async (req, res) => {
-  const { name, roomCode } = req.body;
+  const { name, roomCode, themeCode } = req.body;
   const rc = roomCode.toUpperCase();
 
   try {
-    // Check if room exists and is open
     const room = await pool.query("SELECT * FROM rooms WHERE code=$1", [rc]);
     if (room.rows.length === 0) return res.status(404).json({ error: "Room not found" });
     if (room.rows[0].status === "closed") return res.status(403).json({ error: "Room closed" });
 
-    // Insert player if not already present
+    // Insert player with themeCode
     await pool.query(
-      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
-      [name, rc]
+      `INSERT INTO players (name, room_code, theme)
+       VALUES ($1,$2,$3)
+       ON CONFLICT (LOWER(name), room_code) DO UPDATE SET theme=$3`,
+      [name, rc, themeCode || null]
     );
 
-    // Lookup canonical player name (handles case sensitivity)
     const player = await pool.query(
-      "SELECT name FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
+      "SELECT name, theme FROM players WHERE room_code=$1 AND LOWER(name)=LOWER($2)",
       [rc, name]
     );
     if (!player.rows.length) return res.status(500).json({ error: "Player lookup failed" });
     const canonicalName = player.rows[0].name;
 
-    // Prevent duplicate login if player already active
     if (isPlayerActive(rc, canonicalName)) {
       return res.status(403).json({ error: "Player already logged somewhere." });
     }
 
-    // Redirect player to their board
     res.json({
       success: true,
-      redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(canonicalName)}`
+      redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(canonicalName)}&theme=${encodeURIComponent(player.rows[0].theme || "")}`
     });
   } catch (err) {
     console.error("Error in player join:", err);
     res.status(500).json({ error: "Failed to join room" });
   }
 });
+
 
 /* ---------------- Socket Events ---------------- */
 // Real-time game logic via Socket.IO
@@ -797,6 +797,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
