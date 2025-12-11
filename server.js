@@ -511,11 +511,12 @@ app.post("/api/player/join", async (req, res) => {
 
 io.on("connection", (socket) => {
   // When a player joins the lobby
-  socket.on("joinLobby", async ({ roomCode, name }) => {
+  socket.on("joinLobby", async ({ roomCode, name, themeCode }) => {
     try {
       const rc = roomCode.toUpperCase();
-      socket.data.name = name;       // Save player name on socket
-      socket.data.roomCode = rc;     // Save room code on socket
+      socket.data.name = name;       // Save player name on socket, only in memory
+      socket.data.roomCode = rc;     // Save room code on socket, only in memory
+      socket.data.themeCode = themeCode;   // Save theme code only in memory
       socket.join(rc);               // Add socket to room group
 
       // Ensure player exists in DB
@@ -547,7 +548,8 @@ io.on("connection", (socket) => {
           prompt: q.rows[0].prompt,
           playerCount: activeCount,
           roundNumber: room.rows[0].current_round,
-          myAnswer: ans.rows.length ? ans.rows[0].answer : null
+          myAnswer: ans.rows.length ? ans.rows[0].answer : null,
+          theme: socket.data.themeCode || null
         });
 
         // Update submission progress for everyone
@@ -797,6 +799,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
