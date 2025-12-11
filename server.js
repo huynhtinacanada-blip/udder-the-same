@@ -123,7 +123,7 @@ const pool = new Pool({
     await pool.query(`CREATE TABLE IF NOT EXISTS questions (
       id SERIAL PRIMARY KEY,
       prompt TEXT NOT NULL,               -- Question text
-      theme TEXT DEFAULT NULL,        -- Room code
+      theme TEXT DEFAULT NULL,        -- theme code
       discard DATE DEFAULT NULL,          -- When discarded
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
@@ -495,7 +495,7 @@ app.post("/api/player/join", async (req, res) => {
       return res.status(403).json({ error: "Player already logged somewhere." });
     }
 
-    // Redirect player to their board, include themeCode in URL
+    // Redirect player to their board, include themeCode from login textbox in URL
     res.json({
       success: true,
       redirect: `/player-board.html?room=${rc}&name=${encodeURIComponent(canonicalName)}&theme=${encodeURIComponent(themeCode || "")}`
@@ -826,6 +826,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
