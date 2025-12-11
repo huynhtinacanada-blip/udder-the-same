@@ -576,6 +576,11 @@ io.on("connection", (socket) => {
 socket.on("startRound", async ({ roomCode, themeCode }) => {
   try {
 
+    const rc = roomCode.toUpperCase();
+    const theme = themeCode ? themeCode.toUpperCase() : null;
+    
+    let q;
+    let effectiveTheme = theme;
 
     if (process.env.DEBUG === 'true') {
       console.log('[startRound] payload=', { roomCode, themeCode });
@@ -585,11 +590,9 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
       console.log('[SQL]', sql.replace('$1', `'${params[0]}'`));      
     }
       
-    const rc = roomCode.toUpperCase();
-    const theme = themeCode ? themeCode.toUpperCase() : null;
 
-    let q;
-    let effectiveTheme = theme;
+
+
 
     if (theme) {
       // Count how many questions match this theme
@@ -621,7 +624,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 
       const offset = Math.floor(Math.random() * count);
       q = await pool.query(
-        "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme IS NULL OFFSET $1 LIMIT 1",
+        "SELECT id, prompt FROM questions WHERE discard IS NULL OFFSET $1 LIMIT 1",
         [offset]
       );
       effectiveTheme = null;
@@ -836,6 +839,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
