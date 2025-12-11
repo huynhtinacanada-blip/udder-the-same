@@ -546,7 +546,7 @@ document.getElementById("statusMessage").innerText =
     // ---- Start Round ----
     // Clicking Start Round tells server to begin a new round.
     startBtn.onclick = () => {
-      socket.emit("startRound",{roomCode});
+      socket.emit("startRound", { roomCode, themeCode });
     };
 
     // ---- Round Started ----
@@ -917,6 +917,7 @@ document.getElementById("editScoreboardBtn").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
