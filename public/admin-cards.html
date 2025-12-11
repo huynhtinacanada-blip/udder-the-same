@@ -306,7 +306,7 @@
               </th>
               <th scope="col">ID</th>
               <th scope="col">Question Card</th>
-              <th scope="col">Room</th>
+              <th scope="col">Theme Code</th>
               <th scope="col">Discard</th>
               <th scope="col">Actions</th>
             </tr>
@@ -324,7 +324,7 @@
   
   <!-- ---- Version info ---- -->
   <div style="text-align:center; font-size:0.8em; color:gray; margin-top:10px;">
-    📇 Card Management Ver. 1.0.1r
+    📇 Card Management Ver. 1.1.0r
   </div>
   
   <!-- ---- Scroll-to-top button ---- -->
@@ -355,7 +355,7 @@
             <td><input type="checkbox" class="row-select modern-checkbox"></td>
             <td>${q.id}</td>
             <td>${escapeHTML(q.prompt)}</td>
-            <td>${q.room ? escapeHTML(q.room) : ''}</td>
+            <td>${q.theme ? escapeHTML(q.theme) : ''}</td>
             <td>${formatDiscardDate(q.discard)}</td>
             <td>
               <div class="actions">
@@ -652,6 +652,7 @@
   </script>
 </body>
 </html>
+
 
 
 
