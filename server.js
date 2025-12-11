@@ -572,64 +572,89 @@ io.on("connection", (socket) => {
   });
 
   
-  // Start a new round
-  socket.on("startRound", async ({ roomCode, themeCode }) => {
-    try {
-      const rc = roomCode.toUpperCase();
-      const theme = themeCode ? themeCode.toUpperCase() : null;
-      
-      // Try to get a random question tied to this theme
-      let q;
-      if (theme) {
-        q = await pool.query(
-          "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme=$1 ORDER BY RANDOM() LIMIT 1",
-          [theme]
-        );
-      }
-      
-      // If none found or no theme provided, fall back to global questions
-      if (!q || q.rows.length === 0) {
-        q = await pool.query(
-          "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme IS NULL ORDER BY RANDOM() LIMIT 1"
-        );
-      }
-      
-      if (q.rows.length === 0) return; // no available questions at all
-      
-      // Use the random question directly
-      const { id: qid, prompt } = q.rows[0];
-      
-      // Mark question as discarded
-      await pool.query("UPDATE questions SET discard = CURRENT_DATE WHERE id=$1", [qid]);
+// Start a new round
+socket.on("startRound", async ({ roomCode, themeCode }) => {
+  try {
+    const rc = roomCode.toUpperCase();
+    const theme = themeCode ? themeCode.toUpperCase() : null;
 
-      // Increment round number and set active question
-      await pool.query(
-        "UPDATE rooms SET current_round=current_round+1, active_question_id=$1, popup_active=true WHERE code=$2",
-        [qid, rc]
+    let q;
+    let effectiveTheme = theme;
+
+    if (theme) {
+      // Count how many questions match this theme
+      const countRes = await pool.query(
+        "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND theme=$1",
+        [theme]
       );
+      const count = parseInt(countRes.rows[0].count, 10);
 
-      // Reset submitted flags
-      await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
-
-      await emitPlayerList(rc);
-
-      // Fetch updated round number
-      const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
-      const roomState = await pool.query("SELECT popup_active FROM rooms WHERE code=$1", [rc]);
-
-      // Broadcast round start
-      io.to(rc).emit("roundStarted", {
-        questionId: qid,
-        prompt: q.rows[0].prompt,
-        playerCount: (await getActiveStats(rc)).activeCount,
-        roundNumber: roundNum,
-        myAnswer: null,
-        popup: roomState.rows[0].popup_active
-      });
-    } catch (err) {
-      console.error("Error in startRound:", err);
+      if (count > 0) {
+        const offset = Math.floor(Math.random() * count);
+        q = await pool.query(
+          "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme=$1 OFFSET $2 LIMIT 1",
+          [theme, offset]
+        );
+      } else {
+        effectiveTheme = null; // no theme questions available
+      }
     }
-  });
+
+    // If none found or no theme provided, fall back to global questions
+    if (!q || q.rows.length === 0) {
+      const countRes = await pool.query(
+        "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND theme IS NULL"
+      );
+      const count = parseInt(countRes.rows[0].count, 10);
+
+      if (count === 0) return; // no available questions at all
+
+      const offset = Math.floor(Math.random() * count);
+      q = await pool.query(
+        "SELECT id, prompt FROM questions WHERE discard IS NULL AND theme IS NULL OFFSET $1 LIMIT 1",
+        [offset]
+      );
+      effectiveTheme = null;
+    }
+
+    if (q.rows.length === 0) return; // still no question
+
+    // Use the random question directly
+    const { id: qid, prompt } = q.rows[0];
+
+    // Mark question as discarded
+    await pool.query("UPDATE questions SET discard = CURRENT_DATE WHERE id=$1", [qid]);
+
+    // Increment round number and set active question
+    await pool.query(
+      "UPDATE rooms SET current_round=current_round+1, active_question_id=$1, popup_active=true WHERE code=$2",
+      [qid, rc]
+    );
+
+    // Reset submitted flags
+    await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
+
+    await emitPlayerList(rc);
+
+    // Fetch updated round number
+    const roundNum = (await pool.query("SELECT current_round FROM rooms WHERE code=$1", [rc])).rows[0].current_round;
+    const roomState = await pool.query("SELECT popup_active FROM rooms WHERE code=$1", [rc]);
+
+    // Broadcast round start
+    io.to(rc).emit("roundStarted", {
+      questionId: qid,
+      prompt,
+      playerCount: (await getActiveStats(rc)).activeCount,
+      roundNumber: roundNum,
+      myAnswer: null,
+      popup: roomState.rows[0].popup_active,
+      theme: effectiveTheme // null if no theme applied
+    });
+  } catch (err) {
+    console.error("Error in startRound:", err);
+  }
+});
+
 
   // Handle answer submission
   socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
@@ -801,6 +826,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
