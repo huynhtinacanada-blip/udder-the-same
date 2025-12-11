@@ -123,7 +123,7 @@ const pool = new Pool({
     await pool.query(`CREATE TABLE IF NOT EXISTS questions (
       id SERIAL PRIMARY KEY,
       prompt TEXT NOT NULL,               -- Question text
-      room TEXT DEFAULT NULL,        -- Room code
+      theme TEXT DEFAULT NULL,        -- Room code
       discard DATE DEFAULT NULL,          -- When discarded
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
@@ -341,7 +341,7 @@ app.patch("/api/rooms/:code", async (req, res) => {
 // Question management (CRUD + discard)
 app.get("/api/questions", async (_req, res) => {
   try {
-    const r = await pool.query("SELECT id, prompt, room, discard FROM questions ORDER BY id DESC");
+    const r = await pool.query("SELECT id, prompt, theme, discard FROM questions ORDER BY id DESC");
     res.json(r.rows);
   } catch (err) {
     console.error("Error fetching questions:", err);
@@ -568,24 +568,28 @@ io.on("connection", (socket) => {
 
   
   // Start a new round
-  socket.on("startRound", async ({ roomCode }) => {
+  socket.on("startRound", async ({ roomCode, themeCode }) => {
     try {
       const rc = roomCode.toUpperCase();
-
-      // First try to get questions tied to this room
-      let qr = await pool.query(
-        "SELECT id FROM questions WHERE discard IS NULL AND room=$1 ORDER BY id ASC",
-        [rc]
-      );
-  
-      // If none found, fall back to global questions (room IS NULL)
-      if (qr.rows.length === 0) {
+      const theme = themeCode ? themeCode.toUpperCase() : null;
+      
+      // First try to get questions tied to this theme
+      let qr;
+      if (theme) {
         qr = await pool.query(
-          "SELECT id FROM questions WHERE discard IS NULL AND room IS NULL ORDER BY id ASC"
+        "SELECT id FROM questions WHERE discard IS NULL AND theme=$1 ORDER BY id ASC",
+        [theme]
         );
       }
-
-    if (qr.rows.length === 0) return; // no available questions at all
+      
+      // If none found or no theme provided, fall back to global questions (theme IS NULL)
+      if (!qr || qr.rows.length === 0) {
+        qr = await pool.query(
+        "SELECT id FROM questions WHERE discard IS NULL AND theme IS NULL ORDER BY id ASC"
+        );
+      }
+      
+      if (qr.rows.length === 0) return; // no available questions at all
 
       // Pick random question
       const qid = qr.rows[Math.floor(Math.random() * qr.rows.length)].id;
@@ -793,6 +797,7 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
