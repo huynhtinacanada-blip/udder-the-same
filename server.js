@@ -584,18 +584,15 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 
     if (process.env.DEBUG === 'true') {
       console.log('[startRound] payload=', { roomCode, themeCode });
+       console.log('[startRound] payload=', { roomCode: rc, themeCode: theme });
 
       const sql = "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND UPPER(theme)=$1";
       const params = [theme];
       console.log('[SQL]', sql.replace('$1', `'${params[0]}'`));      
     }
       
-
-
-
-
     if (theme) {
-      // Count how many questions match this theme
+      // Try theme-specific questions
       const countRes = await pool.query(
         "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND theme=$1",
         [theme]
@@ -613,10 +610,10 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
       }
     }
 
-    // If none found or no theme provided, fall back to global questions
+    // Fallback: ANY non-discarded question (not just theme IS NULL)
     if (!q || q.rows.length === 0) {
       const countRes = await pool.query(
-        "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND theme IS NULL"
+        "SELECT COUNT(*) FROM questions WHERE discard IS NULL"
       );
       const count = parseInt(countRes.rows[0].count, 10);
 
@@ -630,9 +627,8 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
       effectiveTheme = null;
     }
 
-    if (q.rows.length === 0) return; // still no question
+    if (q.rows.length === 0) return;
 
-    // Use the random question directly
     const { id: qid, prompt } = q.rows[0];
 
     // Mark question as discarded
@@ -839,6 +835,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
