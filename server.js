@@ -582,13 +582,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 
       const sql = "SELECT COUNT(*) FROM questions WHERE discard IS NULL AND UPPER(theme)=$1";
       const params = [theme];
-      
-      // Debug log with actual values
-      if (process.env.DEBUG === 'true') {
-      console.log('[SQL]', sql.replace('$1', `'${params[0]}'`));
-      }
-
-      
+      console.log('[SQL]', sql.replace('$1', `'${params[0]}'`));      
     }
       
     const rc = roomCode.toUpperCase();
@@ -842,6 +836,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
