@@ -360,20 +360,32 @@ With this change, the unicorn tag will stick correctly for the first player as w
     
   <!-- ---- Accordion: Answers ---- -->
   <!-- Hidden until answers are revealed. Shows table of points, tags, names, answers. -->
-  <div id="answersAccordion" class="accordion" style="display:none;">
-    <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
-    <div id="answersTableWrapper" class="accordion-content">
-      <!--  Round + Question header -->
-      <div id="answersHeader" class="mb-2">
-        <strong>Round <span id="roundNumber"></span>:</strong>
-        <span id="questionText"></span>
-      </div>
-		<table id="answersTable">
-        <thead><tr><th>Point</th><th>TAG</th><th>Name</th><th>Answer</th></tr></thead>
+<div id="answersAccordion" class="accordion" style="display:none;">
+  <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
+  <div id="answersTableWrapper" class="accordion-content">
+    <!-- Round + Question header -->
+    <div id="answersHeader" class="mb-2">
+      <strong>Round <span id="roundNumber"></span>:</strong>
+      <span id="questionText"></span>
+    </div>
+
+    <!-- Scroll wrapper around answers table -->
+    <div class="scroll-wrapper">
+      <table id="answersTable">
+        <thead>
+          <tr>
+            <th>Point</th>
+            <th>TAG</th>
+            <th>Name</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
         <tbody></tbody>
       </table>
     </div>
   </div>
+</div>
+
 
   <!-- ---- Accordion: Scoreboard ---- -->
   <!-- Shows scores per round. Sticky columns keep TAG, Player, Total visible while scrolling. -->
@@ -946,6 +958,7 @@ document.getElementById("editScoreboardBtn").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
