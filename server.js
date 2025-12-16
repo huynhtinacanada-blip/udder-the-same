@@ -714,7 +714,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
        WHERE a.room_code=$1
          AND a.question_id=$2
          AND a.round_number=$3
-       ORDER BY name ASC`,
+       ORDER BY a.answer ASC, a.player_name ASC`,
       [rc, room.rows[0].active_question_id, room.rows[0].current_round]
     );
       // Step 1: Broadcast Emit answers + round + question prompt
@@ -835,6 +835,7 @@ socket.on("startRound", async ({ roomCode, themeCode }) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
 
 
