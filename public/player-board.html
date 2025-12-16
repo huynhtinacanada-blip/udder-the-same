@@ -178,8 +178,9 @@ With this change, the unicorn tag will stick correctly for the first player as w
 	  content: "🦄"; font-size: 18px; position: absolute; top: -2px; left: -2px;
 	}
 
-	/* Wrapper for horizontal scroll (useful for wide tables) */
-	.table-wrapper { overflow-x: auto; width: 100%; }
+	/* Wrapper for horizontal scroll (useful for wide tables) - OLD code repacled below
+	.table-wrapper { overflow-x: auto; width: 100%; } 
+	 */
 
 	/* ---- Control Switches (pill-style toggle) ---- */
 	/* Generic pill switch used for override controls. */
@@ -228,6 +229,25 @@ With this change, the unicorn tag will stick correctly for the first player as w
 	#scoreTable th:nth-child(n+4), #scoreTable td.roundCell { text-align: center; width: 55px; }
 	.scoreSelect { width: 100%; text-align: center; }
 
+	/* ---- Scroll wrapper for Players accordion ---- */
+	.scroll-wrapper {
+	  max-height: 300px;   /* adjust height as needed */
+	  overflow-y: auto;    /* vertical scrollbar */
+	  border: 1px solid #ccc;
+	  border-radius: 6px;
+	}
+
+	.table-wrapper {
+	  overflow-x: auto;    /* keep horizontal scroll */
+	  overflow-y: auto;    /* add vertical scroll */
+	  max-height: 400px;   /* set a reasonable height */
+	  width: 100%;
+	  border: 1px solid #ccc;
+	  border-radius: 6px;
+	}
+
+	
+		
 	/* ---- Popup Modal ---- */
 	/* Full-screen overlay with blurred background, centered content box. */
 	.popup {
@@ -295,7 +315,20 @@ With this change, the unicorn tag will stick correctly for the first player as w
   <!-- ---- Game Over Banner ---- -->
   <!-- Hidden by default. Shown when server signals the room is closed. -->
   <div id="gameOverBanner" class="hidden">🎮 Game Over</div>
-        
+
+	<!-- Accordion: Players -->
+	<div class="accordion">
+	  <div class="accordion-header" onclick="toggleAccordion('playersBox')">Players</div>
+	  <div id="playersBox" class="accordion-content open">
+	    <div class="scroll-wrapper">
+	      <table id="playersTable">
+	        <thead><tr><th>Player</th><th>Out</th><th>Status</th></tr></thead>
+	        <tbody></tbody>
+	      </table>
+	    </div>
+	  </div>
+	</div>	
+	
   <!-- ---- Accordion: Game Room Info ---- -->
   <!-- Accordion lets players expand/collapse room info. Default state is open. -->
   <div class="accordion">
@@ -305,11 +338,8 @@ With this change, the unicorn tag will stick correctly for the first player as w
         <p id="roomLabel"></p>
         <span id="topStatus"></span>
       </div>
-      <!-- Players table lists all players, whether they are out, and their status. -->
-      <table id="playersTable">
-        <thead><tr><th>Player</th><th>Out</th><th>Status</th></tr></thead>
-        <tbody></tbody>
-      </table>
+
+		
       <!-- Controls: buttons to start round, show question, show answers. -->
       <div id="controls">
         <button id="startBtn">Start Round</button>
@@ -352,7 +382,6 @@ With this change, the unicorn tag will stick correctly for the first player as w
     <div id="scoreboardBox" class="accordion-content">
       <div class="table-wrapper">
 		<button id="editScoreboardBtn">Edit Scores</button>
-
 		  <table id="scoreTable">
           <thead></thead>   <!-- JS will build header dynamically -->
           <tbody></tbody>   <!-- JS will build rows dynamically -->
@@ -917,6 +946,7 @@ document.getElementById("editScoreboardBtn").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
