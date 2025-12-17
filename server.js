@@ -101,9 +101,8 @@ const pool = new Pool({
       status TEXT NOT NULL DEFAULT 'open',-- Room status: open/closed
       current_round INT DEFAULT 0,        -- Tracks current round number
       active_question_id INT,             -- Which question is active
-      popup_active BOOLEAN DEFAULT false, -- Whether popup is active
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMP DEFAULT NOW()  -- Last update timestamp
+      updated_at TIMESTAMP DEFAULT NOW()
     );`);
 
     await pool.query(`CREATE TABLE IF NOT EXISTS players (
@@ -111,7 +110,6 @@ const pool = new Pool({
       name TEXT NOT NULL,                 -- Player name
       room_code TEXT REFERENCES rooms(code) ON DELETE CASCADE,
       submitted BOOLEAN DEFAULT FALSE,    -- Has player submitted answer?
-      has_unicorn BOOLEAN DEFAULT false,  -- Is player unicorn?
       score_total INT DEFAULT 0,          -- Quick lookup for total score
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
@@ -123,7 +121,6 @@ const pool = new Pool({
       id SERIAL PRIMARY KEY,
       prompt TEXT NOT NULL,               -- Question text
       theme TEXT DEFAULT NULL,            -- Theme code
-      discard DATE DEFAULT NULL,          -- When discarded
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP DEFAULT NOW()
     );`);
@@ -159,9 +156,9 @@ const pool = new Pool({
   }
 })();
 
-/* ---------------- Helpers ---------------- */
+/* ---------------- Helper Functions ---------------- */
 
-// Get list of currently connected player names in a room
+// getActiveNames: returns list of currently connected player names in a room
 function getActiveNames(roomCode) {
   const connected = io.sockets.adapter.rooms.get(roomCode) || new Set();
   const activeNames = [];
@@ -172,7 +169,7 @@ function getActiveNames(roomCode) {
   return activeNames;
 }
 
-// Combines DB player list with active socket connections
+// getActiveStats: combines DB player list with active socket connections
 async function getActiveStats(roomCode) {
   const dbPlayers = await pool.query(
     "SELECT name, submitted FROM players WHERE room_code=$1 ORDER BY name ASC",
@@ -189,7 +186,7 @@ async function getActiveStats(roomCode) {
   return { merged, activeCount, submittedActiveCount };
 }
 
-// Build scoreboard data: aggregates scores per player and joins latest unicorn tag
+// getScoreboard: aggregates scores per player, ensures latest round exists
 async function getScoreboard(roomCode) {
   const { rows: roomRows } = await pool.query(
     `SELECT current_round FROM rooms WHERE code=$1`,
@@ -232,7 +229,7 @@ async function getScoreboard(roomCode) {
   return rows;
 }
 
-// Broadcasts player list and submission progress to all clients
+// emitPlayerList: broadcasts player list and submission progress
 async function emitPlayerList(roomCode) {
   const { merged, activeCount, submittedActiveCount } = await getActiveStats(roomCode);
   io.to(roomCode).emit("playerList", {
@@ -246,58 +243,148 @@ async function emitPlayerList(roomCode) {
   });
 }
 
-// Broadcasts updated scoreboard to all clients
+// emitScoreboard: broadcasts updated scoreboard
 async function emitScoreboard(roomCode) {
   const scoreboard = await getScoreboard(roomCode);
   io.to(roomCode).emit("scoreboardUpdated", scoreboard);
 }
 
-// Checks if a specific player is currently connected
-function isPlayerActive(roomCode, playerName) {
-  const connected = io.sockets.adapter.rooms.get(roomCode) || new Set();
-  for (const socketId of connected) {
-    const s = io.sockets.sockets.get(socketId);
-    if (s && s.data && s.data.name && s.data.name.toLowerCase() === playerName.toLowerCase()) {
-      return true;
+/* ---------------- HTTP Route for Login ---------------- */
+// Called by player-login.html to join or create a room
+app.post("/player-login", async (req, res) => {
+  const { roomCode, playerName, themeCode } = req.body;
+  try {
+    // Ensure room exists or create it
+    let room = await pool.query("SELECT * FROM rooms WHERE code=$1", [roomCode]);
+    if (room.rows.length === 0) {
+      await pool.query(
+        "INSERT INTO rooms (code, status, current_round) VALUES ($1,'open',0)",
+        [roomCode]
+      );
     }
-  }
-  return false;
-}
 
-/* ---------------- APIs ---------------- */
-// Admin login, room management, question management, reset routes, player join
-// (all your Part 1 and Part 2 code goes here unchanged, with comments already included)
+    // Ensure player exists
+    await pool.query(
+      "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+      [playerName, roomCode]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ success: false, error: "Server error" });
+  }
+});
 
 /* ---------------- Socket Events ---------------- */
-// Real-time game logic via Socket.IO
 io.on("connection", (socket) => {
-  // Player joins lobby
-  socket.on("joinLobby", async ({ roomCode, name, themeCode }) => { /* ... */ });
+  // joinLobby: when a player joins the lobby
+  socket.on("joinLobby", async ({ roomCode, name, themeCode }) => {
+    try {
+      const rc = roomCode.toUpperCase();
+      socket.data.name = name;
+      socket.data.roomCode = rc;
+      socket.data.themeCode = themeCode;
+      socket.join(rc);
 
-  // Start a new round
-  socket.on("startRound", async ({ roomCode, themeCode }) => { /* ... */ });
+      await pool.query(
+        "INSERT INTO players (name, room_code) VALUES ($1,$2) ON CONFLICT (LOWER(name), room_code) DO NOTHING",
+        [name, rc]
+      );
 
-  // Handle answer submission
-  socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => { /* ... */ });
+      await emitPlayerList(rc);
+      await emitScoreboard(rc);
+    } catch (err) {
+      console.error("Error in joinLobby:", err);
+    }
+  });
 
-  // Reveal all answers + emit pivot counts
+  // startRound: begins a new round by selecting a question and notifying players
+  socket.on("startRound", async ({ roomCode, themeCode }) => {
+    try {
+      const rc = roomCode.toUpperCase();
+
+      // Pick a random question from DB for this theme
+      const { rows } = await pool.query(
+        "SELECT id, prompt FROM questions WHERE theme=$1 ORDER BY RANDOM() LIMIT 1",
+        [themeCode]
+      );
+      if (rows.length === 0) return; // no questions available
+
+      const q = rows[0];
+
+      // Increment round and set active question
+      await pool.query(
+        "UPDATE rooms SET current_round=current_round+1, active_question_id=$2 WHERE code=$1",
+        [rc, q.id]
+      );
+
+      // Reset players submitted flag
+      await pool.query("UPDATE players SET submitted=false WHERE room_code=$1", [rc]);
+
+      // Broadcast round start to all players in room
+      const playerCount = (await pool.query("SELECT COUNT(*) FROM players WHERE room_code=$1",[rc])).rows[0].count;
+      const roundNumber = (await pool.query("SELECT current_round FROM rooms WHERE code=$1",[rc])).rows[0].current_round;
+
+      io.to(rc).emit("roundStarted", {
+        questionId: q.id,
+        prompt: q.prompt,
+        playerCount,
+        roundNumber,
+        myAnswer: null,
+        popup: true,
+        theme: themeCode
+      });
+    } catch (err) {
+      console.error("Error in startRound:", err);
+    }
+  });
+
+  // submitAnswer: player submits an answer for current round
+  socket.on("submitAnswer", async ({ roomCode, name, questionId, answer }) => {
+    try {
+      const rc = roomCode.toUpperCase();
+
+      // Find current round
+      const { rows: roomRows } = await pool.query(
+        "SELECT current_round FROM rooms WHERE code=$1",
+        [rc]
+      );
+      const roundNumber = roomRows[0]?.current_round || 1;
+
+      // Insert answer
+      await pool.query(
+        `INSERT INTO answers (room_code, player_name, question_id, round_number, answer)
+         VALUES ($1,$2,$3,$4,$5)
+         ON CONFLICT (room_code, LOWER(player_name), question_id, round_number)
+         DO UPDATE SET answer=$5, updated_at=NOW()`,
+        [rc, name, questionId, roundNumber, answer]
+      );
+
+      // Mark player as submitted
+      await pool.query("UPDATE players SET submitted=true WHERE room_code=$1 AND name=$2", [rc, name]);
+
+      // Update player list and submission progress
+      await emitPlayerList(rc);
+    } catch (err) {
+      console.error("Error in submitAnswer:", err);
+    }
+  });
+
+  // showAnswers: reveal all answers and pivot counts
   socket.on("showAnswers", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
       const room = await pool.query(
-        `SELECT r.current_round,
-                r.active_question_id,
-                q.prompt AS question_prompt
-         FROM rooms r
-         JOIN questions q ON r.active_question_id = q.id
-         WHERE r.code = $1`,
+        `SELECT r.current_round, r.active_question_id, q.prompt AS question_prompt
+         FROM rooms r JOIN questions q ON r.active_question_id = q.id
+         WHERE r.code=$1`,
         [rc]
       );
+      if (room.rows.length === 0) return;
 
       const rr = await pool.query(
-        `SELECT a.player_name AS name,
-                a.answer,
-                s.tag
+        `SELECT a.player_name AS name, a.answer, s.tag
          FROM answers a
          LEFT JOIN scores s
            ON a.room_code = s.room_code
@@ -310,14 +397,13 @@ io.on("connection", (socket) => {
         [rc, room.rows[0].active_question_id, room.rows[0].current_round]
       );
 
-      // Step 1: Broadcast answers + round + question prompt
       io.to(rc).emit("answersRevealed", {
         rows: rr.rows,
         round: room.rows[0].current_round,
         questionPrompt: room.rows[0].question_prompt
       });
 
-      // Step 2: Query pivot counts (group answers by text)
+      // Pivot counts query
       const pivot = await pool.query(
         `SELECT a.answer, COUNT(*) AS player_count
          FROM answers a
@@ -329,101 +415,78 @@ io.on("connection", (socket) => {
         [rc, room.rows[0].active_question_id, room.rows[0].current_round]
       );
 
-      // Step 3: Emit pivot counts to clients
       io.to(rc).emit("pivotUpdated", pivot.rows);
 
-      // Step 4: Immediately broadcast scoreboard so all clients update
       await emitScoreboard(rc);
     } catch (err) {
       console.error("Error in showAnswers:", err);
     }
   });
 
-// awardPivotPoints: award +1 to all players who submitted the selected answer in current round
-socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
-  try {
-    const rc = roomCode.toUpperCase();
-
-    // Find current round number for this room
-    const { rows: roomRows } = await pool.query(
-      "SELECT current_round, active_question_id FROM rooms WHERE code=$1",
-      [rc]
-    );
-    if (roomRows.length === 0) return;
-    const roundNumber = roomRows[0].current_round;
-    const questionId  = roomRows[0].active_question_id;
-
-    // Find all players who submitted this answer in this round
-    const { rows: matching } = await pool.query(
-      `SELECT player_name
-         FROM answers
-        WHERE room_code=$1
-          AND question_id=$2
-          AND round_number=$3
-          AND answer=$4`,
-      [rc, questionId, roundNumber, answer]
-    );
-
-    // For each matching player, set their score to 1 for this round
-    for (const row of matching) {
-      await pool.query(
-        `INSERT INTO scores (room_code, player_name, round_number, points)
-         VALUES ($1,$2,$3,1)
-         ON CONFLICT (room_code, LOWER(player_name), round_number)
-         DO UPDATE SET points=1, updated_at=NOW()`,
-        [rc, row.player_name, roundNumber]
-      );
-    }
-
-    // After updating, broadcast new scoreboard
-    await emitScoreboard(rc);
-  } catch (err) {
-    console.error("Error in awardPivotPoints:", err);
-  }
-});
-
-
-
-  
-  // Award points to a player
+  // awardPoint: award points to a single player for a round
   socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
     try {
       const rc = roomCode.toUpperCase();
-      // Insert or update score for this player/round
       await pool.query(
         `INSERT INTO scores (room_code, player_name, round_number, points)
-         VALUES ($1, $2, $3, $4)
+         VALUES ($1,$2,$3,$4)
          ON CONFLICT (room_code, LOWER(player_name), round_number)
-         DO UPDATE SET points=$4`,
+         DO UPDATE SET points=$4, updated_at=NOW()`,
         [rc, playerName, roundNumber, points]
       );
-
-      // Update player's quick total (optional convenience field)
-      await pool.query(
-        "UPDATE players SET score_total = score_total + $1, updated_at=NOW() WHERE room_code=$2 AND LOWER(name)=LOWER($3)",
-        [points, rc, playerName]
-      );
-
-      // Broadcast updated scoreboard
       await emitScoreboard(rc);
     } catch (err) {
       console.error("Error in awardPoint:", err);
     }
   });
 
-  // Unicorn assignment event
+  // awardPivotPoints: award +1 to all players who submitted the selected answer
+  socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
+    try {
+      const rc = roomCode.toUpperCase();
+      const { rows: roomRows } = await pool.query(
+        "SELECT current_round, active_question_id FROM rooms WHERE code=$1",
+        [rc]
+      );
+      if (roomRows.length === 0) return;
+      const roundNumber = roomRows[0].current_round;
+      const questionId  = roomRows[0].active_question_id;
+
+      const { rows: matching } = await pool.query(
+        `SELECT player_name
+           FROM answers
+          WHERE room_code=$1
+            AND question_id=$2
+            AND round_number=$3
+            AND answer=$4`,
+        [rc, questionId, roundNumber, answer]
+      );
+
+      for (const row of matching) {
+        await pool.query(
+          `INSERT INTO scores (room_code, player_name, round_number, points)
+           VALUES ($1,$2,$3,1)
+           ON CONFLICT (room_code, LOWER(player_name), round_number)
+           DO UPDATE SET points=1, updated_at=NOW()`,
+          [rc, row.player_name, roundNumber]
+        );
+      }
+
+      await emitScoreboard(rc);
+    } catch (err) {
+      console.error("Error in awardPivotPoints:", err);
+    }
+  });
+
+  // setUnicorn: assign unicorn tag to a player
   socket.on("setUnicorn", async ({ roomCode, playerName }) => {
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-
-      // Clear existing unicorn tags
       await client.query(
         `UPDATE scores SET tag = NULL WHERE room_code = $1 AND tag = '🦄'`,
         [roomCode]
       );
-
-      // Assign unicorn tag to latest round for selected player
       await client.query(
         `UPDATE scores
          SET tag = '🦄'
@@ -437,10 +500,7 @@ socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
            )`,
         [roomCode, playerName]
       );
-
       await client.query("COMMIT");
-
-      // Broadcast updated scoreboard
       const scoreboard = await getScoreboard(roomCode);
       io.to(roomCode).emit("scoreboardUpdated", scoreboard);
     } catch (err) {
@@ -451,7 +511,7 @@ socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
     }
   });
 
-  // Close room
+  // closeRoom: mark room as closed
   socket.on("closeRoom", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
@@ -465,7 +525,7 @@ socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
     }
   });
 
-  // Handle player disconnect
+  // disconnect: handle player leaving
   socket.on("disconnect", async () => {
     try {
       const r = socket.data?.roomCode;
@@ -476,10 +536,8 @@ socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
       console.error("Error in disconnect:", err);
     }
   });
-}); // closes io.on("connection")
+});
 
 /* ---------------- Start Server ---------------- */
-// Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
-
