@@ -339,6 +339,52 @@ io.on("connection", (socket) => {
     }
   });
 
+// awardPivotPoints: award +1 to all players who submitted the selected answer in current round
+socket.on("awardPivotPoints", async ({ roomCode, answer }) => {
+  try {
+    const rc = roomCode.toUpperCase();
+
+    // Find current round number for this room
+    const { rows: roomRows } = await pool.query(
+      "SELECT current_round, active_question_id FROM rooms WHERE code=$1",
+      [rc]
+    );
+    if (roomRows.length === 0) return;
+    const roundNumber = roomRows[0].current_round;
+    const questionId  = roomRows[0].active_question_id;
+
+    // Find all players who submitted this answer in this round
+    const { rows: matching } = await pool.query(
+      `SELECT player_name
+         FROM answers
+        WHERE room_code=$1
+          AND question_id=$2
+          AND round_number=$3
+          AND answer=$4`,
+      [rc, questionId, roundNumber, answer]
+    );
+
+    // For each matching player, set their score to 1 for this round
+    for (const row of matching) {
+      await pool.query(
+        `INSERT INTO scores (room_code, player_name, round_number, points)
+         VALUES ($1,$2,$3,1)
+         ON CONFLICT (room_code, LOWER(player_name), round_number)
+         DO UPDATE SET points=1, updated_at=NOW()`,
+        [rc, row.player_name, roundNumber]
+      );
+    }
+
+    // After updating, broadcast new scoreboard
+    await emitScoreboard(rc);
+  } catch (err) {
+    console.error("Error in awardPivotPoints:", err);
+  }
+});
+
+
+
+  
   // Award points to a player
   socket.on("awardPoint", async ({ roomCode, playerName, roundNumber, points }) => {
     try {
@@ -436,3 +482,4 @@ io.on("connection", (socket) => {
 // Start listening for HTTP and WebSocket connections
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
