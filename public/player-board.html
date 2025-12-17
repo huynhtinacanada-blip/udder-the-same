@@ -357,6 +357,23 @@ With this change, the unicorn tag will stick correctly for the first player as w
     </div>
   </div>
 
+	<!-- Pivot Counts Accordion -->
+	<div id="pivotAccordion" class="accordion" style="display:none;">
+	  <div class="accordion-header" onclick="toggleAccordion('pivotTableWrapper')">Pivot Counts</div>
+	  <div id="pivotTableWrapper" class="accordion-content">
+	    <div class="scroll-wrapper">
+	      <table id="pivotTable">
+	        <thead>
+	          <tr><th>Select</th><th>Count</th><th>Answer</th></tr>
+	        </thead>
+	        <tbody></tbody>
+	      </table>
+	    </div>
+	  </div>
+	</div>
+
+
+	
     
   <!-- ---- Accordion: Answers ---- -->
   <!-- Hidden until answers are revealed. Shows table of points, tags, names, answers. -->
@@ -958,6 +975,7 @@ document.getElementById("editScoreboardBtn").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
