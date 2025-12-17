@@ -63,6 +63,29 @@ button:hover:enabled { background:#F7AC4D; }
 .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
 .accordion-content.open { padding:15px; max-height:1000px; }
 
+
+#qaSection {
+  display: flex;
+  flex-direction: column; /* stack children vertically */
+  gap: 10px;              /* space between textarea and button */
+}
+
+#answerInput {
+  width: 100%;            /* full width of parent */
+  min-height: 100px;      /* taller box for typing */
+  padding: 10px;
+  font-size: 16px;
+  box-sizing: border-box; /* include padding in width calculation */
+}
+
+#submitAnswerBtn {
+  align-self: flex-start; /* button aligns left; use center if preferred */
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+	
+
 /* ---------------- Table Styling ---------------- */
 #answersTable, #playersTable, #scoreTable {
   font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
@@ -210,12 +233,12 @@ button:hover:enabled { background:#F7AC4D; }
         <button id="showAnswersBtn" disabled>Show Answers</button>
         <p id="statusMessage"></p>
       </div>
-      <div id="qaSection" style="display:none;">
-        <p id="questionPrompt"></p>
-        <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
-        <button id="submitAnswerBtn">Submit Answer</button>
-        <p id="progress"></p>
-      </div>
+		<div id="qaSection" style="display:none;">
+		  <p id="questionPrompt"></p>
+		  <textarea id="answerInput" rows="4" placeholder="Type your answer..."></textarea>
+		  <button id="submitAnswerBtn">Submit Answer</button>
+		  <p id="progress"></p>
+		</div>
     </div>
   </div>
 
@@ -556,17 +579,18 @@ button:hover:enabled { background:#F7AC4D; }
     });
 
     // Pivot counts from server: build table with multi-checkboxes
-    socket.on("pivotUpdated", rows => {
-      document.querySelector("#pivotTable tbody").innerHTML = rows.map(r => `
-        <tr>
-          <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.answer)}"></td>
-          <td>${escapeHTML(r.player_count)}</td>
-          <td>${escapeHTML(r.answer)}</td>
-        </tr>
-      `).join("");
-      document.getElementById("pivotAccordion").style.display="block";
-      openAccordion("pivotTableWrapper");
-    });
+	socket.on("pivotUpdated", rows => {
+	  document.querySelector("#pivotTable tbody").innerHTML = rows.map(r => `
+	    <tr>
+	      <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.answer)}"></td>
+	      <td>${escapeHTML(r.player_count)}</td>
+	      <td>${escapeHTML(r.answer)}</td>
+	    </tr>
+	  `).join("");
+	  document.getElementById("pivotAccordion").style.display = "block"; // show accordion
+	  openAccordion("pivotTableWrapper"); // expand content
+	});
+
 
     // Scoreboard updates: render and sync toggles and unicorns
     socket.on("scoreboardUpdated", data => {
@@ -743,4 +767,5 @@ button:hover:enabled { background:#F7AC4D; }
 </html>
 
 		
+
 
