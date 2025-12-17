@@ -629,7 +629,9 @@ With this change, the unicorn tag will stick correctly for the first player as w
       document.getElementById("qaSection").style.display="block";
       openAccordion("questionBox");
       closeAccordion("answersTableWrapper");
-      document.getElementById("answersAccordion").style.display="none";
+	  closeAccordion("pivotTableWrapper");
+	  document.getElementById("answersAccordion").style.display="none";
+      document.getElementById("pivotAccordion").style.display="none";
       document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${escapeHTML(prompt)}`;  //Ensure we always use escape any dynamic text inserted into statusMessage or other DOM elements to prevent injection.
       document.getElementById("progress").innerText = `Submitted: 0 / ${escapeHTML(playerCount)}`;
 
@@ -975,6 +977,7 @@ document.getElementById("editScoreboardBtn").addEventListener("click", () => {
   </script>
 </body>
 </html>
+
 
 
 
