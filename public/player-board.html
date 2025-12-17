@@ -8,329 +8,195 @@ With this change, the unicorn tag will stick correctly for the first player as w
 <head>
   <meta charset="utf-8" />
   <title>Player Dashboard — Udderly the Same</title>
+  <!-- Socket.IO client library connects browser to server in real time -->
   <script src="/socket.io/socket.io.js"></script>
 
 <style>
-	/* ---- Page Body ---- */
-	/* The body sets the overall look: font, max width, centered layout, background gradient, padding, rounded corners, and a subtle shadow. */
-	body {
-	  font-family:'Segoe UI',Arial,sans-serif;
-	  max-width:900px;
-	  margin:30px auto;
-	  background:linear-gradient(135deg,#fdfcfb,#e2d1c3);
-	  padding:20px;
-	  border-radius:12px;
-	  box-shadow:0 4px 12px rgba(0,0,0,0.1);
-	}
+/* ---------------- General Page Styling ---------------- */
+body {
+  font-family:'Segoe UI',Arial,sans-serif;   /* Sets the font family for the whole page */
+  max-width:900px;                           /* Restricts page width so it doesn’t stretch too wide */
+  margin:30px auto;                          /* Adds space around the page and centers it horizontally */
+  background:linear-gradient(135deg,#fdfcfb,#e2d1c3); /* Soft gradient background for visual appeal */
+  padding:20px;                              /* Adds space inside the body container */
+  border-radius:12px;                        /* Rounds the corners of the page container */
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);     /* Adds a subtle shadow for depth */
+}
 
-	/* ---- Header Section (Logo + Title) ---- */
-	/* Flexbox header aligns logo and title horizontally with spacing. */
-	.header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-	.logo { max-width:100px; height:auto; display:block; }
-	h2 { margin:0; }
+/* ---------------- Header Section ---------------- */
+.header {
+  display:flex;                              /* Use flexbox to arrange items horizontally */
+  align-items:center;                        /* Vertically center items within the header */
+  gap:12px;                                  /* Adds spacing between logo and title */
+  margin-bottom:20px;                        /* Adds space below the header */
+}
+.logo { max-width:100px; height:auto; display:block; }
+h2 { margin:0; }
 
-	/* ---- Status Message (below header) ---- */
-	/* Bold text, centered, used to show game status messages. */
-	#statusMessage { font-weight:bold; margin-top:10px; text-align:center; color:#444; }
+/* ---------------- Status Message ---------------- */
+#statusMessage {
+  font-weight:bold; margin-top:10px; text-align:center; color:#444;
+}
 
-	/* ---- Buttons (general styling) ---- */
-	/* All buttons share padding, rounded corners, dark background, white text, and hover transitions. */
-	button {
-	  padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
-	  cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
-	}
-	button:disabled { background:#999; cursor:not-allowed; }
+/* ---------------- Buttons ---------------- */
+button {
+  padding:10px 18px; margin:6px; font-size:16px; border:none; border-radius:8px;
+  cursor:pointer; background:#333; color:#fff; transition:background 0.3s ease;
+}
+button:disabled { background:#999; cursor:not-allowed; }
+button:hover:enabled { background:#F7AC4D; }
 
-	/* Default hover (orange) for most buttons */
-	button:hover:enabled { background:#F7AC4D; }
+.danger-btn:hover:enabled { background:#d32f2f; color:#fff; font-weight:bold; }
+#showQuestionBtn:hover:enabled { background:#1976d2; }
+#showAnswersBtn:hover:enabled { background:#2e7d32; }
 
-	/* Special End Game button hover: red to emphasize danger */
-	.danger-btn:hover:enabled {
-	  background:#d32f2f;
-	  color:#fff;
-	  font-weight:bold;
-	}
+#signOutBtn {
+  background-color: #d32f2f; color: white; border: none; padding: 10px 18px;
+  border-radius: 6px; cursor: pointer; font-weight: bold; transition: background-color 0.3s;
+}
+#signOutBtn:hover { background-color: #ffa600; }
 
-	/* Show Question button hover: blue */
-	#showQuestionBtn:hover:enabled { background:#1976d2; }
+/* ---------------- Accordion Styling ---------------- */
+.accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
+.accordion-header:hover { background:#F7AC4D; }
+.accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
+.accordion-content.open { padding:15px; max-height:1000px; }
 
-	/* Show Answers button hover: green */
-	#showAnswersBtn:hover:enabled { background:#2e7d32; }
+/* ---------------- Table Styling ---------------- */
+#answersTable, #playersTable, #scoreTable {
+  font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
+}
+#answersTable th, #answersTable td,
+#playersTable th, #playersTable td,
+#scoreTable th, #scoreTable td {
+  border-bottom:1px solid #ccc; padding:8px;
+}
+#answersTable th { text-align:left !important; }
+#playersTable th { text-align:left !important; }
 
-	/* Sign Out button styling: red by default, orange on hover */
-	#signOutBtn {
-	  background-color: #d32f2f;
-	  color: white;
-	  border: none;
-	  padding: 10px 18px;
-	  border-radius: 6px;
-	  cursor: pointer;
-	  font-weight: bold;
-	  transition: background-color 0.3s;
-	}
-	#signOutBtn:hover { background-color: #ffa600; }
+/* ---------------- Scroll Wrappers ---------------- */
+.scroll-wrapper {
+  max-height: 300px; overflow-y: auto; border: 1px solid #ccc; border-radius: 6px;
+}
+.table-wrapper {
+  overflow-x: auto; overflow-y: auto; max-height: 400px; width: 100%;
+  border: 1px solid #ccc; border-radius: 6px;
+}
 
-	/* ---- Accordion Sections ---- */
-	/* Accordion headers toggle content visibility. Content expands/collapses with max-height animation. */
-	.accordion { margin-top:20px; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
-	.accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
-	.accordion-header:hover { background:#F7AC4D; }
-	.accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
-	.accordion-content.open { padding:15px; max-height:1000px; }
+/* ---------------- Popup Modal ---------------- */
+.popup {
+  display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); justify-content:center; align-items:center;
+}
+.popup-content {
+  background:#fff; border-radius:16px; padding:40px; width:80%; max-width:700px;
+  text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.3); animation:fadeIn 0.4s ease; position:relative;
+}
+.popup-content h1 { font-size:2rem; color:#333; margin:0; }
+.close-btn { position:absolute; top:20px; right:30px; font-size:32px; font-weight:bold; color:#333; cursor:pointer; transition:color 0.3s; }
+.close-btn:hover { color:#F7AC4D; }
+@keyframes fadeIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
 
-	/* ---- Tables (Answers, Players, Score) ---- */
-	/* Shared table styling: font size, collapsed borders, full width. */
-	#answersTable, #playersTable, #scoreTable {
-	  font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
-	}
-	#answersTable th, #answersTable td,
-	#playersTable th, #playersTable td,
-	#scoreTable th, #scoreTable td {
-	  border-bottom:1px solid #ccc; padding:8px;
-	}
+/* ---------------- Game Over Banner ---------------- */
+#gameOverBanner {
+  background-color: #d32f2f; color: white; font-weight: bold; text-align: center;
+  padding: 25px; font-size: 22px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.hidden { display: none; }
 
-	/* Answers table: default left alignment */
-	#answersTable th, #answersTable td { text-align:left; }
+/* ---------------- Scoreboard Table ---------------- */
+#scoreTable { table-layout: fixed; border-collapse: collapse; width: 100%; }
+#scoreTable th, #scoreTable td { padding: 6px; white-space: nowrap; border: 1px solid #ccc; }
+#scoreTable th:first-child, #scoreTable td:first-child { text-align: left; width: 40px; position: sticky; left: 0; background: #fff; z-index: 3; }
+#scoreTable th:nth-child(2), #scoreTable td:nth-child(2) { text-align: left; padding-left: 10px; width: 150px; position: sticky; left: 40px; background: #fff; z-index: 3; }
+#scoreTable th:nth-child(3), #scoreTable td:nth-child(3) { text-align: center; width: 80px; position: sticky; left: 190px; background: #fff; border-right: 2px solid #999; box-shadow: 1px 0 0 #999; z-index: 3; }
+#scoreTable th:nth-child(n+4), #scoreTable td.roundCell { text-align: center; width: 55px; }
+.scoreSelect { width: 100%; text-align: center; }
 
-	/* Explicit column widths for Answers table: toggle, player, answer */
-	#answersTable th:first-child, #answersTable td:first-child {
-	  width: 120px; text-align: left;
-	}
-	#answersTable th:nth-child(2), #answersTable td:nth-child(2) {
-	  width: 200px;
-	}
-	#answersTable th:nth-child(3), #answersTable td:nth-child(3) {
-	  width: auto;
-	}
+/* ---------------- Answers table inline toggle styling ---------------- */
+/* Switch container inside answers table */
+#answersTable .switch {
+  position: relative;                        /* Container for the slider and label */
+  display: inline-block;                     /* Lets it sit inline inside the cell */
+  width: 80px; height: 32px;                 /* Pill size */
+}
+/* Hide the raw checkbox; we style the sibling .slider instead */
+#answersTable .switch input { display: none; }
 
-	/* Force all header text left-aligned */
-	#answersTable th { text-align: left !important; }
+/* The pill track for the toggle (OFF by default) */
+#answersTable .slider {
+  position: relative;                        /* Positions inside switch container */
+  width: 100%; height: 100%;
+  background-color: #ddd;                    /* Gray pill background when OFF */
+  border: 2px solid #aaa;                    /* Subtle border around pill */
+  border-radius: 32px;                       /* Rounded ends for pill shape */
+  transition: background-color 0.3s, border-color 0.3s; /* Smooth transitions */
+  cursor: pointer;                           /* Pointer cursor on hover */
+}
 
+/* The knob uses an emoji; we animate translateX on check */
+#answersTable .slider::before {
+  content: "🏅";                              /* Emoji inside knob when OFF */
+  position: absolute; width: 28px; height: 28px; left: 2px; top: 2px;
+  background-color: white;                   /* White knob */
+  border: none;                              /* No border around knob */
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  transition: transform 0.3s, background-color 0.3s, content 0.3s; /* Smooth animations */
+}
 
-	/* Force all header text left-aligned */
-	#playersTable th { text-align: left !important; }
+/* When checkbox is checked, make pill green and slide knob right */
+#answersTable .switch input:checked + .slider {
+  background-color: #66bb6a;                 /* Green when ON */
+  border-color: #66bb6a;                     /* Match border to background */
+}
+#answersTable .switch input:checked + .slider::before {
+  transform: translateX(48px);               /* Move knob to right */
+  content: "🏃‍♀️";                           /* Change emoji when ON */
+}
 
+/* Labels next to toggles to show "+1" or "0" with color */
+.pointLabel { margin-left: 6px; font-weight: bold; }
+.pointLabel.green { color: #2e7d32; }        /* Green text for +1 */
+.pointLabel.blue  { color: #1976d2; }        /* Blue text for 0 */
 
-	
-	/* ---- Textarea (for input fields) ---- */
-	textarea {
-	  width:100%; max-width:800px; padding:10px; border-radius:6px;
-	  border:1px solid #ccc; margin-bottom:10px; font-size:16px;
-	}
-
-	/* ---- Answers Table Toggle Styling ---- */
-	/* Special pill switch inside answers table, with emoji knob that changes when toggled. */
-	#answersTable .switch {
-	  position: relative; margin-left: 0; display: inline-block; width: 80px; height: 32px;
-	}
-	#answersTable .switch input { display: none; }
-	#answersTable .slider {
-	  position: relative;
-	  width: 100%;
-	  height: 100%;
-	  background-color: #ddd;          /* gray pill background when OFF */
-	  border: 2px solid #aaa;          /* subtle border around pill */
-	  border-radius: 32px;             /* rounded ends for pill shape */
-	  transition: background-color 0.3s, border-color 0.3s;
-	  cursor: pointer;                 /* pointer cursor on hover */
-	}
-
-	#answersTable .slider::before {
-	  content: "🏅";                   /* initial emoji shown inside knob */
-	  position: absolute;
-	  width: 28px;
-	  height: 28px;
-	  left: 2px;                       /* start position (left side of pill) */
-	  top: 2px;
-	  background-color: white;         /* knob circle background */
-	    /* border-radius: 50%;  */            /* makes knob circular */
-	  border: none;                    /* no border around knob */
-	  transition: transform 0.3s, background-color 0.3s, content 0.3s;
-	  display: flex;                   /* flex centers emoji inside knob */
-	  align-items: center;
-	  justify-content: center;
-	  font-size: 18px;
-	}
-
-	#answersTable .switch input:checked + .slider {
-	  background-color: #66bb6a;       /* green pill background when ON */
-	  border-color: #66bb6a;           /* border matches green background */
-	}
-
-	#answersTable .switch input:checked + .slider::before {
-	  transform: translateX(48px);     /* slide knob to the right */
-	  content: "🏃‍♀️";                /* emoji changes when ON */
-	}
-
-	#answersTable .slider:hover {
-	  background-color: #bbb;          /* darker gray pill on hover */
-	}
-	
-	/* ---- Custom Unicorn Radio Buttons ---- */
-	/* Hide default radio input, replace with styled circle that shows 🦄 when checked. */
-	.unicornRadio { display: none; }
-	.unicornLabel {
-	  width: 24px; height: 24px; border: 2px solid #afc; border-radius: 50%;
-	  display: inline-block; position: relative; cursor: pointer; transition: all 0.3s ease;
-	}
-	.unicornLabel:hover { border-color: #888; box-shadow: 0 0 6px rgba(0,0,0,0.5); }
-	.unicornRadio:checked + .unicornLabel::after {
-	  content: "🦄"; font-size: 18px; position: absolute; top: -2px; left: -2px;
-	}
-
-	/* Wrapper for horizontal scroll (useful for wide tables) - OLD code repacled below
-	.table-wrapper { overflow-x: auto; width: 100%; } 
-	 */
-
-	/* ---- Control Switches (pill-style toggle) ---- */
-	/* Generic pill switch used for override controls. */
-	.switch { display: block; margin-bottom: 12px; }
-	.switch label { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-	.switch input { display: none; }
-	.slider {
-	  position: relative; width: 60px; height: 28px; background-color: #ccc;
-	  border-radius: 28px; transition: background-color 0.3s;
-	}
-	.slider::before {
-	  content: ""; position: absolute; width: 24px; height: 24px; left: 2px; top: 2px;
-	  background-color: white; border-radius: 50%; transition: transform 0.3s;
-	}
-	.switch input:checked + .slider { background-color: #2e7d32; }
-	.switch input:checked + .slider::before { transform: translateX(32px); }
-
-	/* ---- Controls Layout (3-column arrangement) ---- */
-	/* Flexbox layout splits controls into left, middle, right columns. */
-	.controlsLayout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
-	.leftColumn { display: flex; flex-direction: column; gap: 12px; }
-	.middleColumn { display: flex; flex-direction: column; gap: 12px; align-items: center; }
-	.rightColumn { display: flex; align-items: center; align-self: stretch; }
-
-	/* ---- Room Header (top status bar) ---- */
-	#topStatus { font-weight:bold; color:#444; margin-left:auto; }
-	.roomHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-	.small { font-size: 12px; color: #666; }
-
-	/* ---- Score Table ---- */
-	/* Fixed layout with sticky first three columns for clarity when scrolling horizontally. */
-	#scoreTable { table-layout: fixed; border-collapse: collapse; width: 100%; }
-	#scoreTable th, #scoreTable td {
-	  padding: 6px; white-space: nowrap; border: 1px solid #ccc;
-	}
-	#scoreTable th:first-child, #scoreTable td:first-child {
-	  text-align: left; width: 40px; position: sticky; left: 0; background: #fff; z-index: 3;
-	}
-	#scoreTable th:nth-child(2), #scoreTable td:nth-child(2) {
-	  text-align: left; padding-left: 10px; width: 150px; position: sticky; left: 40px; background: #fff; z-index: 3;
-	}
-	#scoreTable th:nth-child(3), #scoreTable td:nth-child(3) {
-	  text-align: center; width: 80px; position: sticky; left: 190px; background: #fff;
-	  border-right: 2px solid #999; box-shadow: 1px 0 0 #999; z-index: 3;
-	}
-	#scoreTable th:nth-child(n+4), #scoreTable td.roundCell { text-align: center; width: 55px; }
-	.scoreSelect { width: 100%; text-align: center; }
-
-	/* ---- Scroll wrapper for Players accordion ---- */
-	.scroll-wrapper {
-	  max-height: 300px;   /* adjust height as needed */
-	  overflow-y: auto;    /* vertical scrollbar */
-	  border: 1px solid #ccc;
-	  border-radius: 6px;
-	}
-
-	.table-wrapper {
-	  overflow-x: auto;    /* keep horizontal scroll */
-	  overflow-y: auto;    /* add vertical scroll */
-	  max-height: 400px;   /* set a reasonable height */
-	  width: 100%;
-	  border: 1px solid #ccc;
-	  border-radius: 6px;
-	}
-
-	
-		
-	/* ---- Popup Modal ---- */
-	/* Full-screen overlay with blurred background, centered content box. */
-	.popup {
-	  display:none;
-	  position:fixed;
-	  z-index:1000;
-	  left:0; top:0;
-	  width:100%; height:100%;
-	  background:rgba(0,0,0,0.6);      /* semi-transparent dark overlay */
-	  backdrop-filter:blur(4px);       /* blur background for focus effect */
-	  justify-content:center;
-	  align-items:center;
-	}
-	.popup-content {
-	  background:#fff;
-	  border-radius:16px;
-	  padding:40px;
-	  width:80%; max-width:700px;
-	  text-align:center;
-	  box-shadow:0 8px 24px rgba(0,0,0,0.3);
-	  animation:fadeIn 0.4s ease;      /* smooth pop-in animation */
-	  position:relative;
-	}
-	.popup-content h1 { font-size:2rem; color:#333; margin:0; }
-	.close-btn {
-	  position:absolute; top:20px; right:30px;
-	  font-size:32px; font-weight:bold;
-	  color:#333; cursor:pointer;
-	  transition:color 0.3s;
-	}
-	.close-btn:hover { color:#F7AC4D; }
-	@keyframes fadeIn {
-	  from { transform:scale(0.9); opacity:0; }
-	  to   { transform:scale(1); opacity:1; }
-	}
-
-	/* ---- Game Over Banner ---- */
-	/* Bold red banner shown when game ends. */
-	#gameOverBanner {
-	  background-color: #d32f2f; color: white; font-weight: bold;
-	  text-align: center; padding: 25px; font-size: 22px;
-	  margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-	}
-	.hidden { display: none; }
-
-	/* ---- Disclaimer Footer ---- */
-	/* Small, muted text at bottom of page. */
-	.disclaimer {
-	  text-align:center;
-	  font-size:0.75em;
-	  color:#666;
-	  margin-top:50px;
-	}
+/* Unicorn radio custom circle */
+.unicornRadio { display: none; }              /* Hide the native radio */
+.unicornLabel {
+  width: 24px; height: 24px; border: 2px solid #afc; border-radius: 50%;
+  display: inline-block; position: relative; cursor: pointer; transition: all 0.3s ease;
+}
+.unicornLabel:hover { border-color: #888; box-shadow: 0 0 6px rgba(0,0,0,0.5); }
+.unicornRadio:checked + .unicornLabel::after {
+  content: "🦄"; font-size: 18px; position: absolute; top: -2px; left: -2px;
+}
 </style>
 </head>
 <body>
-  <!-- ---- Header ---- -->
-  <!-- Contains logo, dashboard title, and End Game button aligned with flexbox. -->
+  <!-- ---------------- Header ---------------- -->
   <div class="header">
     <img src="udderly-logo-main-b.png" alt="Udderly the Same Logo" class="logo">
     <h2>🐮 Player Dashboard <span class="small">(code ver. 1.1.3r)</span></h2>
     <button id="endGameBtn" class="danger-btn" style="margin-left:auto;">End Game</button>
   </div>
 
-  <!-- ---- Game Over Banner ---- -->
-  <!-- Hidden by default. Shown when server signals the room is closed. -->
+  <!-- Game Over Banner -->
   <div id="gameOverBanner" class="hidden">🎮 Game Over</div>
 
-	<!-- Accordion: Players -->
-	<div class="accordion">
-	  <div class="accordion-header" onclick="toggleAccordion('playersBox')">Players</div>
-	  <div id="playersBox" class="accordion-content open">
-	    <div class="scroll-wrapper">
-	      <table id="playersTable">
-	        <thead><tr><th>Player</th><th>Out</th><th>Status</th></tr></thead>
-	        <tbody></tbody>
-	      </table>
-	    </div>
-	  </div>
-	</div>	
-	
-  <!-- ---- Accordion: Game Room Info ---- -->
-  <!-- Accordion lets players expand/collapse room info. Default state is open. -->
+  <!-- Players Accordion -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('playersBox')">Players</div>
+    <div id="playersBox" class="accordion-content open">
+      <div class="scroll-wrapper">
+        <table id="playersTable">
+          <thead><tr><th>Player</th><th>Out</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Room Info Accordion -->
   <div class="accordion">
     <div class="accordion-header" onclick="toggleAccordion('questionBox')">Game Room Info</div>
     <div id="questionBox" class="accordion-content open">
@@ -338,16 +204,12 @@ With this change, the unicorn tag will stick correctly for the first player as w
         <p id="roomLabel"></p>
         <span id="topStatus"></span>
       </div>
-
-		
-      <!-- Controls: buttons to start round, show question, show answers. -->
       <div id="controls">
         <button id="startBtn">Start Round</button>
         <button id="showQuestionBtn">Show Question</button>
         <button id="showAnswersBtn" disabled>Show Answers</button>
         <p id="statusMessage"></p>
       </div>
-      <!-- QA Section: hidden until a round starts. Shows question prompt and answer input. -->
       <div id="qaSection" style="display:none;">
         <p id="questionPrompt"></p>
         <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
@@ -357,85 +219,72 @@ With this change, the unicorn tag will stick correctly for the first player as w
     </div>
   </div>
 
-	<!-- Pivot Counts Accordion -->
-	<div id="pivotAccordion" class="accordion" style="display:none;">
-	  <div class="accordion-header" onclick="toggleAccordion('pivotTableWrapper')">Pivot Counts</div>
-	  <div id="pivotTableWrapper" class="accordion-content">
-	    <div class="scroll-wrapper">
-	      <table id="pivotTable">
-	        <thead>
-	          <tr><th>Select</th><th>Count</th><th>Answer</th></tr>
-	        </thead>
-	        <tbody></tbody>
-	      </table>
-	    </div>
-	  </div>
-	</div>
-
-
-	
-    
-  <!-- ---- Accordion: Answers ---- -->
-  <!-- Hidden until answers are revealed. Shows table of points, tags, names, answers. -->
-<div id="answersAccordion" class="accordion" style="display:none;">
-  <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
-  <div id="answersTableWrapper" class="accordion-content">
-    <!-- Round + Question header -->
-    <div id="answersHeader" class="mb-2">
-      <strong>Round <span id="roundNumber"></span>:</strong>
-      <span id="questionText"></span>
-    </div>
-
-    <!-- Scroll wrapper around answers table -->
-    <div class="scroll-wrapper">
-      <table id="answersTable">
-        <thead>
-          <tr>
-            <th>Point</th>
-            <th>TAG</th>
-            <th>Name</th>
-            <th>Answer</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-
-  <!-- ---- Accordion: Scoreboard ---- -->
-  <!-- Shows scores per round. Sticky columns keep TAG, Player, Total visible while scrolling. -->
-  <div class="accordion">
-    <div class="accordion-header" onclick="toggleAccordion('scoreboardBox')">Scoreboard</div>
-    <div id="scoreboardBox" class="accordion-content">
-      <div class="table-wrapper">
-		<button id="editScoreboardBtn">Edit Scores</button>
-		  <table id="scoreTable">
-          <thead></thead>   <!-- JS will build header dynamically -->
-          <tbody></tbody>   <!-- JS will build rows dynamically -->
+  <!-- Pivot Counts Accordion -->
+  <!-- This accordion shows grouped answers with counts and multi-checkboxes.
+       Check multiple answers to award +1 to everyone who submitted those answers. -->
+  <div id="pivotAccordion" class="accordion" style="display:none;">
+    <div class="accordion-header" onclick="toggleAccordion('pivotTableWrapper')">Pivot Counts</div>
+    <div id="pivotTableWrapper" class="accordion-content">
+      <div class="scroll-wrapper">
+        <table id="pivotTable">
+          <thead>
+            <tr><th>Select</th><th>Count</th><th>Answer</th></tr>
+          </thead>
+          <tbody></tbody>
         </table>
       </div>
     </div>
   </div>
 
+  <!-- Answers Accordion -->
+  <div id="answersAccordion" class="accordion" style="display:none;">
+    <div class="accordion-header" onclick="toggleAccordion('answersTableWrapper')">Answers</div>
+    <div id="answersTableWrapper" class="accordion-content">
+      <div id="answersHeader" class="mb-2">
+        <strong>Round <span id="roundNumber"></span>:</strong>
+        <span id="questionText"></span>
+      </div>
+      <div class="scroll-wrapper">
+        <table id="answersTable">
+          <thead>
+            <tr>
+              <th>Point</th>
+              <th>TAG</th>
+              <th>Name</th>
+              <th>Answer</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
+  <!-- Scoreboard Accordion -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion('scoreboardBox')">Scoreboard</div>
+    <div id="scoreboardBox" class="accordion-content">
+      <div class="table-wrapper">
+        <button id="editScoreboardBtn">Edit Scores</button>
+        <table id="scoreTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 
-  <!-- ---- Accordion: Control Switches ---- -->
-  <!-- Switches let any payler enable/disable specific controls dynamically. -->
+  <!-- Control Switches Accordion -->
   <div class="accordion">
     <div class="accordion-header" onclick="toggleAccordion('controlsBox')">Control switches</div>
     <div id="controlsBox" class="accordion-content">
-      <div class="controlsLayout">
-        <!-- Left column: switches for Start, Show Answers, Submit Answer -->
-        <div class="leftColumn">
+      <div class="controlsLayout" style="display:flex; justify-content:space-between; align-items:flex-start; gap:20px;">
+        <div class="leftColumn" style="display:flex; flex-direction:column; gap:12px;">
           <div class="switch"><label><input type="checkbox" id="toggleStart" checked><span class="slider"></span>Enable Start Round</label></div>
           <div class="switch"><label><input type="checkbox" id="toggleShow" checked><span class="slider"></span>Enable Show Answers</label></div>
           <div class="switch"><label><input type="checkbox" id="toggleSubmit" checked><span class="slider"></span>Enable Submit Answer</label></div>
         </div>
-
-        <!-- Middle column: Unicorn control (fun extra toggle) -->
-        <div class="middleColumn">
+        <div class="middleColumn" style="display:flex; flex-direction:column; gap:12px; align-items:center;">
           <div class="switch">
             <label>
               <input type="checkbox" id="toggleUnicorn">
@@ -444,17 +293,14 @@ With this change, the unicorn tag will stick correctly for the first player as w
           </div>
           <button id="clearUnicornBtn" style="display:none;">Clear Unicorn</button>
         </div>
-
-        <!-- Right column: Sign Out button -->
-        <div class="rightColumn">
+        <div class="rightColumn" style="display:flex; align-items:center; align-self:stretch;">
           <button id="signOutBtn">Sign Out</button>
         </div>
       </div>
     </div>
   </div>
-	
-  <!-- ---- Popup Modal ---- -->
-  <!-- Used to show the current round’s question in a focused overlay. -->
+
+  <!-- Popup Modal -->
   <div id="roundPopup" class="popup">
     <div class="popup-content">
       <span id="closePopup" class="close-btn">&times;</span>
@@ -462,96 +308,80 @@ With this change, the unicorn tag will stick correctly for the first player as w
     </div>
   </div>
 
-  <!-- ---- Disclaimer Footer ---- -->
-  <!-- Legal disclaimer clarifying independence from original Herd Mentality game. -->
-  <div class="disclaimer">
-    This online game is inspired by Herd Mentality, created by Big Potato Games. 
+  <!-- Disclaimer Footer -->
+  <div class="disclaimer" style="text-align:center; font-size:0.75em; color:#666; margin-top:50px;">
+    This online game is inspired by Herd Mentality, created by Big Potato Games.
     It is an independent project and is not affiliated with, endorsed by, or sponsored by Big Potato Games.
   </div>
 
-  <!-- ---- JavaScript Section ---- -->
-  <!-- Handles game logic, socket communication, and UI updates. -->
-<!-- Best practice: organize JavaScript code into four groups in this order:
-     1. Setup (global flags, DOM references, socket connection)
-     2. Events (user‑initiated actions like button clicks and switch toggles)
-     3. Server responses (socket listeners that react to server messages)
-     4. Helpers (utility functions used by the above)
-
-     The current file does not yet follow this grouping because the code was written incrementally:
-     - Event handlers and socket listeners were added as features were built,
-     - Utility functions were defined inline when needed,
-     - As a result, related blocks are scattered instead of grouped. -->
-
-
+  <!-- ---------------- JavaScript Section ---------------- -->
   <script>
-    // Global flags
-    let roomIsClosed = false;
+    /* ---------------- Global flags and URL params ---------------- */
+    let roomIsClosed = false;                 // tracks if server closed the room
+    let answersShown = false;                 // tracks if answers are currently revealed
+    let currentRound = 0;                     // latest round number; updated on roundStarted
+    let scoreboard = [];                      // latest scoreboard from server
+    let lastAnswers = [];                     // cache of answers rows for current round (used by Pivot awarding)
 
-    // DOM references: extract room code and player name from URL
-    const urlParams=new URLSearchParams(window.location.search);
-    const roomCode=(urlParams.get("room")||"").toUpperCase();
-    const myName=urlParams.get("name")||"";
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCode  = (urlParams.get("room")  || "").toUpperCase();
+    const myName    = (urlParams.get("name")  || "");
     const themeCode = (urlParams.get("theme") || "").toUpperCase();
 
- 
-  // Show all parameters in an alert
-  //  alert(`roomCode: ${roomCode}\nmyName: ${myName}\nthemeCode: ${themeCode}`);
-	  
-// As a fallback, show them on screen
- // document.getElementById("statusMessage").innerText =
- //   `roomCode=${roomCode}, myName=${myName}, themeCode=${themeCode}`;
-    // Guard: if no valid login info, redirect back to login page
- //     if (!roomCode || !myName) {
- //       window.location.href = "/player-login.html";
- //     }
-	  
-    // Safe insertion with escaping
-    document.getElementById("roomLabel").innerText =  
-      `Room: ${escapeHTML(roomCode)} — Hello: ${escapeHTML(myName)}`;
+    /* ---------------- DOM references ---------------- */
+    const startBtn      = document.getElementById("startBtn");
+    const showBtn       = document.getElementById("showAnswersBtn");
+    const showQuestionBtn = document.getElementById("showQuestionBtn");
+    const statusMessage = document.getElementById("statusMessage");
+    const submitBtn     = document.getElementById("submitAnswerBtn");
+    const inputBox      = document.getElementById("answerInput");
+    const endGameBtn    = document.getElementById("endGameBtn");
+    const signOutBtn    = document.getElementById("signOutBtn");
 
-    // Connect to server via socket.io
-    const socket=io();
-    socket.emit("joinLobby", { roomCode, name: myName, themeCode }); //
+    /* ---------------- Utility functions ---------------- */
+    // Escape HTML to prevent injection attacks
+    function escapeHTML(str){
+      const div=document.createElement('div');
+      div.innerText=String(str||"");
+      return div.innerHTML;
+    }
+    // Accordion helpers
+    function toggleAccordion(id){document.getElementById(id).classList.toggle("open");}
+    function openAccordion(id){document.getElementById(id).classList.add("open");}
+    function closeAccordion(id){document.getElementById(id).classList.remove("open");}
+    // Map scoreboard data to round points for quick lookup
+    function toRoundMap(data, round) {
+      const map = {};
+      (data || []).forEach(d => {
+        const val = (d.rounds && d.rounds[round]) != null ? d.rounds[round] : 0;
+        map[escapeHTML(d.player_name)] = parseInt(val, 10) === 1 ? 1 : 0;
+      });
+      return map;
+    }
 
-    // Cache references to key buttons and inputs
-    const startBtn=document.getElementById("startBtn");
-    const showBtn=document.getElementById("showAnswersBtn");
-    const statusMessage=document.getElementById("statusMessage");
-    const submitBtn=document.getElementById("submitAnswerBtn");
-    const inputBox=document.getElementById("answerInput");
-    const endGameBtn = document.getElementById("endGameBtn");
-    const signOutBtn = document.getElementById("signOutBtn");
+    /* ---------------- Connect to server ---------------- */
+    const socket = io();
+    // Show greeting and room
+    document.getElementById("roomLabel").innerText = `Room: ${escapeHTML(roomCode)} — Hello: ${escapeHTML(myName)}`;
+    // Join lobby: lets server track you in the room and send updates
+    socket.emit("joinLobby", { roomCode, name: myName, themeCode });
 
-    // Event handlers
+    /* ---------------- UI events ---------------- */
     signOutBtn.onclick = () => window.location.href = "/player-login.html";
     endGameBtn.onclick = () => {
       if (confirm("Are you sure you want to end this game?")) {
         socket.emit("closeRoom", { roomCode });
       }
     };
-
-    // Socket listeners: handle room closed
-    socket.on("roomClosed", () => {
-      roomIsClosed = true;
-      startBtn.disabled = true;
-      showBtn.disabled = true;
-      showQuestionBtn.disabled = true;
-      submitBtn.disabled = true;
-      inputBox.disabled = true;
-      endGameBtn.disabled = true;
-      document.getElementById("gameOverBanner").classList.remove("hidden");
-      statusMessage.innerText = "🎮 This game room has been closed.";
-    });
- 
-     // ---- Player State Tracking ----
-    // Keep track of all players, whether answers are shown, current round number, and scoreboard data.
-    let allPlayers = new Set();
-    let answersShown = false;
-    let currentRound = 0;
-    let scoreboard = []; // server-sourced [{player_name, total, rounds:{round:points}}]
-
-    // ---- Switch Overrides ----
-    // Each toggle switch enables/disables its corresponding control button.
+    startBtn.onclick = () => {
+      socket.emit("startRound", { roomCode, themeCode });
+    };
+    showQuestionBtn.onclick = () => {
+      const promptText = document.getElementById("questionPrompt").innerText;
+      document.getElementById("popupQuestion").innerText = escapeHTML(promptText);
+      document.getElementById("roundPopup").style.display = "flex";
+    };
+    // Control switches enable/disable their features
     document.getElementById("toggleStart").addEventListener("change", e => {
       startBtn.disabled = !e.target.checked;
     });
@@ -564,32 +394,41 @@ With this change, the unicorn tag will stick correctly for the first player as w
       inputBox.disabled = !on;
     });
 
-    // ---- Player List Updates ----
-    // Server sends updated player list. Render table rows with player name, ghost icon if inactive, and submission status.
+    /* ---------------- Socket listeners (server → client) ---------------- */
+    // Room closed by host
+    socket.on("roomClosed", () => {
+      roomIsClosed = true;
+      startBtn.disabled = true;
+      showBtn.disabled = true;
+      showQuestionBtn.disabled = true;
+      submitBtn.disabled = true;
+      inputBox.disabled = true;
+      endGameBtn.disabled = true;
+      document.getElementById("gameOverBanner").classList.remove("hidden");
+      statusMessage.innerText = "🎮 This game room has been closed.";
+    });
+
+    // Player list updates: renders active/inactive and submission status
     socket.on("playerList", data => {
       const players = data.players || data;
       const activeCount = data.activeCount || players.filter(p => p.active).length;
       const submittedCount = data.submittedCount || players.filter(p => p.active && p.submitted).length;
 
-      players.forEach(p => allPlayers.add(p.name));
-      document.querySelector("#playersTable tbody").innerHTML = Array.from(allPlayers)
-        .map(name => {
+      const names = [...new Set(players.map(p => p.name))].sort((a,b)=>a.localeCompare(b));
+      document.querySelector("#playersTable tbody").innerHTML = names.map(name => {
           const player = players.find(p => p.name === name);
           const ghost = player && player.active ? "" : "👻"; // ghost icon if inactive
           const submitted = player ? (player.submitted ? "🟢 Submitted" : "⌛ Waiting") : "";
           return `<tr><td>${escapeHTML(name)}</td><td>${ghost}</td><td>${submitted}</td></tr>`;
-        })
-        .join("");
+        }).join("");
 
-      // If QA section is visible, update progress message
+      // If QA section is visible, update progress
       if (document.getElementById("qaSection").style.display === "block") {
-        document.getElementById("progress").innerText = `Submitted: ${escapeHTML(submittedCount)} / ${escapeHTML(totalPlayers)}`;
-
+        document.getElementById("progress").innerText = `Submitted: ${escapeHTML(submittedCount)} / ${escapeHTML(activeCount)}`;
       }
     });
 
-    // ---- Submission Progress ----
-    // Server sends submission counts. Enable Show Answers only when all players submitted.
+    // Submission progress: enables Show Answers when all active players submitted
     socket.on("submissionProgress", ({submittedCount,totalPlayers}) => {
       document.getElementById("progress").innerText = `Submitted: ${escapeHTML(submittedCount)} / ${escapeHTML(totalPlayers)}`;
       if (totalPlayers > 0 && submittedCount === totalPlayers) {
@@ -601,125 +440,107 @@ With this change, the unicorn tag will stick correctly for the first player as w
       }
     });
 
-    // ---- Start Round ----
-    // Clicking Start Round tells server to begin a new round.
-    startBtn.onclick = () => {
-      socket.emit("startRound", { roomCode, themeCode });
-    };
-
-    // ---- Round Started ----
-    // Server signals a new round has begun. Update UI accordingly.
-    socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer}) => {
-      currentRound = roundNumber;  // this is the only place to update the round number
+    // Round started: sets up the UI for answering
+    socket.on("roundStarted", ({questionId,prompt,playerCount,roundNumber,myAnswer,popup,theme}) => {
+      currentRound = roundNumber;
       answersShown = false;
 
-// Show all parameters in an alert
- // alert(`roomCode: ${roomCode}\nmyName: ${myName}\nthemeCode: ${themeCode}`);
-  
-
-		
-      // Disable Start and Show buttons until round progresses
-      startBtn.disabled=true;
+      // Disable controls until appropriate
+      startBtn.disabled = true;
       document.getElementById("toggleStart").checked = false;
-      showBtn.disabled=true;
+      showBtn.disabled = true;
       document.getElementById("toggleShow").checked = false;
 
-      // Show QA section with question prompt
-      statusMessage.innerText="Round in progress…";
-      document.getElementById("qaSection").style.display="block";
+      // Show QA section and prompt
+      statusMessage.innerText = "Round in progress…";
+      document.getElementById("qaSection").style.display = "block";
       openAccordion("questionBox");
       closeAccordion("answersTableWrapper");
-	  closeAccordion("pivotTableWrapper");
-	  document.getElementById("answersAccordion").style.display="none";
+      closeAccordion("pivotTableWrapper");
+      document.getElementById("answersAccordion").style.display="none";
       document.getElementById("pivotAccordion").style.display="none";
-      document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${escapeHTML(prompt)}`;  //Ensure we always use escape any dynamic text inserted into statusMessage or other DOM elements to prevent injection.
+      document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${escapeHTML(prompt)}`;
       document.getElementById("progress").innerText = `Submitted: 0 / ${escapeHTML(playerCount)}`;
 
-// Show popup with question
-const promptText = document.getElementById("questionPrompt").innerText;
-document.getElementById("popupQuestion").innerText = escapeHTML(promptText);
-document.getElementById("roundPopup").style.display = "flex";
+      // Open popup if room says popup active
+      const promptText = document.getElementById("questionPrompt").innerText;
+      document.getElementById("popupQuestion").innerText = escapeHTML(promptText);
+      if (popup) document.getElementById("roundPopup").style.display = "flex";
 
-      // Keep local Show Question toggle enabled
+      // Allow showing the question again via button
       showQuestionBtn.disabled = false;
 
-      // ---- Answer Submission Logic ----
-      // If answers already shown or player has submitted, disable input. Otherwise allow submission.
+      // Input handling: disable if already answered or answersShown
       if (answersShown || myAnswer) {
-        submitBtn.disabled=true;
-        inputBox.disabled=true;
+        submitBtn.disabled = true;
+        inputBox.disabled = true;
         document.getElementById("toggleSubmit").checked = false;
         inputBox.value = myAnswer || "";
       } else {
-        submitBtn.disabled=false;
-        inputBox.disabled=false;
+        submitBtn.disabled = false;
+        inputBox.disabled = false;
         document.getElementById("toggleSubmit").checked = true;
         inputBox.value = "";
-        submitBtn.onclick=()=>{
-          const answer=inputBox.value.trim();
-          if(!answer) return;
-          socket.emit("submitAnswer",{roomCode,name:myName,questionId,answer});
-          submitBtn.disabled=true;
-          inputBox.disabled=true;
+        // Submit handler
+        submitBtn.onclick = () => {
+          const answer = inputBox.value.trim();
+          if (!answer) return;
+          socket.emit("submitAnswer", { roomCode, name: myName, questionId, answer });
+          submitBtn.disabled = true;
+          inputBox.disabled = true;
           document.getElementById("toggleSubmit").checked = false;
         };
       }
     });
 
-    // ---- Server Event: allSubmitted ----
-    // When server signals all players have submitted, enable Show Answers button.
+    // Server signals all active players have submitted
     socket.on("allSubmitted", () => {
-      showBtn.disabled=false;
+      showBtn.disabled = false;
       document.getElementById("toggleShow").checked = true;
     });
 
-    // ---- Show Answers Button ----
-    // Clicking this tells server to reveal answers.
+    // Show Answers button clicked
     showBtn.onclick = () => {
-      socket.emit("showAnswers",{roomCode});
+      socket.emit("showAnswers", { roomCode });
       answersShown = true;
     };
 
-    // ---- Server Event: answersRevealed ----
-    // Server sends all answers for the round. Build table rows dynamically.
-	socket.on("answersRevealed", ({ rows, round, questionPrompt }) => {
-	  // Update Round + Question header
-	  document.getElementById("roundNumber").textContent = round;
-	  document.getElementById("questionText").textContent = questionPrompt;
-		
-	  const roundMap = toRoundMap(scoreboard, currentRound);
-	  document.querySelector("#answersTable tbody").innerHTML = rows
-	    .map(r => {
-	      const name = escapeHTML(r.name);
-	      const ans = escapeHTML(r.answer);
-	      const checked = roundMap[name] === 1 ? "checked" : "";
-	      const labelText = roundMap[name] === 1 ? "+1" : "0";
-	      const labelClass = roundMap[name] === 1 ? "pointLabel green" : "pointLabel blue";
-	
-	      // use r.tag from server response to decide unicorn radio state
-	      const isUnicorn = r.tag === "🦄";
-			return `
-			  <tr>
-			    <td>
-			      <label class="switch">
-			        <input type="checkbox" class="scoreToggle"
-			               data-player="${name}" data-round="${currentRound}" ${checked}>
-			        <span class="slider"></span>
-			        <span class="${labelClass}">${labelText}</span>
-			      </label>
-			    </td>
-			    <td>
-			      <input type="radio" name="unicornTag" class="unicornRadio"
-			             data-player="${name}" data-round="${currentRound}"
-			             id="unicorn-${name}" ${isUnicorn ? "checked" : ""}>
-			      <label for="unicorn-${name}" class="unicornLabel"></label>
-			    </td>
-			    <td>${name}</td>
-			    <td>${ans}</td>
-			  </tr>
-			`;
-	    })
-	    .join("");
+    // Answers revealed: render table and enable next round
+    socket.on("answersRevealed", ({ rows, round, questionPrompt }) => {
+      lastAnswers = rows;  // cache for Pivot awarding
+      document.getElementById("roundNumber").textContent = round;
+      document.getElementById("questionText").textContent = questionPrompt;
+
+      const roundMap = toRoundMap(scoreboard, currentRound);
+      document.querySelector("#answersTable tbody").innerHTML = rows.map(r => {
+        const name = escapeHTML(r.name);
+        const ans = escapeHTML(r.answer);
+        const checked = roundMap[name] === 1 ? "checked" : "";
+        const labelText = roundMap[name] === 1 ? "+1" : "0";
+        const labelClass = roundMap[name] === 1 ? "pointLabel green" : "pointLabel blue";
+        const isUnicorn = r.tag === "🦄";
+
+        return `
+          <tr>
+            <td>
+              <label class="switch">
+                <input type="checkbox" class="scoreToggle"
+                       data-player="${name}" data-round="${currentRound}" ${checked}>
+                <span class="slider"></span>
+                <span class="${labelClass}">${labelText}</span>
+              </label>
+            </td>
+            <td>
+              <input type="radio" name="unicornTag" class="unicornRadio"
+                     data-player="${name}" data-round="${currentRound}"
+                     id="unicorn-${name}" ${isUnicorn ? "checked" : ""}>
+              <label for="unicorn-${name}" class="unicornLabel"></label>
+            </td>
+            <td>${name}</td>
+            <td>${ans}</td>
+          </tr>
+        `;
+      }).join("");
 
       // Show answers accordion, hide question accordion
       document.getElementById("answersAccordion").style.display="block";
@@ -727,161 +548,128 @@ document.getElementById("roundPopup").style.display = "flex";
       closeAccordion("questionBox");
 
       // Reset button states for next round
-      showBtn.disabled=true;
+      showBtn.disabled = true;
       document.getElementById("toggleShow").checked = false;
-      startBtn.disabled=false;
+      startBtn.disabled = false;
       document.getElementById("toggleStart").checked = true;
-      statusMessage.innerText="Round finished. You can start a new round.";
+      statusMessage.innerText = "Round finished. You can start a new round.";
     });
 
-    // ---- Persist Point Toggles ----
-    // When host toggles a score checkbox, send update to server and update label text.
-	document.addEventListener("change", e => {
-	  if (e.target.classList.contains("scoreToggle")) {
-	    const player = e.target.dataset.player;
-	    const round = parseInt(e.target.dataset.round, 10);
-	    const points = e.target.checked ? 1 : 0;
-	
-	     // Update label text and color immediately (optimistic UI update)
-	    const labelSpan = e.target.closest("label").querySelector(".pointLabel");
-	    if (labelSpan) {
-	      labelSpan.textContent = points === 1 ? "+1" : "0";
-	      labelSpan.className = points === 1 ? "pointLabel green" : "pointLabel blue";
-	    }
-	
-	    // emit with acknowledgement
-	    socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points }, (ack) => {
-	      if (!ack.success) {
-	        // revert if server failed
-	        e.target.checked = !e.target.checked;
-	        if (labelSpan) {
-	          labelSpan.textContent = e.target.checked ? "+1" : "0";
-	          labelSpan.className = e.target.checked ? "pointLabel green" : "pointLabel blue";
-	        }
-	        alert("Failed to update score. Please try again.");
-	      }
-	    });
-	  }
-	});
-	  
+    // Pivot counts from server: build table with multi-checkboxes
+    socket.on("pivotUpdated", rows => {
+      document.querySelector("#pivotTable tbody").innerHTML = rows.map(r => `
+        <tr>
+          <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.answer)}"></td>
+          <td>${escapeHTML(r.player_count)}</td>
+          <td>${escapeHTML(r.answer)}</td>
+        </tr>
+      `).join("");
+      document.getElementById("pivotAccordion").style.display="block";
+      openAccordion("pivotTableWrapper");
+    });
 
-    // ---- Server Event: scoreboardUpdated ----
-    // Server sends updated scoreboard. Re-render table and sync toggles.
-	/* if (document.getElementById("answersAccordion").style.display === "block") {
-  		// sync toggles
-		} //} That means if the accordion isn’t open, you skip syncing. Remove that condition so toggles always sync.
-	*/
+    // Scoreboard updates: render and sync toggles and unicorns
+    socket.on("scoreboardUpdated", data => {
+      scoreboard = data || [];
+      renderScoreboard(scoreboard);
 
-	// ---- Server Event: scoreboardUpdated ----
-	// Server sends updated scoreboard. Re-render table and sync toggles.
-	socket.on("scoreboardUpdated", data => {
-	  scoreboard = data || [];
-	  renderScoreboard(scoreboard);
-	
-	  // Always sync toggles, regardless of accordion state
-	  const roundMap = toRoundMap(scoreboard, currentRound);
-	  document.querySelectorAll(".scoreToggle").forEach(cb => {
-	    const player = cb.dataset.player;
-	    cb.checked = roundMap[player] === 1;
-	    const labelSpan = cb.closest("label").querySelector(".pointLabel");
-	    if (labelSpan) {
-	      labelSpan.textContent = cb.checked ? "+1" : "0";
-	      labelSpan.className = cb.checked ? "pointLabel green" : "pointLabel blue";
-	    }
-	  });
-	  // 🔧 also refresh unicorn radios and labels in answers table
-  document.querySelectorAll(".unicornRadio").forEach(radio => {
-    const player = radio.dataset.player;
-    radio.checked = scoreboard.find(p => p.player_name === player)?.tag === "🦄";
-  });
-	});
-
-// ---- Render Scoreboard ----
-// Builds scoreboard table dynamically based on server data.
-function renderScoreboard(data) {
-  // Find maximum round number across all players
-  const allRounds = data.flatMap(d =>
-    Object.keys(d.rounds || {}).map(n => parseInt(n, 10))
-  );
-  const maxRound = Math.max(0, ...allRounds);
-
-  // Build header row with TAG, Player, Total, and round numbers
-  const header =
-    "<tr><th>TAG</th><th>Player</th><th>Total</th>" +
-    Array.from({ length: maxRound }, (_, i) => `<th>#${i + 1}</th>`).join("") +
-    "</tr>";
-  document.querySelector("#scoreTable thead").innerHTML = header;
-
-  // Build each player row
-  const rows = data
-    .map(d => {
-      const total = d.total || 0;
-      const roundCells = Array.from({ length: maxRound }, (_, i) => {
-        const rnum = i + 1;
-        const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
-        return `
-          <td class="roundCell">
-            <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect" disabled>
-              <option value="0" ${val == 0 ? "selected" : ""}>0</option>
-              <option value="1" ${val == 1 ? "selected" : ""}>1</option>
-            </select>
-          </td>
-        `;
-      }).join("");
-
-      // TAG column shows 🦄 if player has unicorn tag
-		return `<tr><td>${d.tag === "🦄" ? "🦄" : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
-    })
-    .join("");
-
-  document.querySelector("#scoreTable tbody").innerHTML = rows;
-
-
-  // Dynamic min-width so table scrolls horizontally if many rounds
-  const baseWidth = 270; // Tag (40) + Player (150) + Total (80)
-  const roundWidth = 55; // width for each round column
-  const minWidth = baseWidth + (maxRound - 1) * roundWidth;
-  document.querySelector("#scoreTable").style.minWidth = minWidth + "px";
-}
-
-// ---- Global delegated listener ----
-// Attach once, outside renderScoreboard
-document.addEventListener("change", e => {
-  if (e.target.classList.contains("scoreSelect")) {
-    const player = e.target.dataset.player;
-    const round = parseInt(e.target.dataset.round, 10);
-    const points = parseInt(e.target.value, 10);
-    socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
-  }
-});
-
-
-
-    // ---- Utility Functions ----
-    // Map scoreboard data to round points for quick lookup
-    function toRoundMap(data, round) {
-      const map = {};
-      (data || []).forEach(d => {
-        const val = (d.rounds && d.rounds[round]) != null ? d.rounds[round] : 0;
-        map[escapeHTML(d.player_name)] = parseInt(val, 10) === 1 ? 1 : 0;
+      // Sync checkboxes in answers with latest points
+      const roundMap = toRoundMap(scoreboard, currentRound);
+      document.querySelectorAll(".scoreToggle").forEach(cb => {
+        const player = cb.dataset.player;
+        cb.checked = roundMap[player] === 1;
+        const labelSpan = cb.closest("label").querySelector(".pointLabel");
+        if (labelSpan) {
+          labelSpan.textContent = cb.checked ? "+1" : "0";
+          labelSpan.className = cb.checked ? "pointLabel green" : "pointLabel blue";
+        }
       });
-      return map;
-    }
+      // Sync unicorn radios
+      document.querySelectorAll(".unicornRadio").forEach(radio => {
+        const player = radio.dataset.player;
+        radio.checked = scoreboard.find(p => p.player_name === player)?.tag === "🦄";
+      });
+    });
 
-    // Escape HTML to prevent injection attacks
-    function escapeHTML(str){
-      const div=document.createElement('div');
-      div.innerText=String(str||"");
-      return div.innerHTML;
-    }
+    /* ---------------- Delegated event handlers (document-level) ---------------- */
+    // Persist point toggles (+1/0) per player per round
+    document.addEventListener("change", e => {
+      if (e.target.classList.contains("scoreToggle")) {
+        const player = e.target.dataset.player;
+        const round = parseInt(e.target.dataset.round, 10);
+        const points = e.target.checked ? 1 : 0;
 
-    // Accordion helpers
-    function toggleAccordion(id){document.getElementById(id).classList.toggle("open");}
-    function openAccordion(id){document.getElementById(id).classList.add("open");}
-    function closeAccordion(id){document.getElementById(id).classList.remove("open");}
+        // Update label text and color immediately (optimistic UI)
+        const labelSpan = e.target.closest("label").querySelector(".pointLabel");
+        if (labelSpan) {
+          labelSpan.textContent = points === 1 ? "+1" : "0";
+          labelSpan.className = points === 1 ? "pointLabel green" : "pointLabel blue";
+        }
 
-    // ---- Popup Logic ----
-    // Close popup when clicking X or background
+        // Emit to server (awardPoint)
+        socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
+      }
+    });
+
+    // Unicorn assignment (atomic in server): clear old, set for selected player
+    document.addEventListener("change", e => {
+      if (e.target.classList.contains("unicornRadio")) {
+        const player = e.target.dataset.player;
+        socket.emit("setUnicorn", { roomCode, playerName: player });
+
+        // Optimistic update: update scoreboard tags locally and rerender
+        scoreboard.forEach(p => p.tag = "");
+        const target = scoreboard.find(p => p.player_name === player);
+        if (target) target.tag = "🦄";
+        renderScoreboard(scoreboard);
+      }
+    });
+
+    // Pivot awarding: when a pivot checkbox is checked, award +1 to all who chose that answer
+    document.addEventListener("change", e => {
+      if (e.target.classList.contains("pivotCheckbox")) {
+        const answer = e.target.dataset.answer;
+        const checked = e.target.checked;
+        if (!checked) return; // only award on check; unchecking does nothing
+
+        // Find all players whose answer matches this pivot answer in current round
+        const matchingPlayers = lastAnswers
+          .filter(r => r.answer === answer)
+          .map(r => r.name);
+
+        // Loop and emit awardPoint for each player
+        matchingPlayers.forEach(player => {
+          socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: currentRound, points: 1 });
+        });
+      }
+    });
+
+    // Edit Scores toggle: allow manual editing of round cells (dropdowns)
+    document.getElementById("editScoreboardBtn").addEventListener("click", () => {
+      const selects = document.querySelectorAll(".scoreSelect");
+      const isDisabled = selects[0]?.disabled;
+      selects.forEach(sel => { sel.disabled = !isDisabled; });
+      document.getElementById("editScoreboardBtn").textContent = isDisabled ? "Lock Scores" : "Edit Scores";
+    });
+
+    // Clear Unicorn button visibility and action
+    const toggleUnicorn = document.getElementById("toggleUnicorn");
+    const clearUnicornBtn = document.getElementById("clearUnicornBtn");
+    toggleUnicorn.addEventListener("change", e => {
+      clearUnicornBtn.style.display = e.target.checked ? "inline-block" : "none";
+    });
+    clearUnicornBtn.onclick = () => {
+      if (confirm("Clear unicorn tag for this room?")) {
+        // Optimistic: clear local scoreboard tags and radios
+        scoreboard.forEach(p => p.tag = "");
+        renderScoreboard(scoreboard);
+        document.querySelectorAll(".unicornRadio").forEach(radio => { radio.checked = false; });
+        // Note: server does not expose a clearUnicorn event; to clear on server,
+        // host can set a new unicorn or we could add a route later.
+      }
+    };
+
+    /* ---------------- Popup Logic ---------------- */
     document.getElementById("closePopup").onclick = () => {
       document.getElementById("roundPopup").style.display = "none";
     };
@@ -890,120 +678,68 @@ document.addEventListener("change", e => {
         document.getElementById("roundPopup").style.display = "none";
       }
     });
-	
-	// Escape key closes popup
-	document.addEventListener("keydown", e => {
-	  if (e.key === "Escape") {
-	    document.getElementById("roundPopup").style.display = "none";
-	  }
-	});
-
-	  
-    // Show Question button opens popup with current question
-    const showQuestionBtn = document.getElementById("showQuestionBtn");
-    showQuestionBtn.onclick = () => {
-		const promptText = document.getElementById("questionPrompt").innerText;
-		document.getElementById("popupQuestion").innerText = escapeHTML(promptText);
-      	document.getElementById("roundPopup").style.display = "flex";
-    };
-
-
-    // ---- Unicorn Assignment ----
-    // When a unicorn radio is selected, notify server and update scoreboard.
-// Listen for any "change" events on the document
-document.addEventListener("change", e => {
-  // Check if the changed element has the class "unicornRadio"
-  if (e.target.classList.contains("unicornRadio")) {
-    // Extract the player name from the element's data attribute
-    const player = e.target.dataset.player;
-
-    // Notify the server: clear all unicorn assignments in the room,
-    // then set the unicorn tag for this specific player atomically
-    socket.emit("setUnicorn", { roomCode, playerName: player });
-
-    // Perform an optimistic UI update:
-    // 1. Clear all unicorn tags locally
-    scoreboard.forEach(p => p.tag = "");
-    // 2. Find the selected player in the scoreboard
-    const target = scoreboard.find(p => p.player_name === player);
-    // 3. Assign the unicorn emoji to that player
-    if (target) target.tag = "🦄";
-
-    // Re-render the scoreboard so the UI reflects the change immediately
-    renderScoreboard(scoreboard);
-  }
-});
-
-	  // Edit Scores enables logic
-document.getElementById("editScoreboardBtn").addEventListener("click", () => {
-  const selects = document.querySelectorAll(".scoreSelect");
-  const isDisabled = selects[0]?.disabled; // check current state
-
-  selects.forEach(sel => {
-    sel.disabled = !isDisabled; // toggle all
-  });
-
-  // Update button text
-  document.getElementById("editScoreboardBtn").textContent = isDisabled 
-    ? "Lock Scores" 
-    : "Edit Scores";
-});
-
-
-    // ---- Unicorn Control Toggle + Clear Button ----
-    const toggleUnicorn = document.getElementById("toggleUnicorn");
-    const clearUnicornBtn = document.getElementById("clearUnicornBtn");
-
-    // Show/hide Clear Unicorn button depending on toggle state
-    toggleUnicorn.addEventListener("change", e => {
-      clearUnicornBtn.style.display = e.target.checked ? "inline-block" : "none";
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        document.getElementById("roundPopup").style.display = "none";
+      }
     });
 
-    // Clear unicorn assignment for all players when button clicked
-    clearUnicornBtn.onclick = () => {
-      if (confirm("Clear unicorn tag for this room?")) {
-        socket.emit("clearUnicorn", { roomCode });
+    /* ---------------- Render Scoreboard ---------------- */
+    function renderScoreboard(data) {
+      // Determine max round to build columns
+      const allRounds = data.flatMap(d =>
+        Object.keys(d.rounds || {}).map(n => parseInt(n, 10))
+      );
+      const maxRound = Math.max(0, ...allRounds);
 
-        // Optimistic update: clear all unicorns locally
-        scoreboard.forEach(p => p.tag = "");
-        renderScoreboard(scoreboard);
+      // Header row: TAG, Player, Total, and round numbers
+      const header =
+        "<tr><th>TAG</th><th>Player</th><th>Total</th>" +
+        Array.from({ length: maxRound }, (_, i) => `<th>#${i + 1}</th>`).join("") +
+        "</tr>";
+      document.querySelector("#scoreTable thead").innerHTML = header;
 
-        // Also clear radios in the answers table
-        document.querySelectorAll(".unicornRadio").forEach(radio => {
-          radio.checked = false;
-        });
-      }
-    };
+      // Player rows
+      const rows = data
+        .map(d => {
+          const total = d.total || 0;
+          const roundCells = Array.from({ length: maxRound }, (_, i) => {
+            const rnum = i + 1;
+            const val = (d.rounds && d.rounds[rnum]) != null ? d.rounds[rnum] : 0;
+            return `
+              <td class="roundCell">
+                <select data-player="${escapeHTML(d.player_name)}" data-round="${rnum}" class="scoreSelect" disabled>
+                  <option value="0" ${val == 0 ? "selected" : ""}>0</option>
+                  <option value="1" ${val == 1 ? "selected" : ""}>1</option>
+                </select>
+              </td>
+            `;
+          }).join("");
+
+          return `<tr><td>${d.tag === "🦄" ? "🦄" : ""}</td><td>${escapeHTML(d.player_name)}</td><td>${total}</td>${roundCells}</tr>`;
+        })
+        .join("");
+
+      document.querySelector("#scoreTable tbody").innerHTML = rows;
+
+      // Dynamic min-width so table scrolls if many rounds
+      const baseWidth = 270; // Tag (40) + Player (150) + Total (80)
+      const roundWidth = 55; // width for each round column
+      const minWidth = baseWidth + (maxRound - 1) * roundWidth;
+      document.querySelector("#scoreTable").style.minWidth = minWidth + "px";
+
+      // Delegated change for dropdowns to award points (0/1) manually
+      document.addEventListener("change", e => {
+        if (e.target.classList.contains("scoreSelect")) {
+          const player = e.target.dataset.player;
+          const round = parseInt(e.target.dataset.round, 10);
+          const points = parseInt(e.target.value, 10);
+          socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: round, points });
+        }
+      });
+    }
   </script>
 </body>
 </html>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		
