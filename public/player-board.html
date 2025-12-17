@@ -482,8 +482,10 @@ button:hover:enabled { background:#F7AC4D; }
       openAccordion("questionBox");
       closeAccordion("answersTableWrapper");
       closeAccordion("pivotTableWrapper");
-      document.getElementById("answersAccordion").style.display="none";
-      document.getElementById("pivotAccordion").style.display="none";
+	  // Hide both answers and pivot accordions		
+	  document.getElementById("answersAccordion").style.display="none";
+	  document.getElementById("pivotAccordion").style.display="none";
+	
       document.getElementById("questionPrompt").innerText = `Round ${roundNumber}: ${escapeHTML(prompt)}`;
       document.getElementById("progress").innerText = `Submitted: 0 / ${escapeHTML(playerCount)}`;
 
@@ -568,10 +570,13 @@ button:hover:enabled { background:#F7AC4D; }
       }).join("");
 
       // Show answers accordion, hide question accordion
+	  closeAccordion("questionBox");
       document.getElementById("answersAccordion").style.display="block";
       openAccordion("answersTableWrapper");
-      closeAccordion("questionBox");
-
+	  // ALSO show pivot accordion
+	  document.getElementById("pivotAccordion").style.display = "block";
+	  openAccordion("pivotTableWrapper");
+		
       // Reset button states for next round
       showBtn.disabled = true;
       document.getElementById("toggleShow").checked = false;
@@ -775,6 +780,7 @@ socket.on("pivotUpdated", rows => {
 </html>
 
 		
+
 
 
 
