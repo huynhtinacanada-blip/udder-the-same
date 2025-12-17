@@ -242,22 +242,24 @@ button:hover:enabled { background:#F7AC4D; }
     </div>
   </div>
 
-  <!-- Pivot Counts Accordion -->
-  <!-- This accordion shows grouped answers with counts and multi-checkboxes.
-       Check multiple answers to award +1 to everyone who submitted those answers. -->
-  <div id="pivotAccordion" class="accordion" style="display:none;">
-    <div class="accordion-header" onclick="toggleAccordion('pivotTableWrapper')">Pivot Counts</div>
-    <div id="pivotTableWrapper" class="accordion-content">
-      <div class="scroll-wrapper">
-        <table id="pivotTable">
-          <thead>
-            <tr><th>Select</th><th>Count</th><th>Answer</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
+<!-- Pivot Counts Accordion -->
+<!-- This accordion shows grouped answers with counts and multi-checkboxes.
+   Check multiple answers to award +1 to everyone who submitted those answers. -->
+<!-- Pivot Counts Accordion -->
+<div id="pivotAccordion" class="accordion">
+  <div class="accordion-header" onclick="toggleAccordion('pivotTableWrapper')">Pivot Counts</div>
+  <div id="pivotTableWrapper" class="accordion-content">
+	<div class="scroll-wrapper">
+	  <table id="pivotTable">
+		<thead>
+		  <tr><th>Select</th><th>Count</th><th>Answer</th></tr>
+		</thead>
+		<tbody></tbody>
+	  </table>
+	</div>
   </div>
+</div>
+
 
   <!-- Answers Accordion -->
   <div id="answersAccordion" class="accordion" style="display:none;">
@@ -773,6 +775,7 @@ socket.on("pivotUpdated", rows => {
 </html>
 
 		
+
 
 
 
