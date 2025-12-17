@@ -87,6 +87,16 @@ button:hover:enabled { background:#F7AC4D; }
 	
 
 /* ---------------- Table Styling ---------------- */
+
+#pivotTable th,
+#pivotTable td {
+  padding: 8px 12px;   /* vertical and horizontal padding */
+  text-align: left;    /* align text nicely */
+}
+
+
+
+	
 #answersTable, #playersTable, #scoreTable {
   font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
 }
@@ -675,23 +685,34 @@ socket.on("pivotUpdated", rows => {
     });
 
     // Pivot awarding: when a pivot checkbox is checked, award +1 to all who chose that answer
-    document.addEventListener("change", e => {
-      if (e.target.classList.contains("pivotCheckbox")) {
-        const answer = e.target.dataset.answer;
-        const checked = e.target.checked;
-        if (!checked) return; // only award on check; unchecking does nothing
+document.addEventListener("change", e => {
+  if (e.target.classList.contains("pivotCheckbox")) {
+    const answer = e.target.dataset.answer;
+    const checked = e.target.checked;
 
-        // Find all players whose answer matches this pivot answer in current round
-        const matchingPlayers = lastAnswers
-          .filter(r => r.answer === answer)
-          .map(r => r.name);
+    // Find all players whose answer matches this pivot answer
+    const matchingPlayers = lastAnswers
+      .filter(r => r.answer === answer)
+      .map(r => r.name);
 
-        // Loop and emit awardPoint for each player
-        matchingPlayers.forEach(player => {
-          socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: currentRound, points: 1 });
-        });
+    matchingPlayers.forEach(player => {
+      const points = checked ? 1 : 0;
+      socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: currentRound, points });
+
+      // Update the answers table UI immediately (optimistic)
+      const row = document.querySelector(`#answersTable tbody tr td input[data-player="${player}"]`);
+      if (row) {
+        row.checked = checked;
+        const labelSpan = row.closest("label").querySelector(".pointLabel");
+        if (labelSpan) {
+          labelSpan.textContent = checked ? "+1" : "0";
+          labelSpan.className = checked ? "pointLabel green" : "pointLabel blue";
+        }
       }
     });
+  }
+});
+
 
     // Edit Scores toggle: allow manual editing of round cells (dropdowns)
     document.getElementById("editScoreboardBtn").addEventListener("click", () => {
@@ -792,6 +813,7 @@ socket.on("pivotUpdated", rows => {
 </html>
 
 		
+
 
 
 
