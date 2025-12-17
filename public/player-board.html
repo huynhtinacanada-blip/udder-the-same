@@ -574,8 +574,28 @@ button:hover:enabled { background:#F7AC4D; }
       document.getElementById("answersAccordion").style.display="block";
       openAccordion("answersTableWrapper");
 	  // ALSO show pivot accordion
-	  document.getElementById("pivotAccordion").style.display = "block";
-	  openAccordion("pivotTableWrapper");
+// Build pivot counts locally from the revealed answers
+const counts = {};
+rows.forEach(r => {
+  counts[r.answer] = (counts[r.answer] || 0) + 1;
+});
+
+// Render pivot rows into the table
+const pivotRows = Object.entries(counts).map(([answer, count]) => `
+  <tr>
+    <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(answer)}"></td>
+    <td>${count}</td>
+    <td>${escapeHTML(answer)}</td>
+  </tr>
+`).join("");
+
+document.querySelector("#pivotTable tbody").innerHTML = pivotRows;
+
+// Show pivot accordion
+document.getElementById("pivotAccordion").style.display = "block";
+openAccordion("pivotTableWrapper");
+
+		
 		
       // Reset button states for next round
       showBtn.disabled = true;
@@ -594,14 +614,6 @@ socket.on("pivotUpdated", rows => {
       <td>${escapeHTML(r.answer)}</td>
     </tr>
   `).join("");
-
-  // Show the accordion wrapper
-  const pivotAccordion = document.getElementById("pivotAccordion");
-  pivotAccordion.style.display = "block";
-
-  // Force the content section open
-  const pivotWrapper = document.getElementById("pivotTableWrapper");
-  pivotWrapper.classList.add("open");
 });
 
 
@@ -780,6 +792,7 @@ socket.on("pivotUpdated", rows => {
 </html>
 
 		
+
 
 
 
