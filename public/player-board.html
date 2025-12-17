@@ -578,18 +578,24 @@ button:hover:enabled { background:#F7AC4D; }
       statusMessage.innerText = "Round finished. You can start a new round.";
     });
 
-    // Pivot counts from server: build table with multi-checkboxes
-	socket.on("pivotUpdated", rows => {
-	  document.querySelector("#pivotTable tbody").innerHTML = rows.map(r => `
-	    <tr>
-	      <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.answer)}"></td>
-	      <td>${escapeHTML(r.player_count)}</td>
-	      <td>${escapeHTML(r.answer)}</td>
-	    </tr>
-	  `).join("");
-	  document.getElementById("pivotAccordion").style.display = "block"; // show accordion
-	  openAccordion("pivotTableWrapper"); // expand content
-	});
+socket.on("pivotUpdated", rows => {
+  // Fill the pivot table body
+  document.querySelector("#pivotTable tbody").innerHTML = rows.map(r => `
+    <tr>
+      <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.answer)}"></td>
+      <td>${escapeHTML(r.player_count)}</td>
+      <td>${escapeHTML(r.answer)}</td>
+    </tr>
+  `).join("");
+
+  // Show the accordion wrapper
+  const pivotAccordion = document.getElementById("pivotAccordion");
+  pivotAccordion.style.display = "block";
+
+  // Force the content section open
+  const pivotWrapper = document.getElementById("pivotTableWrapper");
+  pivotWrapper.classList.add("open");
+});
 
 
     // Scoreboard updates: render and sync toggles and unicorns
@@ -767,5 +773,6 @@ button:hover:enabled { background:#F7AC4D; }
 </html>
 
 		
+
 
 
