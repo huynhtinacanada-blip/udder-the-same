@@ -61,16 +61,15 @@ button:hover:enabled { background:#F7AC4D; }
 .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
 .accordion-header:hover { background:#F7AC4D; }
 .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
-/*  
-.accordion-content.open { padding:15px; max-height:1000px; }
- */
+.accordion-content.open { padding:15px; max-height:1500px; }
 
-/* ---------------- auto‑sizing to content ---------------- */
+
+/* ---------------- auto‑sizing to content ---------------- 
 .accordion-content.open {
   padding:15px;
   max-height:none;   /* let it size naturally */
 }
-
+*/
 
 	
 
@@ -97,30 +96,65 @@ button:hover:enabled { background:#F7AC4D; }
 	
 
 /* ---------------- Table Styling ---------------- */
-
-/* Pivot table styling */
+/* ---------------- Pivot Table Styling ---------------- */
 #pivotTable {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-top: 15px;
   font-size: 14px;
 }
 
 #pivotTable th,
 #pivotTable td {
-  border: 1px solid #ccc;
-  padding: 8px 12px;   /* space between columns */
-  text-align: left;
+  border: 1px solid #ddd;
+  padding: 8px;
 }
 
-#pivotTable th {
-  background-color: #f2f2f2;
+/* First column: small, just enough for checkbox */
+#pivotTable th:first-child,
+#pivotTable td:first-child {
+  width: 40px;          /* narrow column */
+  text-align: center;   /* center checkbox */
+}
+
+/* Second column: fixed width for 2-digit numbers */
+#pivotTable th:nth-child(2),
+#pivotTable td:nth-child(2) {
+  width: 50px;          /* enough for 00–99 */
+  text-align: center;   /* center counts */
   font-weight: bold;
 }
 
+/* Third column: answer text takes remaining space */
+#pivotTable th:nth-child(3),
+#pivotTable td:nth-child(3) {
+  width: auto;
+  text-align: left;
+}
 
+/* Header styling */
+#pivotTable th {
+  background-color: #333;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Alternating row colors */
+#pivotTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+#pivotTable tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* Row hover effect */
+#pivotTable tr:hover {
+  background-color: #e6f2ff;
+}
 
 	
+
 #answersTable, #playersTable, #scoreTable {
   font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
 }
@@ -857,6 +891,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
