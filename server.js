@@ -690,7 +690,7 @@ io.on("connection", (socket) => {
   // Reveal all answers
   // Purpose: Fetch all answers for the active question/round, emit them to clients,
   // and update the scoreboard (no points change here, just display).
-  socket.on("showAnswers", async ({ roomCode }) => {
+/*  socket.on("showAnswers", async ({ roomCode }) => {
     try {
       const rc = roomCode.toUpperCase();
       // Get round + active question + prompt by joining questions
@@ -734,6 +734,68 @@ io.on("connection", (socket) => {
       console.error("Error in showAnswers:", err);
     }
   });
+  */
+
+  socket.on("showAnswers", async ({ roomCode }) => {
+  try {
+    const rc = roomCode.toUpperCase();
+    const room = await pool.query(
+      `SELECT r.current_round,
+              r.active_question_id,
+              q.prompt AS question_prompt
+       FROM rooms r
+       JOIN questions q ON r.active_question_id = q.id
+       WHERE r.code = $1`,
+      [rc]
+    );
+
+    const rr = await pool.query(
+      `SELECT a.player_name AS name,
+              a.answer,
+              s.tag
+       FROM answers a
+       LEFT JOIN scores s
+         ON a.room_code = s.room_code
+        AND a.round_number = s.round_number
+        AND LOWER(a.player_name) = LOWER(s.player_name)
+       WHERE a.room_code=$1
+         AND a.question_id=$2
+         AND a.round_number=$3
+       ORDER BY name ASC`,
+      [rc, room.rows[0].active_question_id, room.rows[0].current_round]
+    );
+
+    // Broadcast raw answers (clients can build pivot locally by default)
+    io.to(rc).emit("answersRevealed", {
+      rows: rr.rows,
+      round: room.rows[0].current_round,
+      questionPrompt: room.rows[0].question_prompt
+    });
+
+    // NEW: also build authoritative pivot counts on server
+    const { rows: pivotRows } = await pool.query(
+      `SELECT LOWER(answer) AS normalized_answer,
+              MIN(answer) AS answer,
+              COUNT(*) AS player_count
+       FROM answers
+       WHERE room_code=$1
+         AND question_id=$2
+         AND round_number=$3
+       GROUP BY LOWER(answer)
+       ORDER BY player_count DESC`,
+      [rc, room.rows[0].active_question_id, room.rows[0].current_round]
+    );
+
+    // Broadcast pivot counts (clients can use this when "Load from Server" is clicked)
+    io.to(rc).emit("pivotUpdated", pivotRows);
+
+    await emitScoreboard(rc);
+  } catch (err) {
+    console.error("Error in showAnswers:", err);
+  }
+});
+
+  
 
   // Award points to a player
   // Purpose: Insert or update a score row for a player for a specific round.
@@ -886,3 +948,4 @@ io.on("connection", (socket) => {
 // Purpose: Boot the server. Uses environment PORT or defaults to 10000.
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
