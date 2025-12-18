@@ -64,12 +64,7 @@ button:hover:enabled { background:#F7AC4D; }
 .accordion-content.open { padding:15px; max-height:none; }
 
 
-/* ---------------- auto‑sizing to content ---------------- 
-.accordion-content.open {
-  padding:15px;
-  max-height:none;   /* let it size naturally */
-}
-*/
+
 
 	
 
@@ -198,21 +193,33 @@ button:hover:enabled { background:#F7AC4D; }
   background-color: #e6f2ff;
 }
 
-/* minimum height so tables/accordions don’t look too short 
+/* max height so tables/accordions don’t look too short */
 #answersTable,
 #playersTable,
 #scoreTable {
-  min-height: 250px; 
+  display: block;          /* required for overflow to work */
+  max-height: 450px;       /* cap at ~15 rows */
+  overflow-y: auto;        /* scroll if more rows */
 }
-*/
 
+	
+
+	
 /* ---------------- Scroll Wrappers ---------------- */
 .scroll-wrapper {
-  max-height: 300px; overflow-y: auto; border: 1px solid #ccc; border-radius: 6px;
+  max-height: 600px;   /* enough for ~15 rows at ~40px each */
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
+
 .table-wrapper {
-  overflow-x: auto; overflow-y: auto; max-height: 400px; width: 100%;
-  border: 1px solid #ccc; border-radius: 6px;
+  max-height: 600px;   /* match scroll-wrapper */
+  overflow-x: auto;
+  overflow-y: auto;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
 /* ---------------- Popup Modal ---------------- */
@@ -931,6 +938,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
