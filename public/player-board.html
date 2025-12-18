@@ -273,9 +273,11 @@ button:hover:enabled { background:#F7AC4D; }
 <div id="pivotAccordion" class="accordion">
   <div class="accordion-header" onclick="toggleAccordion('pivotTableWrapper')">Pivot Counts</div>
 
-	<button id="loadPivotBtn">Load Pivot from Server</button>
-	
+
 <div id="pivotTableWrapper" class="accordion-content">
+
+		<button id="loadPivotBtn">Load Pivot from Server</button>
+	
 	<div class="scroll-wrapper">
 	  <table id="pivotTable">
 		<thead>
@@ -634,11 +636,11 @@ button:hover:enabled { background:#F7AC4D; }
       statusMessage.innerText = "Round finished. You can start a new round.";
     });
 
-socket.on("pivotUpdated", rows => {
   // Fill the pivot table body
+  socket.on("pivotUpdated", rows => {
   document.querySelector("#pivotTable tbody").innerHTML = rows.map(r => `
     <tr>
-      <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.answer)}"></td>
+      <td><input type="checkbox" class="pivotCheckbox" data-answer="${escapeHTML(r.normalized_answer)}"></td>
       <td>${escapeHTML(r.player_count)}</td>
       <td>${escapeHTML(r.answer)}</td>
     </tr>
@@ -713,23 +715,28 @@ document.getElementById("loadPivotBtn").addEventListener("click", () => {
     // Pivot awarding: when a pivot checkbox is checked, award +1 to all who chose that answer
 document.addEventListener("change", e => {
   if (e.target.classList.contains("pivotCheckbox")) {
-    const answer = e.target.dataset.answer;
+    const normalizedAnswer = e.target.dataset.answer.toLowerCase();
     const checked = e.target.checked;
 
-    // Find all players whose answer matches this pivot answer
-    const matchingPlayers = lastAnswers
-      .filter(r => r.answer === answer)
-      .map(r => r.name);
+    // Find all players whose answer matches case-insensitively
+    const matchingPlayers = lastAnswers.filter(
+      r => r.answer.trim().toLowerCase() === normalizedAnswer
+    );
 
-    matchingPlayers.forEach(player => {
+    matchingPlayers.forEach(r => {
       const points = checked ? 1 : 0;
-      socket.emit("awardPoint", { roomCode, playerName: player, roundNumber: currentRound, points });
+      socket.emit("awardPoint", {
+        roomCode,
+        playerName: r.name,
+        roundNumber: currentRound,
+        points
+      });
 
-      // Update the answers table UI immediately (optimistic)
-      const row = document.querySelector(`#answersTable tbody tr td input[data-player="${player}"]`);
-      if (row) {
-        row.checked = checked;
-        const labelSpan = row.closest("label").querySelector(".pointLabel");
+      // Update answers table UI immediately
+      const toggle = document.querySelector(`#answersTable input[data-player="${r.name}"]`);
+      if (toggle) {
+        toggle.checked = checked;
+        const labelSpan = toggle.closest("label").querySelector(".pointLabel");
         if (labelSpan) {
           labelSpan.textContent = checked ? "+1" : "0";
           labelSpan.className = checked ? "pointLabel green" : "pointLabel blue";
@@ -738,6 +745,7 @@ document.addEventListener("change", e => {
     });
   }
 });
+
 
 
     // Edit Scores toggle: allow manual editing of round cells (dropdowns)
@@ -839,6 +847,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
