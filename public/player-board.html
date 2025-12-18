@@ -95,7 +95,6 @@ button:hover:enabled { background:#F7AC4D; }
 
 	
 
-/* ---------------- Table Styling ---------------- */
 /* ---------------- Pivot Table Styling ---------------- */
 #pivotTable {
   width: 100%;
@@ -153,7 +152,14 @@ button:hover:enabled { background:#F7AC4D; }
   background-color: #e6f2ff;
 }
 
+/* Make checkboxes bigger */
+#pivotTable input[type="checkbox"] {
+  transform: scale(1.5);   /* enlarge checkbox */
+  margin: 4px;             /* spacing */
+  cursor: pointer;
+}
 	
+/* ---------------- Table Styling ---------------- */
 
 #answersTable, #playersTable, #scoreTable {
   font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
@@ -891,6 +897,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
