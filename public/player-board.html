@@ -61,8 +61,18 @@ button:hover:enabled { background:#F7AC4D; }
 .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
 .accordion-header:hover { background:#F7AC4D; }
 .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
+/*  
 .accordion-content.open { padding:15px; max-height:1000px; }
+ */
 
+/* ---------------- auto‑sizing to content ---------------- */
+.accordion-content.open {
+  padding:15px;
+  max-height:none;   /* let it size naturally */
+}
+
+
+	
 
 #qaSection {
   display: flex;
@@ -847,6 +857,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
