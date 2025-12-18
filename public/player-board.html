@@ -64,10 +64,6 @@ button:hover:enabled { background:#F7AC4D; }
 .accordion-content.open { padding:15px; max-height:none; }
 
 
-
-
-	
-
 #qaSection {
   display: flex;
   flex-direction: column; /* stack children vertically */
@@ -193,28 +189,29 @@ button:hover:enabled { background:#F7AC4D; }
   background-color: #e6f2ff;
 }
 
-/* max height so tables/accordions don’t look too short */
+	/* max height so tables/accordions don’t look too short */
+/*
 #answersTable,
 #playersTable,
 #scoreTable {
-  display: block;          /* required for overflow to work */
-  max-height: 450px;       /* cap at ~15 rows */
-  overflow-y: auto;        /* scroll if more rows */
+  display: block;           required for overflow to work
+  max-height: 450px;        cap at ~15 rows 
+  overflow-y: auto;        scroll if more rows 
 }
-
+*/
 	
 
 	
 /* ---------------- Scroll Wrappers ---------------- */
 .scroll-wrapper {
-  max-height: 600px;   /* enough for ~15 rows at ~40px each */
+  max-height: 800px;   /* enough for ~15 rows at ~40px each */
   overflow-y: auto;
   border: 1px solid #ccc;
   border-radius: 6px;
 }
 
 .table-wrapper {
-  max-height: 600px;   /* match scroll-wrapper */
+  max-height: 800px;   /* match scroll-wrapper */
   overflow-x: auto;
   overflow-y: auto;
   width: 100%;
@@ -938,6 +935,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
