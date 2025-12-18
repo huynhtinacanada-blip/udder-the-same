@@ -847,7 +847,7 @@ io.on("connection", (socket) => {
           WHERE room_code=$1
             AND question_id=$2
             AND round_number=$3
-            AND answer=$4`,
+           AND LOWER(answer)=LOWER($4)`,
         [rc, questionId, roundNumber, answer]
       );
 
@@ -948,4 +948,5 @@ io.on("connection", (socket) => {
 // Purpose: Boot the server. Uses environment PORT or defaults to 10000.
 const PORT = process.env.PORT || 10000;
 server.listen(PORT, () => console.log("Udderly the Same running on port " + PORT));
+
 
