@@ -61,7 +61,7 @@ button:hover:enabled { background:#F7AC4D; }
 .accordion-header { background:#333; color:#fff; padding:12px; cursor:pointer; font-weight:bold; }
 .accordion-header:hover { background:#F7AC4D; }
 .accordion-content { max-height:0; overflow:hidden; transition:max-height 0.4s ease; background:#fff; padding:0 15px; }
-.accordion-content.open { padding:15px; max-height:1500px; }
+.accordion-content.open { padding:15px; max-height:none; }
 
 
 /* ---------------- auto‑sizing to content ---------------- 
@@ -112,14 +112,14 @@ button:hover:enabled { background:#F7AC4D; }
 /* First column: small, just enough for checkbox */
 #pivotTable th:first-child,
 #pivotTable td:first-child {
-  width: 40px;          /* narrow column */
+  width: 60px;          /* narrow column */
   text-align: center;   /* center checkbox */
 }
 
 /* Second column: fixed width for 2-digit numbers */
 #pivotTable th:nth-child(2),
 #pivotTable td:nth-child(2) {
-  width: 50px;          /* enough for 00–99 */
+  width: 80px;          /* enough for 00–99 */
   text-align: center;   /* center counts */
   font-weight: bold;
 }
@@ -160,17 +160,51 @@ button:hover:enabled { background:#F7AC4D; }
 }
 	
 /* ---------------- Table Styling ---------------- */
-
 #answersTable, #playersTable, #scoreTable {
-  font-size:18px; border-collapse:collapse; width:100%; margin-top:10px;
+  font-size: 18px;
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 10px;
 }
+
+/* Shared cell styling */
 #answersTable th, #answersTable td,
 #playersTable th, #playersTable td,
 #scoreTable th, #scoreTable td {
-  border-bottom:1px solid #ccc; padding:8px;
+  border-bottom: 1px solid #ccc;
+  padding: 8px;
 }
-#answersTable th { text-align:left !important; }
-#playersTable th { text-align:left !important; }
+
+/* Header alignment */
+#answersTable th { text-align: left !important; }
+#playersTable th { text-align: left !important; }
+
+/* NEW: consistent row striping */
+#answersTable tr:nth-child(even),
+#playersTable tr:nth-child(even),
+#scoreTable tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+#answersTable tr:nth-child(odd),
+#playersTable tr:nth-child(odd),
+#scoreTable tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+/* NEW: hover effect */
+#answersTable tr:hover,
+#playersTable tr:hover,
+#scoreTable tr:hover {
+  background-color: #e6f2ff;
+}
+
+/* minimum height so tables/accordions don’t look too short */
+#answersTable,
+#playersTable,
+#scoreTable {
+  min-height: 200px;   /* adjust to match your pivot table height */
+}
+
 
 /* ---------------- Scroll Wrappers ---------------- */
 .scroll-wrapper {
@@ -897,6 +931,7 @@ document.addEventListener("change", e => {
 </html>
 
 		
+
 
 
 
